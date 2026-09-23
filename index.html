@@ -32,7 +32,7 @@ button:active{background:#fff3}.spacer{visibility:hidden}.hidden{display:none!im
  <div class="pad"><span class="spacer"></span><button data-k="w">▲</button><span class="spacer"></span><button data-k="a">◀</button><button data-k="s">▼</button><button data-k="d">▶</button></div>
  <div class="actions">
   <button id="btnEnter" data-action="enter">MASUK</button><button id="btnSteal" data-action="steal">AMBIL</button><button id="btnNitro" data-k="shift">NITRO</button><button id="btnRepair" data-action="repair">BENGKEL</button>
-  <button id="btnBrake" data-k="space">REM</button><button data-action="save">SAVE</button><button data-action="load">LOAD</button>
+  <button id="btnBrake" data-k="space">REM</button>
  </div>
 </div>
 <div id="vehicleControls"><button class="vbtn" data-k="a">◀</button><button class="vbtn brake" data-k="space">REM</button><button class="vbtn" data-k="d">▶</button><button class="vbtn reverse" data-k="s">MUNDUR</button><button class="vbtn gas" data-k="gas">GAS 🚗</button></div>
@@ -141,8 +141,28 @@ target.position.set(120,.18,120);scene.add(target);
 
 // ===== REALISTIC PROCEDURAL AUDIO SYSTEM =====
 const audioListener=new THREE.AudioListener();camera.add(audioListener);
+const REAL_AUDIO={
+ engine:'https://upload.wikimedia.org/wikipedia/commons/b/b1/5_cylinder_engine_sound.ogg',
+ siren:'https://upload.wikimedia.org/wikipedia/commons/b/b2/Whelen.ogg'
+};
+const engineAudio=new Audio(REAL_AUDIO.engine);engineAudio.loop=true;engineAudio.preload='auto';engineAudio.volume=.16;
+const sirenAudio=new Audio(REAL_AUDIO.siren);sirenAudio.loop=true;sirenAudio.preload='auto';sirenAudio.volume=.12;
+let realAudioReady=false;
+function startRealAudio(){
+ try{engineAudio.play().then(()=>{engineAudio.pause();engineAudio.currentTime=0;realAudioReady=true}).catch(()=>{});
+ }catch(e){}
+}
+function updateRealAudio(){
+ if(!realAudioReady)return;
+ engineAudio.volume=inCar?.16:0;
+ if(inCar){engineAudio.playbackRate=Math.max(.72,Math.min(1.55,.82+Math.abs(speed)/75));if(engineAudio.paused)engineAudio.play().catch(()=>{})}
+ else engineAudio.pause();
+ const sir= wanted>0;
+ if(sir){if(sirenAudio.paused)sirenAudio.play().catch(()=>{})}else{if(!sirenAudio.paused)sirenAudio.pause()}
+}
 let audioReady=false,audioInitialized=false,audioMaster=.28,audioEngineNodes=[],audioRainGain=null,audioAmbGain=null,audioSirenNodes=[],audioLastImpact=0;
 function ensureAudio(){
+ startRealAudio();
  try{
   const ctx=audioListener.context;if(ctx.state==='suspended')ctx.resume();if(audioInitialized)return;
   audioInitialized=true;audioReady=true;audioListener.setMasterVolume(audioMaster);
@@ -331,7 +351,7 @@ function update(dt){
  const area=obj.position.distanceTo(gas.position)<30?'SPBU':obj.position.distanceTo(shop.position)<30?'Bengkel':obj.position.distanceTo(new THREE.Vector3(-90,0,-90))<35?'Keraton':obj.position.distanceTo(new THREE.Vector3(90,0,-90))<35?'Area Mall':obj.position.distanceTo(new THREE.Vector3(-90,0,90))<35?'Alun-Alun':'Kota';
  document.querySelector('#area').textContent=area;
  document.querySelector('#cash').textContent=Math.floor(cash).toLocaleString('id-ID');document.querySelector('#fuel').textContent=Math.round(fuel);document.querySelector('#wanted').textContent=wanted;document.querySelector('#health').textContent=Math.round(health);
- updateMap(obj);updateWorld(dt);updateAudio(dt);syncVehicleUI();updateContextControls();document.querySelector('#weather').textContent=weather==='Hujan'?'🌧️ Hujan':weather==='Mendung'?'☁️ Mendung':'☀️ Cerah';
+ updateMap(obj);updateWorld(dt);updateAudio(dt);updateRealAudio();syncVehicleUI();updateContextControls();document.querySelector('#weather').textContent=weather==='Hujan'?'🌧️ Hujan':weather==='Mendung'?'☁️ Mendung':'☀️ Cerah';
 }
 function updateMap(obj){
  const c=document.querySelector('#map'),ctx=c.getContext('2d'),w=c.width,h=c.height,s=280/128;
@@ -349,7 +369,7 @@ function keyDown(e){ensureAudio();
 }
 addEventListener('keydown',keyDown);addEventListener('keyup',e=>{keys.delete(e.key.toLowerCase());if(e.key===' ')keys.delete('space');if(e.key==='shift')keys.delete('shift')});
 document.querySelectorAll('button[data-k]').forEach(b=>{const k=b.dataset.k;b.onpointerdown=e=>{e.preventDefault();ensureAudio();keys.add(k);if(k==='gas')keys.add('w')};b.onpointerup=b.onpointercancel=b.onpointerleave=()=>{keys.delete(k);if(k==='gas')keys.delete('w')}});
-document.querySelectorAll('button[data-action]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();const a=b.dataset.action;if(a==='enter')enterExit();if(a==='steal')stealNearestCar();if(a==='repair')service();if(a==='save')saveGame();if(a==='load')loadGame()}});
+document.querySelectorAll('button[data-action]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();const a=b.dataset.action;if(a==='enter')enterExit();if(a==='steal')stealNearestCar();if(a==='repair')service()}});
 setMission();buildWeatherFX();syncVehicleUI();ensureAudio();
 let last=performance.now();function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);renderer.render(scene,camera)}requestAnimationFrame(loop);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
