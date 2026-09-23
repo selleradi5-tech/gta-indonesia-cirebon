@@ -84,10 +84,10 @@ scene.fog=new THREE.Fog(0x4f7890,180,620);
 const camera=new THREE.PerspectiveCamera(64,innerWidth/innerHeight,.1,700);
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(innerWidth,innerHeight);
-renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;sun.castShadow=true;sun.shadow.mapSize.set(1536,1536);sun.shadow.camera.near=1;sun.shadow.camera.far=360;sun.shadow.camera.left=-190;sun.shadow.camera.right=190;sun.shadow.camera.top=190;sun.shadow.camera.bottom=-190;document.querySelector('#game').appendChild(renderer.domElement);
-
+renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const hemi=new THREE.HemisphereLight(0xffffff,0x28432d,1.9);scene.add(hemi);
-const sun=new THREE.DirectionalLight(0xffffff,2.1);sun.position.set(80,120,40);scene.add(sun);
+const sun=new THREE.DirectionalLight(0xffffff,2.1);sun.position.set(80,120,40);sun.castShadow=true;sun.shadow.mapSize.set(1536,1536);sun.shadow.camera.near=1;sun.shadow.camera.far=360;sun.shadow.camera.left=-190;sun.shadow.camera.right=190;sun.shadow.camera.top=190;sun.shadow.camera.bottom=-190;scene.add(sun);
+document.querySelector('#game').appendChild(renderer.domElement);
 const mat=c=>new THREE.MeshStandardMaterial({color:c,roughness:.8});
 const rnd=(a,b)=>a+Math.random()*(b-a);
 const colliders=[];
