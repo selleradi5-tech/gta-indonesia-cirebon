@@ -510,24 +510,6 @@ function updateWeapon(dt){
  syncWeaponModel();
  updateWeaponPickups(dt);
 }
- if(hit){
-   const npc=findNpcRoot(hit.object);
-   npc.userData.weaponDownTimer=5;
-   npc.visible=false;
-   wanted=Math.min(5,wanted+1);
-   toast('⭐ Polisi diperingatkan · wanted '+wanted+'/5');
- }
-}
-function updateWeapon(dt){
- weaponCooldown=Math.max(0,weaponCooldown-dt);
- if(muzzleFlash){muzzleFlashTimer-=dt;muzzleFlash.material.opacity=Math.max(0,muzzleFlashTimer/.06);if(muzzleFlashTimer<=0){scene.remove(muzzleFlash);muzzleFlash.geometry.dispose();muzzleFlash.material.dispose();muzzleFlash=null}}
- if(weaponEquipped){
-   const aimYaw=cameraControls.yaw;
-   player.rotation.y=THREE.MathUtils.lerp(player.rotation.y,aimYaw,.08);
- }
- document.querySelector('#ammo').textContent=weaponAmmo;
- document.querySelector('#reserveAmmo').textContent=weaponReserve;
-}
 function updateSafeNpc(n,i,dt,now){
  const u=n.userData;if(!n.visible)return;
  if(!u.safeAxis){u.safeAxis=i%2?'h':'v';u.safeRoad=npcRoad[i%npcRoad.length];u.safeSide=i%2?-7.2:7.2;u.safeDir=i%3===0?-1:1;u.safeSpeed=1.15+(i%5)*.12;}
