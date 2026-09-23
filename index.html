@@ -78,6 +78,8 @@ const THREE=await window.__threeReady;
 const boot=document.querySelector('#boot-status'); if(boot) boot.remove();
 
 const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x4f7890);
+scene.fog=new THREE.Fog(0x4f7890,180,620);
 const camera=new THREE.PerspectiveCamera(64,innerWidth/innerHeight,.1,700);
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.setSize(innerWidth,innerHeight);
@@ -180,7 +182,7 @@ function handleWanted(dt,obj){
 }
 function updateWorld(dt){
  gameMinutes=(gameMinutes+dt*2.2)%1440;const hour=gameMinutes/60,day=Math.max(.15,Math.sin((hour-6)/12*Math.PI));
- const sky=new THREE.Color().setHSL(.57,.42,.17+.48*day);scene.background.copy(sky);scene.fog.color.copy(sky);
+ const sky=new THREE.Color().setHSL(.57,.42,.17+.48*day);scene.background=sky;if(scene.fog)scene.fog.color.copy(sky);
  sun.intensity=.35+1.9*day;hemi.intensity=.55+1.4*day;
  document.querySelector('#clock').textContent=String(Math.floor(hour)).padStart(2,'0')+':'+String(Math.floor(gameMinutes%60)).padStart(2,'0')+(day>.55?' Siang':' Malam');
 }
