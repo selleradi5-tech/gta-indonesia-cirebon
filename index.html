@@ -182,6 +182,7 @@ function addWindowGlow(x,y,z,sx,sz){const w=new THREE.Mesh(new THREE.PlaneGeomet
 const mat=c=>new THREE.MeshStandardMaterial({color:c,roughness:.8});
 const rnd=(a,b)=>a+Math.random()*(b-a);
 const colliders=[];
+const enterableBuildings=[];
 function addCollider(x,z,w,d,pad=0){colliders.push({x,z,w:w+pad,d:d+pad})}
 function blocked(pos,r=2){return colliders.some(b=>Math.abs(pos.x-b.x)<b.w/2+r&&Math.abs(pos.z-b.z)<b.d/2+r)}
 function moveWithCollision(obj,dx,dz,r=2){const ox=obj.position.x,oz=obj.position.z,nx=ox+dx,nz=oz+dz;if(!blocked(new THREE.Vector3(nx,obj.position.y,nz),r)){obj.position.x=nx;obj.position.z=nz;return true}let moved=false;if(!blocked(new THREE.Vector3(nx,obj.position.y,oz),r)){obj.position.x=nx;moved=true}if(!blocked(new THREE.Vector3(obj.position.x,obj.position.y,nz),r)){obj.position.z=nz;moved=true}return moved}
@@ -216,6 +217,10 @@ for(let bx=-150;bx<=150;bx+=20)for(let bz=-150;bz<=150;bz+=20){
   const cc=[0xd6b08c,0xb7c9d9,0xd0d0c0,0xc59b79,0xa9c5a8][Math.floor(rnd(0,5))];
   const building=meshBox(null,cx,h/2,cz,bw,h,bd,cc);building.castShadow=true;building.receiveShadow=true;
   addCollider(cx,cz,bw,bd,.35);
+  const doorZ=cz+bd/2+.35;
+  const door=new THREE.Mesh(new THREE.BoxGeometry(Math.min(1.35,bw*.28),2.15,.12),mat(0x5a3826));door.position.set(cx,1.075,doorZ);door.castShadow=true;scene.add(door);
+  const sign=new THREE.Mesh(new THREE.BoxGeometry(1.5,.18,.08),mat(0xf2d06b));sign.position.set(cx,2.35,doorZ-.04);scene.add(sign);
+  enterableBuildings.push({building,door,sign,x:cx,z:doorZ,w:bw,d:bd,interior:null,inside:false});
   if(Math.random()<.22){const roof=meshBox(null,cx,h+.5,cz,bw*.55,.7,bd*.55,0x4e4e4e);roof.castShadow=true;roof.receiveShadow=true;}
   if(Math.random()<.72){
     const side=new THREE.Mesh(new THREE.BoxGeometry(Math.max(2.4,bw*.58),Math.min(1.8,h*.16),.035),windowMat);
@@ -243,9 +248,73 @@ for(let p=-160;p<=160;p+=40){meshBox(null,p,.11,-174,12,.12,2,0x777777);meshBox(
 const treeGroup=new THREE.Group();scene.add(treeGroup);
 function addTree(x,z,scale=1){const g=new THREE.Group();const trunk=meshBox(g,0,1.6,0,.65,3.2,.65,0x76502f);trunk.castShadow=true;const crown=new THREE.Mesh(new THREE.SphereGeometry(2.5,10,8),new THREE.MeshStandardMaterial({color:0x2f7d3c,roughness:1}));crown.position.y=4.1;crown.scale.set(scale,1.05*scale,scale);crown.castShadow=true;crown.receiveShadow=true;g.position.set(x,0,z);treeGroup.add(g)}
 for(let x=-170;x<=170;x+=20)for(let z=-170;z<=170;z+=20){if(Math.abs(x%40)>7&&Math.abs(z%40)>7&&Math.random()<.12)addTree(x+rnd(-3,3),z+rnd(-3,3),rnd(.75,1.15))}
+function addUtilityPole(x,z){
+  const g=new THREE.Group();g.position.set(x,0,z);
+  const pole=meshBox(g,0,4,0,.32,8,.32,0x4b4b4b);
+  meshBox(g,0,7.75,0,3.6,.14,.14,0x555555);
+  meshBox(g,-1.15,7.45,0,.12,.55,.12,0x555555);meshBox(g,1.15,7.45,0,.12,.55,.12,0x555555);
+  environmentGroup.add(g);return g;
+}
+function addCable(a,b,y=7.8){
+  const curve=new THREE.CatmullRomCurve3([new THREE.Vector3(a.x,y,a.z),new THREE.Vector3((a.x+b.x)/2,y-.9,(a.z+b.z)/2),new THREE.Vector3(b.x,y,b.z)]);
+  const cable=new THREE.Mesh(new THREE.TubeGeometry(curve,10,.045,5,false),mat(0x151515));cable.castShadow=true;environmentGroup.add(cable);
+}
+function addStreetLamp(x,z,rot=0){
+  const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;
+  meshBox(g,0,2.8,0,.16,5.6,.16,0x333333);meshBox(g,.65,5.5,0,1.4,.1,.1,0x333333);
+  const bulb=new THREE.Mesh(new THREE.SphereGeometry(.18,8,6),new THREE.MeshStandardMaterial({color:0xffe4a3,emissive:0xffb52e,emissiveIntensity:1.2}));
+  bulb.position.set(1.3,5.35,0);g.add(bulb);environmentGroup.add(g);
+}
+function addRoadFence(x,z,len,axis){
+  for(let p=-len/2;p<=len/2;p+=3.5){const px=axis==='x'?x+p:x,pz=axis==='x'?z:z+p;meshBox(environmentGroup,px,1,pz,.12,2,.12,0x626262)}
+  const rail=meshBox(environmentGroup,x,1.35,z,len,.08,.08,0x626262);if(axis==='z')rail.rotation.y=Math.PI/2;
+  const rail2=meshBox(environmentGroup,x,.7,z,len,.08,.08,0x626262);if(axis==='z')rail2.rotation.y=Math.PI/2;
+}
+function addCityInfrastructure(){
+  for(let p=-160;p<=160;p+=40){
+    addStreetLamp(p,7.2,0);addStreetLamp(p,-7.2,Math.PI);
+    addStreetLamp(7.2,p,Math.PI/2);addStreetLamp(-7.2,p,-Math.PI/2);
+    addUtilityPole(p,13);addUtilityPole(p,-13);
+    if(p<160){addCable({x:p,z:13},{x:p+40,z:13},8);addCable({x:p,z:-13},{x:p+40,z:-13},8)}
+  }
+  for(let p=-140;p<=140;p+=20){if(p%40!==0){addRoadFence(0,p,7,'x');addRoadFence(p,0,7,'z')}}
+}
+addCityInfrastructure();
+
 const target=new THREE.Mesh(new THREE.CylinderGeometry(5,5,.18,32),new THREE.MeshStandardMaterial({color:0xffd21a,emissive:0x6b4d00,emissiveIntensity:.45}));
 target.position.set(120,.18,120);scene.add(target);
 
+
+function makeBuildingInterior(b){
+  if(b.interior)return b.interior;
+  const g=new THREE.Group();g.visible=false;
+  const floor=meshBox(g,b.x,0,b.z-5,9,.12,9,0x806b58);
+  meshBox(g,b.x,3,b.z-5,9,.15,9,0x3a302a);
+  meshBox(g,b.x-4.5,1.5,b.z-5,.12,3,9,0x756452);meshBox(g,b.x+4.5,1.5,b.z-5,.12,3,9,0x756452);
+  meshBox(g,b.x,1.5,b.z-9,9,3,.12,0x756452);
+  const desk=meshBox(g,b.x-2.1,1.1,b.z-5,2.5,.12,1.2,0x68452f);meshBox(g,b.x-2.1,.55,b.z-5,2.1,1,.7,0x513622);
+  const bed=meshBox(g,b.x+2.1,.55,b.z-6.5,2.5,.55,4.0,0xcfc5b7);meshBox(g,b.x+2.1,.95,b.z-4.4,2.1,.18,.8,0x4b79a8);
+  meshBox(g,b.x,1.0,b.z-2.5,4.0,.12,1.6,0x777777);
+  const light=new THREE.PointLight(0xffd18a,1.7,16);light.position.set(b.x,2.7,b.z-5);g.add(light);
+  scene.add(g);b.interior=g;return g;
+}
+function nearestEnterableBuilding(){
+  let best=null,bd=5.5;
+  for(const b of enterableBuildings){const d=Math.hypot(player.position.x-b.x,player.position.z-b.z);if(d<bd){bd=d;best=b}}
+  return best;
+}
+let activeInterior=null;
+function enterBuilding(){
+  if(inCar||activeInterior)return false;
+  const b=nearestEnterableBuilding();if(!b)return false;
+  const room=makeBuildingInterior(b);b.inside=true;b.building.visible=false;b.door.visible=false;b.sign.visible=false;room.visible=true;activeInterior=b;
+  player.position.set(b.x,0,b.z-4.0);player.rotation.y=Math.PI;toast('🏠 Masuk gedung · E untuk keluar');return true;
+}
+function exitBuilding(){
+  if(!activeInterior)return false;
+  const b=activeInterior;b.inside=false;b.building.visible=true;b.door.visible=true;b.sign.visible=true;if(b.interior)b.interior.visible=false;
+  player.position.set(b.x,0,b.z+2.3);activeInterior=null;toast('🚪 Keluar gedung');return true;
+}
 
 // Audio vehicle sementara dimatikan. Visual/gameplay tetap aktif.
 let audioReady=false,audioInitialized=false,audioMaster=0,audioRainGain=null,audioAmbGain=null,audioLastImpact=0;
@@ -664,7 +733,9 @@ function stealNearestCar(){
   toast('Kendaraan berhasil diambil');syncVehicleUI();
 }
 function enterExit(){
+ if(activeInterior){exitBuilding();return}
  if(!inCar&&nearby(player.position,car,9)){ensureAudio();soundBurst('unlock',.07);inCar=true;player.visible=false;resetAnalog();document.querySelector('#mode').textContent='Mengemudi';toast('Kamu masuk kendaraan')}
+ else if(!inCar&&enterBuilding())return;
  else if(inCar){ensureAudio();soundBurst('click',.05);inCar=false;player.visible=true;player.position.copy(car.position);const side=new THREE.Vector3(1,0,0).applyQuaternion(car.quaternion);player.position.add(side.multiplyScalar(5));player.position.y=0;player.rotation.y=car.rotation.y;keys.delete('w');keys.delete('a');keys.delete('s');keys.delete('d');keys.delete('gas');keys.delete('space');document.querySelector('#mode').textContent='Jalan kaki';syncControlMode();toast('Kamu keluar kendaraan · siap berjalan')}
 }
 function service(){
