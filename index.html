@@ -165,7 +165,7 @@ function syncVehicleUI(){
   hud.style.display=inCar?'block':'none';
   controls.style.display=inCar?'grid':'none';
   document.querySelector('#vehicleName').textContent=car&&car.userData.stolen?'Kendaraan Curian':'Cirebon Car';
-  document.querySelector('#speed').textContent=Math.round(Math.abs(speed)*95);
+  document.querySelector('#speed').textContent=Math.round(Math.abs(speed)*118);
   document.querySelector('#gear').textContent=speed>0.03?'D':speed<-.03?'R':'N';
   document.querySelector('#carHealth').textContent=Math.round(carHealth);
 }
@@ -230,10 +230,10 @@ function update(dt){
  const accel=(pressed('w')?1:0)-(pressed('s')?1:0),steer=(pressed('a')?1:0)-(pressed('d')?1:0);
  if(inCar){
   const boost=pressed('shift')&&fuel>2;
-  const max=boost?1.18:.78;
-  speed+=accel*(boost?.07:.032)-speed*.035;speed=Math.max(-.42,Math.min(max,speed));
+  const max=boost?1.55:1.05;
+  const accelRate=boost?.115:.075;const drag=accel===0?.055:.018;speed+=accel*accelRate-speed*drag;speed=Math.max(-.55,Math.min(max,speed));
   if(boost)fuel=Math.max(0,fuel-dt*4.8);if(pressed('space'))speed*=.72;
-  car.rotation.y+=steer*speed*.045;const drive=speed*3.2*dt;const forward=new THREE.Vector3(0,0,-1).applyQuaternion(car.quaternion);const moved=moveWithCollision(car,forward.x*drive,forward.z*drive,3.2);if(!moved){speed*=.15;carHealth=Math.max(0,carHealth-Math.abs(speed)*dt*3);if(Math.abs(speed)>.12)toast('🚧 Bangunan menghalangi jalan')}
+  car.rotation.y+=steer*speed*.045;const drive=speed*4.8*dt;const forward=new THREE.Vector3(0,0,-1).applyQuaternion(car.quaternion);const moved=moveWithCollision(car,forward.x*drive,forward.z*drive,3.2);if(!moved){speed*=.15;carHealth=Math.max(0,carHealth-Math.abs(speed)*dt*3);if(Math.abs(speed)>.12)toast('🚧 Bangunan menghalangi jalan')}
   fuel=Math.max(0,fuel-Math.abs(speed)*dt*.42);
   if(fuel<=0){speed=0}
   // Keep vehicle inside the playable city.
