@@ -173,19 +173,19 @@ function soundBurst(type='click',vol=.05){
   if(type==='impact')o.frequency.exponentialRampToValueAtTime(42,ctx.currentTime+.18);
   if(type==='boost')o.frequency.exponentialRampToValueAtTime(520,ctx.currentTime+.22);
   f.type='lowpass';f.frequency.value=type==='impact'?650:2400;
-  g.gain.setValueAtTime(vol,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+(type==='impact'?.2:.1));
-  o.connect(f);f.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+(type==='impact'?.22:.11));
+  g.gain.setValueAtTime(vol,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+((type==='impact' ? .2 : .1)));
+  o.connect(f);f.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+((type==='impact' ? .22 : .11)));
  }catch(e){}
 }
 function updateAudio(dt){
  if(!audioReady)return;const ctx=audioListener.context,eg=audioEngineNodes[3],o1=audioEngineNodes[0],o2=audioEngineNodes[1];
  if(eg){
-  const rpm=inCar?(48+Math.abs(speed)*3.2+(pressed('w')?22:0)):0;
-  eg.gain.linearRampToValueAtTime(inCar?.025:0,ctx.currentTime+.08);
+  const rpm=inCar ? (48+Math.abs(speed)*3.2+(pressed('w') ? 22 : 0)) : 0;
+  eg.gain.linearRampToValueAtTime((inCar ? .025 : 0),ctx.currentTime+.08);
   o1.frequency.setTargetAtTime(rpm,ctx.currentTime,.055);o2.frequency.setTargetAtTime(rpm*2.02,ctx.currentTime,.055);
  }
- if(audioRainGain)audioRainGain.gain.linearRampToValueAtTime(weather==='Hujan'?.06:weather==='Mendung'?.012,ctx.currentTime+.35);
- if(audioAmbGain)audioAmbGain.gain.linearRampToValueAtTime(inCar?.012:.022,ctx.currentTime+.3);
+ if(audioRainGain)audioRainGain.gain.linearRampToValueAtTime(weather==='Hujan' ? .06 : weather==='Mendung' ? .012 : 0,ctx.currentTime+.35);
+ if(audioAmbGain)audioAmbGain.gain.linearRampToValueAtTime((inCar ? .012 : .022),ctx.currentTime+.3);
  const wantedLevel=Math.min(1,wanted/5);
  if(wantedLevel>.01&&audioSirenNodes.length===0)startSiren();
  if(wantedLevel<=0&&audioSirenNodes.length)stopSiren();
