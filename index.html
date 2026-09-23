@@ -90,8 +90,8 @@ const cameraControls={
  yaw:0,pitch:0.28,dragging:false,lastX:0,lastY:0,pointers:new Map(),pinchStart:0,manualUntil:0
 };
 function clampCamera(){
- cameraControls.distance=THREE.MathUtils.clamp(cameraControls.distance,5,34);
- cameraControls.pitch=THREE.MathUtils.clamp(cameraControls.pitch,0.12,0.72);
+ cameraControls.distance=THREE.MathUtils.clamp(cameraControls.distance,2.2,34);
+ cameraControls.pitch=THREE.MathUtils.clamp(cameraControls.pitch,0.04,1.02);
  const maxPan=Math.max(3,cameraControls.distance*.30);
  cameraControls.target.x=THREE.MathUtils.clamp(cameraControls.target.x,-250+maxPan,250-maxPan);
  cameraControls.target.z=THREE.MathUtils.clamp(cameraControls.target.z,-250+maxPan,250-maxPan);
@@ -106,8 +106,8 @@ function applyCamera(player){
    let delta=THREE.MathUtils.euclideanModulo(desiredYaw-cameraControls.yaw+Math.PI,Math.PI*2)-Math.PI;
    cameraControls.yaw+=delta*(isAiming&&aimTarget?.visible?.075:.055);
  }
- const aimDistance=isAiming&&!inCar?Math.min(cameraControls.distance,5.8):cameraControls.distance;
- const aimPitch=isAiming&&!inCar?Math.max(.16,cameraControls.pitch-.08):cameraControls.pitch;
+ const aimDistance=isAiming&&!inCar?Math.min(cameraControls.distance,3.4):cameraControls.distance;
+ const aimPitch=isAiming&&!inCar?THREE.MathUtils.clamp(cameraControls.pitch-.04,.04,1.02):cameraControls.pitch;
  const horizontal=aimDistance*Math.cos(aimPitch),vertical=aimDistance*Math.sin(aimPitch);
  const shoulder=isAiming&&!inCar?.62:0;
  cameraDesiredPosition.set(cameraControls.target.x+Math.sin(cameraControls.yaw)*horizontal+Math.cos(cameraControls.yaw)*shoulder,cameraControls.height+vertical,cameraControls.target.z+Math.cos(cameraControls.yaw)*horizontal-Math.sin(cameraControls.yaw)*shoulder);
@@ -145,7 +145,7 @@ renderer.domElement.addEventListener('pointermove',e=>{
  if(pair){
    e.preventDefault();
    const d=Math.hypot(pair[0].x-pair[1].x,pair[0].y-pair[1].y);
-   if(cameraControls.pinchStart)zoomCamera((cameraControls.pinchStart-d)*.045);
+   if(cameraControls.pinchStart)zoomCamera((cameraControls.pinchStart-d)*.065);
    cameraControls.pinchStart=d;
    return;
  }
@@ -154,7 +154,7 @@ renderer.domElement.addEventListener('pointermove',e=>{
  const dx=e.clientX-cameraControls.lastX,dy=e.clientY-cameraControls.lastY;
  cameraControls.lastX=e.clientX;cameraControls.lastY=e.clientY;
  cameraControls.yaw-=dx*.009;
- cameraControls.pitch=THREE.MathUtils.clamp(cameraControls.pitch+dy*.006,0.12,0.72);
+ cameraControls.pitch=THREE.MathUtils.clamp(cameraControls.pitch+dy*.008,0.04,1.02);
  cameraControls.manualUntil=performance.now()+1400;
 });
 function endPointer(e){cameraControls.pointers.delete(e.pointerId);if(cameraControls.pointers.size<2)cameraControls.pinchStart=0;cameraControls.dragging=false;cameraControls.manualUntil=performance.now()+1400;}
