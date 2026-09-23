@@ -17,6 +17,8 @@
 button{height:52px;border:1px solid #fff5;border-radius:14px;background:#111c;color:#fff;font-size:15px;font-weight:800;touch-action:none;user-select:none;-webkit-user-select:none;backdrop-filter:blur(5px)}
 button:active{background:#fff3}.spacer{visibility:hidden}.hidden{display:none!important}
 @media(max-width:430px){#minimap{width:108px;height:108px}.actions{grid-template-columns:repeat(3,58px)}button{height:48px;font-size:13px}.pad{grid-template-columns:repeat(3,50px)}#mission{top:72px;font-size:12px;min-width:220px}.box{font-size:12px}}
+
+#mpPanel{position:fixed;left:10px;top:150px;z-index:12;width:min(270px,calc(100vw - 20px));background:#000d;border:1px solid #fff3;border-radius:14px;padding:10px;backdrop-filter:blur(6px);box-shadow:0 5px 18px #0008}#mpPanel .mpTitle{font-weight:900;font-size:13px;margin-bottom:7px}#mpPanel input,#mpPanel button{width:100%;height:40px;margin-top:6px;border-radius:10px}#mpPanel input{background:#111;color:#fff;border:1px solid #fff4;padding:0 10px;font-size:14px}#mpPanel button{font-size:12px}#mpStatus{font-size:10px;opacity:.8;margin-top:6px;line-height:1.35}.mpRow{display:grid;grid-template-columns:1fr 1fr;gap:6px}@media(max-width:430px){#mpPanel{top:188px;width:220px;padding:8px}#mpPanel input,#mpPanel button{height:36px}}
 </style>
 </head>
 <body>
@@ -28,6 +30,8 @@ button:active{background:#fff3}.spacer{visibility:hidden}.hidden{display:none!im
 <div id="gps">📍 GPS: <span id="gpsText">Menuju titik misi</span></div><div id="mission">MISI 1 · ANTAR PAKET<br><small id="missionText">Datangi titik kuning</small></div>
 <div id="minimap"><canvas id="map" width="128" height="128"></canvas></div>
 <div id="weaponHud">🔫 <span id="weaponName">Pistol</span><br><span id="ammo">12</span> / <small id="reserveAmmo">60</small><br><small id="weaponState">SIAP</small><div id="reloadBar"><div id="reloadFill"></div></div><div id="weaponHint">2 GANTI · R ISI</div></div><div id="crosshair"></div><div id="vehicleHud">🚗 <span id="vehicleName">Cirebon Car</span><br><span id="speed">0</span> km/j<br><small>⚙️ <span id="gear">N</span> · ❤️ <span id="carHealth">100</span>%</small></div><div id="toast"></div>
+
+<div id="mpPanel"><div class="mpTitle">🌐 MULTIPLAYER</div><input id="mpName" maxlength="16" placeholder="Nama pemain"><input id="mpRoom" maxlength="16" placeholder="Kode room, contoh CIREBON"><div class="mpRow"><button id="mpJoin">GABUNG</button><button id="mpLeave">KELUAR</button></div><div id="mpStatus">Single-player aktif · multiplayer opsional</div></div>
 <div id="controls">
  <div class="pad"><div id="analog" class="analog" aria-label="Analog gerak"><div id="stick" class="stick"></div></div></div>
  <div class="actions">
@@ -1024,7 +1028,7 @@ function update(dt){
  const area=(()=>{const x=obj.position.x,z=obj.position.z;if((x-140)*(x-140)+(z-140)*(z-140)<900)return 'SPBU';if((x+140)*(x+140)+(z-140)*(z-140)<900)return 'Bengkel';if((x+100)*(x+100)+(z+100)*(z+100)<1225)return 'Keraton';if((x-100)*(x-100)+(z+100)*(z+100)<1225)return 'Area Mall';if((x+100)*(x+100)+(z-100)*(z-100)<1225)return 'Alun-Alun';return 'Kota'})()
  document.querySelector('#area').textContent=area;
  document.querySelector('#cash').textContent=Math.floor(cash).toLocaleString('id-ID');document.querySelector('#fuel').textContent=Math.round(fuel);document.querySelector('#wanted').textContent=wanted;document.querySelector('#health').textContent=Math.round(health);
- mapClock+=dt;if(mapClock>=.12){mapClock=0;updateMap(obj)}updateWorld(dt);updatePerformance(dt,obj);updateWeapon(dt);updateAudio(dt);updateRealAudio();syncVehicleUI();updateContextControls();document.querySelector('#weather').textContent=weather==='Hujan'?'🌧️ Hujan':weather==='Mendung'?'☁️ Mendung':'☀️ Cerah';
+ updateMultiplayer(dt,obj);\n mapClock+=dt;if(mapClock>=.12){mapClock=0;updateMap(obj)}updateWorld(dt);updatePerformance(dt,obj);updateWeapon(dt);updateAudio(dt);updateRealAudio();syncVehicleUI();updateContextControls();document.querySelector('#weather').textContent=weather==='Hujan'?'🌧️ Hujan':weather==='Mendung'?'☁️ Mendung':'☀️ Cerah';
 }
 function updateMap(obj){
  const c=document.querySelector('#map'),ctx=c.getContext('2d'),w=c.width,h=c.height,s=280/128;
@@ -1036,7 +1040,55 @@ function updateMap(obj){
  police.forEach(p=>{if(p.position.distanceTo(obj.position)<130)dot(p.position.x,p.position.z,'#ff4545',2)});
  dot(obj.position.x,obj.position.z,'#37a8ff',4);
 }
-function keyDown(e){ensureAudio();
+
+// ===== MULTIPLAYER LAYER =====
+const remotePlayers=new Map();
+let mpSocket=null,mpConnected=false,mpLastSend=0,mpRoom='',mpName='';
+const mpStatusEl=document.querySelector('#mpStatus');
+function mpStatus(t){if(mpStatusEl)mpStatusEl.textContent=t}
+function mpServerUrl(){
+  const q=new URLSearchParams(location.search).get('server');
+  if(q)return q;
+  return window.GTA_MULTIPLAYER_SERVER||'';
+}
+function mpAddRemote(data){
+  if(!data||!data.id||data.id===mpSocket?.id)return;
+  let r=remotePlayers.get(data.id);
+  if(!r){
+    const body=makeHuman(0xd89b76,0x1f6f9d,0x252a32,0x151515,0x1d1410);
+    body.scale.setScalar(.38);
+    const tag=label(data.name||'Pemain',0,0);
+    tag.parent?.remove(tag);
+    const group=new THREE.Group();group.add(body);group.position.set(data.x||0,0,data.z||0);group.rotation.y=data.ry||0;scene.add(group);
+    const canvas=document.createElement('canvas');canvas.width=512;canvas.height=96;const ctx=canvas.getContext('2d');ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(0,0,512,96);ctx.fillStyle='#7ee7ff';ctx.font='bold 34px Arial';ctx.textAlign='center';ctx.fillText(data.name||'Pemain',256,62);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(canvas),transparent:true}));s.scale.set(13,2.4,1);s.position.set(0,6.1,0);group.add(s);
+    r={group,target:new THREE.Vector3(data.x||0,0,data.z||0),targetRot:data.ry||0};remotePlayers.set(data.id,r);
+  }else{r.target.set(data.x||0,0,data.z||0);r.targetRot=data.ry||0}
+}
+function mpRemoveRemote(id){const r=remotePlayers.get(id);if(!r)return;r.group.parent?.remove(r.group);remotePlayers.delete(id)}
+function mpConnect(){
+  if(!window.io){mpStatus('Library multiplayer belum dimuat. Game tetap bisa dimainkan.');return}
+  const server=mpServerUrl();
+  if(!server){mpStatus('Server multiplayer belum dipasang. Isi URL server pada ?server=...');return}
+  mpName=(document.querySelector('#mpName')?.value||'Pemain').trim().slice(0,16)||'Pemain';
+  mpRoom=(document.querySelector('#mpRoom')?.value||'CIREBON').trim().toUpperCase().slice(0,16)||'CIREBON';
+  if(mpSocket)mpSocket.disconnect();
+  mpStatus('Menghubungkan ke server...');
+  mpSocket=io(server,{transports:['websocket','polling'],timeout:7000});
+  mpSocket.on('connect',()=>{mpConnected=true;mpSocket.emit('joinRoom',{room:mpRoom,name:mpName,x:player.position.x,z:player.position.z,ry:player.rotation.y});mpStatus('🟢 Terhubung · Room '+mpRoom)});
+  mpSocket.on('roomState',list=>{(list||[]).forEach(mpAddRemote);});
+  mpSocket.on('playerJoined',mpAddRemote);
+  mpSocket.on('playerMoved',mpAddRemote);
+  mpSocket.on('playerLeft',d=>mpRemoveRemote(d.id));
+  mpSocket.on('disconnect',()=>{mpConnected=false;mpStatus('🔴 Terputus · game tetap bisa dimainkan');});
+  mpSocket.on('connect_error',()=>{mpConnected=false;mpStatus('🔴 Server belum aktif / URL server salah');});
+}
+function mpDisconnect(){if(mpSocket){mpSocket.disconnect();mpSocket=null}mpConnected=false;remotePlayers.forEach((_,id)=>mpRemoveRemote(id));mpStatus('Single-player aktif · multiplayer opsional')}
+function updateMultiplayer(dt,obj){
+  if(mpConnected&&mpSocket&&performance.now()-mpLastSend>50){mpLastSend=performance.now();mpSocket.emit('playerMove',{x:obj.position.x,z:obj.position.z,ry:obj.rotation.y,vehicle:!!inCar});}
+  remotePlayers.forEach(r=>{r.group.position.lerp(r.target,Math.min(1,dt*12));let d=THREE.MathUtils.euclideanModulo(r.targetRot-r.group.rotation.y+Math.PI,Math.PI*2)-Math.PI;r.group.rotation.y+=d*Math.min(1,dt*12);});
+}
+document.querySelector('#mpJoin')?.addEventListener('click',mpConnect);document.querySelector('#mpLeave')?.addEventListener('click',mpDisconnect);
+\nfunction keyDown(e){ensureAudio();
  const k=e.key.toLowerCase();if(e.key===' ')keys.add('space');else if(e.key==='shift')keys.add('shift');else {keys.add(k);if(k==='arrowup')keys.add('w');if(k==='arrowdown')keys.add('s');if(k==='arrowleft')keys.add('a');if(k==='arrowright')keys.add('d');}
  if(k==='e')enterExit();if(k==='r'){if(weaponEquipped)reloadWeapon();else service()}if(k==='f')fireWeapon();if(k==='1')equipWeapon();if(k==='2')switchWeapon();if(k==='q')toggleAim();if(k==='f5')saveGame();if(k==='f9')loadGame();
 }
