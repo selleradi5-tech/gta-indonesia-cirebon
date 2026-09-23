@@ -15,7 +15,7 @@
 #controls{position:fixed;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:end;z-index:6;pointer-events:none}
 .pad,.actions{display:grid;gap:7px;pointer-events:auto}.pad{grid-template-columns:repeat(3,54px)}.actions{grid-template-columns:repeat(3,66px)}
 button{height:52px;border:1px solid #fff5;border-radius:14px;background:#111c;color:#fff;font-size:15px;font-weight:800;touch-action:none;user-select:none;-webkit-user-select:none;backdrop-filter:blur(5px)}
-button:active{background:#fff3}.spacer{visibility:hidden}
+button:active{background:#fff3}.spacer{visibility:hidden}.hidden{display:none!important}
 @media(max-width:430px){#minimap{width:108px;height:108px}.actions{grid-template-columns:repeat(3,58px)}button{height:48px;font-size:13px}.pad{grid-template-columns:repeat(3,50px)}#mission{top:72px;font-size:12px;min-width:220px}.box{font-size:12px}}
 </style>
 </head>
@@ -31,8 +31,8 @@ button:active{background:#fff3}.spacer{visibility:hidden}
 <div id="controls">
  <div class="pad"><span class="spacer"></span><button data-k="w">▲</button><span class="spacer"></span><button data-k="a">◀</button><button data-k="s">▼</button><button data-k="d">▶</button></div>
  <div class="actions">
-  <button data-action="enter">MASUK</button><button data-action="steal">AMBIL</button><button data-k="shift">NITRO</button><button data-action="repair">BENGKEL</button>
-  <button data-k="space">REM</button><button data-action="save">SAVE</button><button data-action="load">LOAD</button>
+  <button id="btnEnter" data-action="enter">MASUK</button><button id="btnSteal" data-action="steal">AMBIL</button><button id="btnNitro" data-k="shift">NITRO</button><button id="btnRepair" data-action="repair">BENGKEL</button>
+  <button id="btnBrake" data-k="space">REM</button><button data-action="save">SAVE</button><button data-action="load">LOAD</button>
  </div>
 </div>
 <div id="vehicleControls"><button class="vbtn" data-k="a">◀</button><button class="vbtn brake" data-k="space">REM</button><button class="vbtn" data-k="d">▶</button><button class="vbtn reverse" data-k="s">MUNDUR</button><button class="vbtn gas" data-k="gas">GAS 🚗</button></div>
@@ -89,7 +89,7 @@ renderer.shadowMap.enabled=false;document.querySelector('#game').appendChild(ren
 const hemi=new THREE.HemisphereLight(0xffffff,0x28432d,1.9);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xffffff,2.1);sun.position.set(80,120,40);scene.add(sun);
 const mat=c=>new THREE.MeshStandardMaterial({color:c,roughness:.8});
-const rnd=(a,b)=>a+Math.random()*(b-a);
+const rnd=(a,b)=>a+Math.random()*(b-a);\nconst colliders=[];\nfunction addCollider(x,z,w,d,pad=0){colliders.push({x,z,w:w+pad,d:d+pad})}\nfunction blocked(pos,r=2){return colliders.some(b=>Math.abs(pos.x-b.x)<b.w/2+r&&Math.abs(pos.z-b.z)<b.d/2+r)}\nfunction moveWithCollision(obj,dx,dz,r=2){const nx=obj.position.x+dx,nz=obj.position.z+dz;if(!blocked(new THREE.Vector3(nx,obj.position.y,nz),r)){obj.position.x=nx;obj.position.z=nz;return true}return false}
 function meshBox(parent,x,y,z,sx,sy,sz,c){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat(c));m.position.set(x,y,z);(parent||scene).add(m);return m}
 function label(text,x,z){const c=document.createElement('canvas');c.width=512;c.height=80;const ctx=c.getContext('2d');ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(0,0,512,80);ctx.fillStyle='#fff';ctx.font='bold 34px Arial';ctx.textAlign='center';ctx.fillText(text,256,52);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true}));s.scale.set(20,3.2,1);s.position.set(x,8,z);scene.add(s)}
 
@@ -106,10 +106,10 @@ for(let x=-140;x<=140;x+=20)for(let z=-140;z<=140;z+=20){
 }
 
 // Landmarks and districts
-meshBox(null,0,4,0,24,8,19,0xd3ad47);meshBox(null,0,9,0,13,2,10,0xf1dfb7);label('BALAI KOTA',0,0);
-meshBox(null,-80,4,-80,30,8,24,0xc98b46);meshBox(null,-80,9,-80,20,2,14,0xeee0b0);label('KERATON',-80,-80);
-meshBox(null,80,5,-80,34,10,25,0x8798aa);meshBox(null,80,11,-80,27,2,18,0x4b6680);label('AREA MALL',80,-80);
-meshBox(null,-80,3,80,28,6,22,0x4b7652);label('ALUN-ALUN',-80,80);
+meshBox(null,0,4,0,24,8,19,0xd3ad47);addCollider(0,0,24,19,2);meshBox(null,0,9,0,13,2,10,0xf1dfb7);label('BALAI KOTA',0,0);
+meshBox(null,-80,4,-80,30,8,24,0xc98b46);addCollider(-80,-80,30,24,2);meshBox(null,-80,9,-80,20,2,14,0xeee0b0);label('KERATON',-80,-80);
+meshBox(null,80,5,-80,34,10,25,0x8798aa);addCollider(80,-80,34,25,2);meshBox(null,80,11,-80,27,2,18,0x4b6680);label('AREA MALL',80,-80);
+meshBox(null,-80,3,80,28,6,22,0x4b7652);addCollider(-80,80,28,22,2);label('ALUN-ALUN',-80,80);
 
 // Gas station / workshop
 function marker(x,z,color,text){const p=new THREE.Mesh(new THREE.CylinderGeometry(5,5,.2,32),new THREE.MeshBasicMaterial({color}));p.position.set(x,.15,z);scene.add(p);label(text,x,z);return p}
@@ -117,9 +117,9 @@ const gas=marker(80,80,0x27d35f,'SPBU');
 const shop=marker(-80,80,0x2ea8ff,'BENGKEL');
 
 const target=new THREE.Mesh(new THREE.CylinderGeometry(5,5,.18,32),new THREE.MeshBasicMaterial({color:0xffd21a}));
-target.position.set(55,.18,55);scene.add(target);
+target.position.set(120,.18,120);scene.add(target);
 
-const player=new THREE.Group();const body=new THREE.Mesh(new THREE.CapsuleGeometry(1,2,6,10),mat(0x2468d8));body.position.y=2;player.add(body);player.position.set(18,0,18);scene.add(player);
+const player=new THREE.Group();const body=new THREE.Mesh(new THREE.CapsuleGeometry(1,2,6,10),mat(0x2468d8));body.position.y=2;player.add(body);player.position.set(40,0,20);scene.add(player);
 
 function makeCar(x,z,color=0xc72c2c,police=false){
  const g=new THREE.Group();meshBox(g,0,1,0,3.8,1.35,6,color);
@@ -129,10 +129,10 @@ function makeCar(x,z,color=0xc72c2c,police=false){
  if(police){meshBox(g,0,2.15,0,.8,.22,1.2,0xeeeeee)}
  g.position.set(x,0,z);scene.add(g);return g;
 }
-let car=makeCar(18,10,0x1d7c45),inCar=false;
-const traffic=[];for(let i=0;i<20;i++){const c=makeCar(-160+i*16,i%2?55:-55,[0xc72c2c,0xeeeeee,0x2457a6,0xd7b23f,0x222222][i%5]);c.rotation.y=i%2?Math.PI:0;c.userData.speed=.018+(i%5)*.006;c.userData.stolen=false;traffic.push(c)}
-const police=[];for(let i=0;i<4;i++)police.push(makeCar(110-i*25,120,0xf2f2f2,true));
-const npcs=[];for(let i=0;i<24;i++){const n=new THREE.Mesh(new THREE.CapsuleGeometry(.5,.9,5,8),mat([0xe0a32f,0x8b5cf6,0x38a169,0xd97706][i%4]));n.position.set(rnd(-145,145),1,rnd(-145,145));scene.add(n);npcs.push(n)}
+let car=makeCar(40,20,0x1d7c45),inCar=false;
+const traffic=[];const roadXs=[-160,-120,-80,-40,0,40,80,120,160];for(let i=0;i<20;i++){const c=makeCar(roadXs[i%roadXs.length],-150+(i%5)*60,[0xc72c2c,0xeeeeee,0x2457a6,0xd7b23f,0x222222][i%5]);c.rotation.y=i%2?Math.PI:0;c.userData.speed=.018+(i%5)*.006;c.userData.stolen=false;traffic.push(c)}
+const police=[];for(let i=0;i<4;i++)police.push(makeCar(-120+i*80,120,0xf2f2f2,true));
+const npcs=[];const npcRoad=[-160,-120,-80,-40,0,40,80,120,160];for(let i=0;i<24;i++){const n=new THREE.Mesh(new THREE.CapsuleGeometry(.5,.9,5,8),mat([0xe0a32f,0x8b5cf6,0x38a169,0xd97706][i%4]));n.position.set(npcRoad[i%npcRoad.length],1,npcRoad[(i*3)%npcRoad.length]);n.userData.target=new THREE.Vector3(npcRoad[(i*5+2)%npcRoad.length],1,npcRoad[(i*7+1)%npcRoad.length]);scene.add(n);npcs.push(n)}
 
 let cash=150000,wanted=0,speed=0,fuel=100,health=100,mission=1,gameMinutes=720,carHealth=100,engineOn=false,weather='Cerah',weatherTimer=0;
 let missionReward=50000;const keys=new Set();const pressed=k=>keys.has(k);
@@ -144,6 +144,13 @@ function nearestTraffic(){
   let best=null,bd=7;
   traffic.forEach(v=>{const d=v.position.distanceTo(player.position);if(d<bd){bd=d;best=v}});
   return best;
+}
+function updateContextControls(){
+ const nearCar=!inCar&&nearby(player.position,car,9);
+ const nearTraffic=!inCar&&!!nearestTraffic();
+ const nearService=inCar&&(car.position.distanceTo(shop.position)<20||car.position.distanceTo(gas.position)<20);
+ const set=(id,on)=>{const e=document.querySelector(id);if(e)e.classList.toggle('hidden',!on)};
+ set('#btnEnter',nearCar);set('#btnSteal',nearTraffic);set('#btnNitro',inCar&&fuel>2);set('#btnBrake',inCar);set('#btnRepair',nearService);
 }
 function syncVehicleUI(){
   const hud=document.querySelector('#vehicleHud');
@@ -182,7 +189,7 @@ function saveGame(){
 }
 function loadGame(){
  try{const s=JSON.parse(localStorage.getItem('gtaCirebonSave')||'null');if(!s){toast('Belum ada save');return}
- cash=Number(s.cash)||150000;wanted=Number(s.wanted)||0;fuel=Math.max(0,Math.min(100,Number(s.fuel)||100));health=Math.max(0,Math.min(100,Number(s.health)||100));carHealth=Math.max(0,Math.min(100,Number(s.carHealth)||100));mission=Math.max(1,Number(s.mission)||1);gameMinutes=Number(s.gameMinutes)||720;car.position.set(Number(s.x)||18,0,Number(s.z)||10);inCar=false;player.visible=true;document.querySelector('#mode').textContent='Jalan kaki';setMission();toast('Game dimuat')}
+ cash=Number(s.cash)||150000;wanted=Number(s.wanted)||0;fuel=Math.max(0,Math.min(100,Number(s.fuel)||100));health=Math.max(0,Math.min(100,Number(s.health)||100));carHealth=Math.max(0,Math.min(100,Number(s.carHealth)||100));mission=Math.max(1,Number(s.mission)||1);gameMinutes=Number(s.gameMinutes)||720;car.position.set(Number(s.x)||40,0,Number(s.z)||20);inCar=false;player.visible=true;document.querySelector('#mode').textContent='Jalan kaki';setMission();toast('Game dimuat')}
  catch(e){toast('Save rusak atau tidak cocok')}}
 function setMission(){
  const x=((mission*53)%280)-140,z=((mission*79)%280)-140;target.position.set(x,.18,z);
@@ -201,7 +208,7 @@ function handleWanted(dt,obj){
   if(d>250)return;
   to.normalize();p.position.add(to.multiplyScalar((.35+wanted*.08)*dt));
   p.lookAt(obj.position.x,p.position.y,obj.position.z);
-  if(d<7){health=Math.max(0,health-dt*9);speed*=.82;if(health<=0){cash=Math.max(0,cash-25000);wanted=0;health=70;car.position.set(18,0,10);toast('Kamu tertangkap! Denda Rp25.000')}}
+  if(d<7){health=Math.max(0,health-dt*9);speed*=.82;if(health<=0){cash=Math.max(0,cash-25000);wanted=0;health=70;car.position.set(40,0,20);toast('Kamu tertangkap! Denda Rp25.000')}}
  });
  // wanted slowly falls only when away from police
  if(Math.random()<dt*(wanted>0?.035:0))wanted=Math.max(0,wanted-1);
@@ -229,8 +236,8 @@ function update(dt){
   player.translateZ(-accel*.34);player.rotation.y+=steer*.065;
   player.position.x=Math.max(-175,Math.min(175,player.position.x));player.position.z=Math.max(-175,Math.min(175,player.position.z));
  }
- traffic.forEach((c,i)=>{c.translateZ(-(0.018+(i%4)*.006)*dt*60);if(Math.abs(c.position.z)>185)c.position.z=-c.position.z});
- npcs.forEach((n,i)=>{n.position.x+=Math.sin(performance.now()/1300+i)*.004*dt*60;n.position.z+=Math.cos(performance.now()/1500+i)*.003*dt*60;n.position.x=Math.max(-165,Math.min(165,n.position.x));n.position.z=Math.max(-165,Math.min(165,n.position.z))});
+ traffic.forEach((c,i)=>{if(c.userData.stolen)return;const v=(0.018+(i%4)*.006)*dt*60*(c.rotation.y?1:-1);c.position.z+=v;if(c.position.z>175)c.position.z=-175;if(c.position.z<-175)c.position.z=175});
+ npcs.forEach((n,i)=>{const t=n.userData.target;const dx=t.x-n.position.x,dz=t.z-n.position.z,d=Math.hypot(dx,dz);if(d<2){const pick=(i+Math.floor(performance.now()/4000))%npcRoad.length;t.set(npcRoad[pick],1,npcRoad[(pick+i+3)%npcRoad.length])}else{const step=Math.min(d,.055*dt*60);n.position.x+=dx/d*step;n.position.z+=dz/d*step;n.rotation.y=Math.atan2(dx,-dz)}});
  handleWanted(dt,obj);
  if(obj.position.distanceTo(target.position)<9)completeMission();
  const desired=new THREE.Vector3(0,inCar?9:7,inCar?16:13).applyQuaternion(obj.quaternion).add(obj.position);
@@ -238,7 +245,7 @@ function update(dt){
  const area=obj.position.distanceTo(gas.position)<30?'SPBU':obj.position.distanceTo(shop.position)<30?'Bengkel':obj.position.distanceTo(new THREE.Vector3(-80,0,-80))<35?'Keraton':obj.position.distanceTo(new THREE.Vector3(80,0,-80))<35?'Area Mall':obj.position.distanceTo(new THREE.Vector3(-80,0,80))<35?'Alun-Alun':'Kota';
  document.querySelector('#area').textContent=area;
  document.querySelector('#cash').textContent=Math.floor(cash).toLocaleString('id-ID');document.querySelector('#fuel').textContent=Math.round(fuel);document.querySelector('#wanted').textContent=wanted;document.querySelector('#health').textContent=Math.round(health);
- updateMap(obj);updateWorld(dt);syncVehicleUI();
+ updateMap(obj);updateWorld(dt);syncVehicleUI();updateContextControls();
 }
 function updateMap(obj){
  const c=document.querySelector('#map'),ctx=c.getContext('2d'),w=c.width,h=c.height,s=280/128;
