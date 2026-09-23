@@ -83,8 +83,8 @@ scene.background=new THREE.Color(0x4f7890);
 scene.fog=new THREE.Fog(0x4f7890,180,620);
 const camera=new THREE.PerspectiveCamera(64,innerWidth/innerHeight,.1,700);
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.setSize(innerWidth,innerHeight);
-renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;document.querySelector('#game').appendChild(renderer.domElement);
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(innerWidth,innerHeight);
+renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;sun.castShadow=true;sun.shadow.mapSize.set(1536,1536);sun.shadow.camera.near=1;sun.shadow.camera.far=360;sun.shadow.camera.left=-190;sun.shadow.camera.right=190;sun.shadow.camera.top=190;sun.shadow.camera.bottom=-190;document.querySelector('#game').appendChild(renderer.domElement);
 
 const hemi=new THREE.HemisphereLight(0xffffff,0x28432d,1.9);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xffffff,2.1);sun.position.set(80,120,40);scene.add(sun);
@@ -94,7 +94,7 @@ const colliders=[];
 function addCollider(x,z,w,d,pad=0){colliders.push({x,z,w:w+pad,d:d+pad})}
 function blocked(pos,r=2){return colliders.some(b=>Math.abs(pos.x-b.x)<b.w/2+r&&Math.abs(pos.z-b.z)<b.d/2+r)}
 function moveWithCollision(obj,dx,dz,r=2){const ox=obj.position.x,oz=obj.position.z,nx=ox+dx,nz=oz+dz;if(!blocked(new THREE.Vector3(nx,obj.position.y,nz),r)){obj.position.x=nx;obj.position.z=nz;return true}let moved=false;if(!blocked(new THREE.Vector3(nx,obj.position.y,oz),r)){obj.position.x=nx;moved=true}if(!blocked(new THREE.Vector3(obj.position.x,obj.position.y,nz),r)){obj.position.z=nz;moved=true}return moved}
-function meshBox(parent,x,y,z,sx,sy,sz,c){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat(c));m.position.set(x,y,z);(parent||scene).add(m);return m}
+function meshBox(parent,x,y,z,sx,sy,sz,c){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat(c));m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;(parent||scene).add(m);return m}
 function label(text,x,z){const c=document.createElement('canvas');c.width=512;c.height=80;const ctx=c.getContext('2d');ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(0,0,512,80);ctx.fillStyle='#fff';ctx.font='bold 34px Arial';ctx.textAlign='center';ctx.fillText(text,256,52);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true}));s.scale.set(20,3.2,1);s.position.set(x,8,z);scene.add(s)}
 
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(620,620),mat(0x416f45));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
@@ -141,32 +141,20 @@ target.position.set(120,.18,120);scene.add(target);
 
 // ===== REALISTIC PROCEDURAL AUDIO SYSTEM =====
 const audioListener=new THREE.AudioListener();camera.add(audioListener);
-const REAL_AUDIO={
- engine:'https://upload.wikimedia.org/wikipedia/commons/b/b1/5_cylinder_engine_sound.ogg',
- siren:'https://upload.wikimedia.org/wikipedia/commons/b/b2/Whelen.ogg'
-};
-const engineAudio=new Audio(REAL_AUDIO.engine);engineAudio.loop=true;engineAudio.preload='auto';engineAudio.volume=.16;
-const sirenAudio=new Audio(REAL_AUDIO.siren);sirenAudio.loop=true;sirenAudio.preload='auto';sirenAudio.volume=.12;
-let realAudioReady=false;
-function startRealAudio(){
- try{engineAudio.play().then(()=>{engineAudio.pause();engineAudio.currentTime=0;realAudioReady=true}).catch(()=>{});
- }catch(e){}
-}
-function updateRealAudio(){
- if(!realAudioReady)return;
- engineAudio.volume=inCar?.16:0;
- if(inCar){engineAudio.playbackRate=Math.max(.72,Math.min(1.55,.82+Math.abs(speed)/75));if(engineAudio.paused)engineAudio.play().catch(()=>{})}
- else engineAudio.pause();
- const sir= wanted>0;
- if(sir){if(sirenAudio.paused)sirenAudio.play().catch(()=>{})}else{if(!sirenAudio.paused)sirenAudio.pause()}
-}
+const REAL_AUDIO={engine:'https://upload.wikimedia.org/wikipedia/commons/b/b1/5_cylinder_engine_sound.ogg',siren:'https://upload.wikimedia.org/wikipedia/commons/b/b2/Whelen.ogg'};
+const engineAudio=new Audio(REAL_AUDIO.engine);engineAudio.loop=true;engineAudio.preload='auto';engineAudio.volume=.12;
+const sirenAudio=new Audio(REAL_AUDIO.siren);sirenAudio.loop=true;sirenAudio.preload='auto';sirenAudio.volume=.07;
+let realAudioReady=false,engineGraph=null,sirenGraph=null;
+function connectSoftAudio(el,kind){try{const ctx=audioListener.context,src=ctx.createMediaElementSource(el),gain=ctx.createGain(),filter=ctx.createBiquadFilter(),comp=ctx.createDynamicsCompressor();filter.type='lowpass';filter.frequency.value=kind==='engine'?1900:2600;filter.Q.value=.35;gain.gain.value=kind==='engine'?.65:.45;comp.threshold.value=-24;comp.knee.value=18;comp.ratio.value=3;comp.attack.value=.02;comp.release.value=.25;src.connect(filter).connect(gain).connect(comp).connect(ctx.destination);return{gain,filter,comp}}catch(e){return null}}
+function startRealAudio(){try{const ctx=audioListener.context;if(ctx.state==='suspended')ctx.resume();if(!engineGraph)engineGraph=connectSoftAudio(engineAudio,'engine');if(!sirenGraph)sirenGraph=connectSoftAudio(sirenAudio,'siren');engineAudio.play().then(()=>{engineAudio.pause();engineAudio.currentTime=0;realAudioReady=true}).catch(()=>{})}catch(e){}}
+function updateRealAudio(){if(!realAudioReady)return;const t=audioListener.context.currentTime;const inGain=inCar?Math.min(.10,.035+Math.abs(speed)/1200):0;engineAudio.volume=.1;if(engineGraph)engineGraph.gain.gain.setTargetAtTime(inGain,t,.12);if(inCar){engineAudio.playbackRate=Math.max(.86,Math.min(1.22,.9+Math.abs(speed)/220));if(engineAudio.paused)engineAudio.play().catch(()=>{})}else engineAudio.pause();if(wanted>0){if(sirenAudio.paused)sirenAudio.play().catch(()=>{});if(sirenGraph)sirenGraph.gain.gain.setTargetAtTime(.055,t,.18)}else{if(sirenGraph)sirenGraph.gain.gain.setTargetAtTime(0,t,.25);if(!sirenAudio.paused)sirenAudio.pause()}}
 let audioReady=false,audioInitialized=false,audioMaster=.28,audioEngineNodes=[],audioRainGain=null,audioAmbGain=null,audioSirenNodes=[],audioLastImpact=0;
 function ensureAudio(){
  startRealAudio();
  try{
   const ctx=audioListener.context;if(ctx.state==='suspended')ctx.resume();if(audioInitialized)return;
   audioInitialized=true;audioReady=true;audioListener.setMasterVolume(audioMaster);
-  // Layered engine: low rumble + harmonic + filtered noise.
+  // Soft ambience and effects; recorded engine is the primary vehicle sound.
   const eg=ctx.createGain();eg.gain.value=0;eg.connect(ctx.destination);
   const o1=ctx.createOscillator(),o2=ctx.createOscillator(),og=ctx.createGain();
   o1.type='sawtooth';o2.type='triangle';o1.frequency.value=52;o2.frequency.value=104;og.gain.value=.34;
@@ -187,13 +175,13 @@ function ensureAudio(){
 function soundBurst(type='click',vol=.05){
  if(!audioReady)return;try{
   const ctx=audioListener.context,o=ctx.createOscillator(),g=ctx.createGain(),f=ctx.createBiquadFilter();
-  o.type=type==='horn'?'sawtooth':'triangle';
-  const base={click:620,unlock:390,impact:90,boost:180,brake:120,horn:260}[type]||440;
+  o.type=type==='horn'?'triangle':'sine';
+  const base={click:420,unlock:300,impact:70,boost:140,brake:95,horn:220}[type]||360;
   o.frequency.setValueAtTime(base,ctx.currentTime);
   if(type==='impact')o.frequency.exponentialRampToValueAtTime(42,ctx.currentTime+.18);
   if(type==='boost')o.frequency.exponentialRampToValueAtTime(520,ctx.currentTime+.22);
-  f.type='lowpass';f.frequency.value=type==='impact'?650:2400;
-  g.gain.setValueAtTime(vol,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+((type==='impact' ? .2 : .1)));
+  f.type='lowpass';f.frequency.value=type==='impact'?420:1200;
+  g.gain.setValueAtTime(vol*.45,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+((type==='impact' ? .2 : .1)));
   o.connect(f);f.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+((type==='impact' ? .22 : .11)));
  }catch(e){}
 }
@@ -209,12 +197,10 @@ function updateAudio(dt){
  const wantedLevel=Math.min(1,wanted/5);
  if(wantedLevel>.01&&audioSirenNodes.length===0)startSiren();
  if(wantedLevel<=0&&audioSirenNodes.length)stopSiren();
- if(audioSirenNodes.length){const s=audioSirenNodes[0];s.frequency.setTargetAtTime(520+Math.sin(ctx.currentTime*4.5)*190,ctx.currentTime,.035)}
+ 
 }
-function startSiren(){
- if(!audioReady)return;try{const ctx=audioListener.context,o=ctx.createOscillator(),g=ctx.createGain();o.type='square';g.gain.value=.018;o.connect(g);g.connect(ctx.destination);o.start();audioSirenNodes=[o,g]}catch(e){}
-}
-function stopSiren(){try{audioSirenNodes[0]?.stop()}catch(e){}audioSirenNodes=[]}
+function startSiren(){}
+function stopSiren(){audioSirenNodes=[]}
 function beep(freq=440,dur=.07,vol=.04){soundBurst('click',vol)}
 const player=new THREE.Group();const body=new THREE.Mesh(new THREE.CapsuleGeometry(1,2,6,10),mat(0x2468d8));body.position.y=2;player.add(body);player.position.set(40,0,20);scene.add(player);
 
