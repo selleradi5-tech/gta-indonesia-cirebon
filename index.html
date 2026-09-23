@@ -294,15 +294,15 @@ function handleWanted(dt,obj){
   if(d<7){health=Math.max(0,health-dt*9);speed*=.82;if(health<=0){cash=Math.max(0,cash-25000);wanted=0;health=70;car.position.set(40,0,20);toast('Kamu tertangkap! Denda Rp25.000')}}
  });
  // wanted slowly falls only when away from police
- if(Math.random()<dt*(wanted>0?.035:0))wanted=Math.max(0,wanted-1);
+ if(Math.random()<dt*(wanted>0 ? .035 : 0))wanted=Math.max(0,wanted-1);
 }
 function updateWorld(dt){
- weatherTimer+=dt;if(weatherTimer>45){weatherTimer=0;cycleWeather()} const wet=weather==='Hujan';sun.intensity*=wet?.82:1;
+ weatherTimer+=dt;if(weatherTimer>45){weatherTimer=0;cycleWeather()} const wet=weather==='Hujan';sun.intensity*=wet ? .82 : 1;
  gameMinutes=(gameMinutes+dt*2.2)%1440;const hour=gameMinutes/60,day=Math.max(.15,Math.sin((hour-6)/12*Math.PI));
  const sky=new THREE.Color().setHSL(.57,.42,.17+.48*day);scene.background=sky;
 const night=1-day;
 if(scene.fog)scene.fog.color.copy(sky);
- sun.intensity=(.35+1.9*day)*(weather==='Hujan'?.72:weather==='Mendung'?.88:1);hemi.intensity=(.55+1.4*day)*(weather==='Hujan'?.8:weather==='Mendung'?.93:1);if(scene.fog)scene.fog.far=weather==='Hujan'?300:620;
+ sun.intensity=(.35+1.9*day)*(weather==='Hujan' ? .72 : weather==='Mendung' ? .88 : 1);hemi.intensity=(.55+1.4*day)*(weather==='Hujan' ? .8 : weather==='Mendung' ? .93 : 1);if(scene.fog)scene.fog.far=weather==='Hujan'?300:620;
  document.querySelector('#clock').textContent=String(Math.floor(hour)).padStart(2,'0')+':'+String(Math.floor(gameMinutes%60)).padStart(2,'0')+(day>.55?' Siang':' Malam');
 }
 function update(dt){
