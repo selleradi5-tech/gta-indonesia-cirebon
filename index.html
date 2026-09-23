@@ -102,11 +102,19 @@ const ground=new THREE.Mesh(new THREE.PlaneGeometry(620,620),mat(0x416f45));grou
 // Cirebon-inspired grid district, not a copy of Google Maps.
 for(let x=-160;x<=160;x+=40){meshBox(null,x,.035,0,11,.07,360,0x3d3d3d);meshBox(null,x,.075,0,.25,.09,360,0xf0d35a)}
 for(let z=-160;z<=160;z+=40){meshBox(null,0,.035,z,360,.07,11,0x3d3d3d);meshBox(null,0,.075,z,360,.09,.25,0xf0d35a)}
-for(let x=-140;x<=140;x+=20)for(let z=-140;z<=140;z+=20){
- if(x%40===0||z%40===0)continue;
- const h=rnd(5,20),c=[0xd6b08c,0xb7c9d9,0xd0d0c0,0xc59b79,0xa9c5a8][Math.floor(rnd(0,5))];
- meshBox(null,x,h/2,z,12,h,12,c);addCollider(x,z,12,12,2);
- if(Math.random()<.25)meshBox(null,x,h+.5,z,7,.7,7,0x4e4e4e);
+// Gebäude liegen ausschließlich in den Blöcken zwischen den Straßen.
+// Straßenkorridore bleiben vollständig frei: Gebäude stehen 8-14 Einheiten vom Straßenrand entfernt.
+const buildingSpots=[];
+for(let x=-140;x<=140;x+=40)for(let z=-140;z<=140;z+=40){
+  const offsets=[[-10,-10],[10,-10],[-10,10],[10,10]];
+  for(const [ox,oz] of offsets){
+    const bx=x+ox,bz=z+oz;
+    if(Math.abs(bx)>155||Math.abs(bz)>155)continue;
+    const h=rnd(7,18),bw=rnd(8,11),bd=rnd(8,11),cc=[0xd6b08c,0xb7c9d9,0xd0d0c0,0xc59b79,0xa9c5a8][Math.floor(rnd(0,5))];
+    meshBox(null,bx,h/2,bz,bw,h,bd,cc);
+    addCollider(bx,bz,bw,bd,.8);
+    if(Math.random()<.25)meshBox(null,bx,h+.5,bz,bw*.55,.7,bd*.55,0x4e4e4e);
+  }
 }
 
 // Landmarks and districts
