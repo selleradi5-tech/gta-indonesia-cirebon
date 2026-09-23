@@ -252,6 +252,7 @@ function makeCar(x,z,color=0xc72c2c,police=false,type='sedan'){
 let car=makeCar(40,20,0x1d7c45,false,'sedan'),inCar=false;
 const traffic=[];
 const roadXs=[-160,-120,-80,-40,0,40,80,120,160];
+const roadZs=[-160,-120,-80,-40,0,40,80,120,160];
 const carTypes=['sedan','hatch','suv','mpv','pickup','taxi','sport','van','truck'];
 const carColors=[0xc72c2c,0xeeeeee,0x2457a6,0xd7b23f,0x222222,0x8b5cf6,0x16835b,0xd65a31,0xbfc5cc,0x5b6ee1,0xeeeecc,0x3b3f46];
 for(let i=0;i<100;i++){
@@ -300,6 +301,26 @@ n.userData.workTarget=null;
 }
 
 let cash=150000,wanted=0,speed=0,fuel=100,health=100,mission=1,gameMinutes=720,carHealth=100,engineOn=false,weather='Cerah',weatherTimer=0;
+function updateSafeNpc(n,i,dt,now){
+ const u=n.userData;if(!n.visible)return;
+ if(!u.safeAxis){u.safeAxis=i%2?'h':'v';u.safeRoad=npcRoad[i%npcRoad.length];u.safeSide=i%2?-7.2:7.2;u.safeDir=i%3===0?-1:1;}
+ const axis=u.safeAxis,side=u.safeSide;u.safeRoad=Math.round(u.safeRoad/40)*40;
+ if(axis==='v'){
+  n.position.x=u.safeRoad+side;n.position.z+=u.safeDir*.9*dt;
+  if(n.position.z>166||n.position.z<-166){n.position.z=Math.max(-166,Math.min(166,n.position.z));u.safeAxis='h';u.safeRoad=Math.round(n.position.z/40)*40;u.safeDir=i%4<2?1:-1;}
+ }else{
+  n.position.z=u.safeRoad+side;n.position.x+=u.safeDir*.9*dt;
+  if(n.position.x>166||n.position.x<-166){n.position.x=Math.max(-166,Math.min(166,n.position.x));u.safeAxis='v';u.safeRoad=Math.round(n.position.x/40)*40;u.safeDir=i%4<2?-1:1;}
+ }
+ n.position.y=0;n.rotation.y=axis==='v'?(u.safeDir>0?0:Math.PI):(u.safeDir>0?Math.PI/2:-Math.PI/2);
+ if(u.activity==='talk'||u.activity==='phone'||u.activity==='wait'){
+  animateHuman(n,now+u.walkPhase,false);if(u.activity==='phone'&&u.parts)u.parts.armR.rotation.x=-.9;
+  u.activityTimer-=dt;if(u.activityTimer<=0)u.activity='walk';return;
+ }
+ if(Math.random()<dt*.018){u.activity=['walk','phone','wait','talk'][Math.floor(Math.random()*4)];u.activityTimer=2+Math.random()*4;}
+ animateHuman(n,now+u.walkPhase,true);
+}
+
 const weatherStates=['Cerah','Mendung','Hujan'];
 let rainDrops=[];
 function buildWeatherFX(){rainDrops.forEach(r=>scene.remove(r));rainDrops=[];if(weather!=='Hujan')return;const g=new THREE.BufferGeometry();const pts=[];for(let i=0;i<420;i++)pts.push(rnd(-180,180),rnd(2,85),rnd(-180,180));g.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));const m=new THREE.PointsMaterial({color:0x9fd8ff,size:.32,transparent:true,opacity:.58,depthWrite:false});const rain=new THREE.Points(g,m);rain.userData.isRain=true;scene.add(rain);rainDrops.push(rain)}
@@ -416,15 +437,14 @@ function update(dt){
  traffic.forEach((c,i)=>{
    if(c.userData.stolen)return;
    const v=((c.userData.speed||38)/3.6)*dt*(c.userData.direction||1);
-   c.position.z+=v;
    const lane=c.userData.laneOffset||0;
-   c.position.x=Math.round(c.position.x/40)*40+lane;
-   if(c.position.z>180)c.position.z=-180;
-   if(c.position.z<-180)c.position.z=180;
+   if(c.userData.axis==='x'){c.position.x+=v;c.position.z=Math.round(c.position.z/40)*40+lane;if(c.position.x>180)c.position.x=-180;if(c.position.x<-180)c.position.x=180;}
+   else{c.position.z+=v;c.position.x=Math.round(c.position.x/40)*40+lane;if(c.position.z>180)c.position.z=-180;if(c.position.z<-180)c.position.z=180;}
  });
  npcs.forEach((n,i)=>{
    const now=performance.now()/1000;
    n.userData.activityTimer-=dt;
+   if(n.userData.workState==='inside'||n.userData.workState==='driving'||n.userData.workState==='rest') n.userData.workTimer-=dt;
    const side=n.userData.side||((i%2===0)?-7.2:7.2);
    const role=n.userData.role||'warga';
    const setTarget=(x,z)=>n.userData.target.set(x,0,z);
@@ -471,6 +491,7 @@ function update(dt){
    }
 
    if(!n.visible)return;
+   if(role==='warga'){updateSafeNpc(n,i,dt,now);return;}
 
    // Interaksi sosial nyata: dua NPC yang berdekatan berhenti, saling menghadap,
    // melambaikan tangan/berbicara, lalu kembali ke rute trotoar.
