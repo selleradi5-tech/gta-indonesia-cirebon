@@ -160,6 +160,8 @@ function beep(){}
 
 function makeHuman(skin=0xc98f72,shirt=0x2468d8,pants=0x20242a,shoe=0x171717,hair=0x201810){
  const g=new THREE.Group();g.userData.human=true;
+ // Skala dunia: tinggi dasar manusia sekitar 1.9 m, agar proporsional dengan mobil, jalan, dan bangunan.
+ g.scale.setScalar(.41);
  const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.72,1.45,5,10),mat(shirt));torso.position.y=2.55;torso.scale.z=.62;torso.castShadow=true;g.add(torso);
  const head=new THREE.Mesh(new THREE.SphereGeometry(.58,14,12),mat(skin));head.position.y=4.15;head.castShadow=true;g.add(head);
  const hairCap=new THREE.Mesh(new THREE.SphereGeometry(.61,14,8,0,Math.PI*2,0,Math.PI*.48),mat(hair));hairCap.position.y=4.35;hairCap.castShadow=true;g.add(hairCap);
@@ -194,7 +196,22 @@ function makeCar(x,z,color=0xc72c2c,police=false){
 let car=makeCar(40,20,0x1d7c45),inCar=false;
 const traffic=[];const roadXs=[-160,-120,-80,-40,0,40,80,120,160];for(let i=0;i<20;i++){const roadX=roadXs[i%roadXs.length];const lane=(i%2===0?-2.5:2.5);const c=makeCar(roadX+lane,-150+(i%5)*60,[0xc72c2c,0xeeeeee,0x2457a6,0xd7b23f,0x222222][i%5]);c.rotation.y=i%2?Math.PI:0;c.userData.speed=22+(i%5)*3;c.userData.stolen=false;c.userData.laneOffset=lane;traffic.push(c)}
 const police=[];for(let i=0;i<4;i++)police.push(makeCar(-120+i*80,120,0xf2f2f2,true));
-const npcs=[];const npcRoad=[-160,-120,-80,-40,0,40,80,120,160];const npcLooks=[[0xc98f72,0xe0a32f,0x20242a],[0x8d5b3f,0x8b5cf6,0x252525],[0xf0b58a,0x38a169,0x3a2f22],[0xb87552,0xd97706,0x27313a]];for(let i=0;i<24;i++){const look=npcLooks[i%npcLooks.length];const n=makeHuman(look[0],look[1],look[2]);n.position.set(npcRoad[i%npcRoad.length],0,npcRoad[(i*3)%npcRoad.length]);n.userData.target=new THREE.Vector3(npcRoad[(i*5+2)%npcRoad.length],0,npcRoad[(i*7+1)%npcRoad.length]);n.userData.walkPhase=i*.7;scene.add(n);npcs.push(n)}
+const npcs=[];const npcRoad=[-160,-120,-80,-40,0,40,80,120,160];
+const npcLooks=[
+ [0xc98f72,0xe0a32f,0x20242a,0x171717,0x201810],[0x8d5b3f,0x8b5cf6,0x252525,0x161616,0x241812],
+ [0xf0b58a,0x38a169,0x3a2f22,0x202020,0x3b2416],[0xb87552,0xd97706,0x27313a,0x171717,0x17120e],
+ [0x9b6a4a,0xe85d75,0x303030,0x191919,0x2b1a14],[0xd9a27b,0x4b9bd8,0x1f2937,0x202020,0x332015],
+ [0x70452f,0xf2f2f2,0x252525,0x111111,0x17120e],[0xe1ad82,0x6cc070,0x394b35,0x191919,0x281810]
+];
+// Populasi kota ditambah agar jalan terasa hidup, tetapi tetap ringan untuk perangkat mobile.
+for(let i=0;i<48;i++){
+ const look=npcLooks[i%npcLooks.length],n=makeHuman(...look);
+ const road=npcRoad[i%npcRoad.length],side=(i%2===0?-3.7:3.7),cross=npcRoad[(i*3)%npcRoad.length];
+ n.position.set(road+side,0,cross+rnd(-4,4));
+ n.scale.multiplyScalar(.92+rnd(0,.16));
+ n.userData.target=new THREE.Vector3(npcRoad[(i*5+2)%npcRoad.length]+(i%2===0?-3.7:3.7),0,npcRoad[(i*7+1)%npcRoad.length]);
+ n.userData.walkPhase=i*.43;scene.add(n);npcs.push(n)
+}
 
 let cash=150000,wanted=0,speed=0,fuel=100,health=100,mission=1,gameMinutes=720,carHealth=100,engineOn=false,weather='Cerah',weatherTimer=0;
 const weatherStates=['Cerah','Mendung','Hujan'];
