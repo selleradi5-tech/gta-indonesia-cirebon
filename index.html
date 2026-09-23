@@ -356,23 +356,39 @@ function updateAudio(){}
 function updateRealAudio(){}
 function beep(){}
 
-function makeHuman(skin=0xc98f72,shirt=0x2468d8,pants=0x20242a,shoe=0x171717,hair=0x201810){
+function makeHuman(skin=0xc98f72,shirt=0x2468d8,pants=0x20242a,shoe=0x171717,hair=0x201810,detail=false){
  const g=new THREE.Group();g.userData.human=true;
- // Skala dunia: tinggi dasar manusia sekitar 1.9 m, agar proporsional dengan mobil, jalan, dan bangunan.
+ // Proporsi manusia tetap ringan. Detail wajah hanya untuk karakter pemain agar 170 NPC tidak bertambah berat.
  g.scale.setScalar(.34);
- const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.72,1.45,5,10),mat(shirt));torso.position.y=2.55;torso.scale.z=.62;torso.castShadow=true;g.add(torso);
- const head=new THREE.Mesh(new THREE.SphereGeometry(.58,14,12),mat(skin));head.position.y=4.15;head.castShadow=true;g.add(head);
- const hairCap=new THREE.Mesh(new THREE.SphereGeometry(.61,14,8,0,Math.PI*2,0,Math.PI*.48),mat(hair));hairCap.position.y=4.35;hairCap.castShadow=true;g.add(hairCap);
- const neck=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.28,10),mat(skin));neck.position.y=3.55;g.add(neck);
+ const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.72,1.45,4,8),mat(shirt));torso.position.y=2.55;torso.scale.z=.62;torso.castShadow=true;g.add(torso);
+ const pelvis=new THREE.Mesh(new THREE.SphereGeometry(.48,8,6),mat(pants));pelvis.position.set(0,1.72,0);pelvis.scale.set(.92,.62,.62);pelvis.castShadow=true;g.add(pelvis);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.58,10,8),mat(skin));head.position.y=4.15;head.castShadow=true;g.add(head);
+ const hairCap=new THREE.Mesh(new THREE.SphereGeometry(.61,10,6,0,Math.PI*2,0,Math.PI*.48),mat(hair));hairCap.position.y=4.35;hairCap.castShadow=true;g.add(hairCap);
+ const neck=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.28,8),mat(skin));neck.position.y=3.55;g.add(neck);
  const limbMat=mat(shirt),pantsMat=mat(pants),shoeMat=mat(shoe);
  const armL=new THREE.Group(),armR=new THREE.Group(),legL=new THREE.Group(),legR=new THREE.Group();
- const armGeo=new THREE.CapsuleGeometry(.22,.95,5,8),legGeo=new THREE.CapsuleGeometry(.25,1.05,5,8);
- const makeLimb=(parent,geo,m, x,y)=>{const q=new THREE.Mesh(geo,m);q.position.set(x,y,0);q.castShadow=true;parent.add(q);return q};
+ const armGeo=new THREE.CapsuleGeometry(.22,.95,4,7),legGeo=new THREE.CapsuleGeometry(.25,1.05,4,7);
+ const makeLimb=(parent,geo,m,x,y)=>{const q=new THREE.Mesh(geo,m);q.position.set(x,y,0);q.castShadow=true;parent.add(q);return q};
  armL.position.set(-.82,2.95,0);armR.position.set(.82,2.95,0);legL.position.set(-.34,1.35,0);legR.position.set(.34,1.35,0);
  makeLimb(armL,armGeo,limbMat,0,-.52);makeLimb(armR,armGeo,limbMat,0,-.52);
  makeLimb(legL,legGeo,pantsMat,0,-.58);makeLimb(legR,legGeo,pantsMat,0,-.58);
  const footL=new THREE.Mesh(new THREE.BoxGeometry(.42,.22,.72),shoeMat);footL.position.set(0,-1.25,-.14);footL.castShadow=true;legL.add(footL);
  const footR=footL.clone();legR.add(footR);
+ if(detail){
+   const eyeMat=new THREE.MeshStandardMaterial({color:0x17120e,roughness:.55});
+   const whiteMat=new THREE.MeshStandardMaterial({color:0xf7f3e8,roughness:.7});
+   const mouthMat=new THREE.MeshStandardMaterial({color:0x5a2020,roughness:.8});
+   const eyeGeo=new THREE.SphereGeometry(.075,6,4),whiteGeo=new THREE.SphereGeometry(.115,6,4);
+   [-.205,.205].forEach(x=>{
+     const white=new THREE.Mesh(whiteGeo,whiteMat);white.position.set(x,4.17,.535);white.scale.z=.45;g.add(white);
+     const eye=new THREE.Mesh(eyeGeo,eyeMat);eye.position.set(x,4.17,.605);g.add(eye);
+   });
+   const nose=new THREE.Mesh(new THREE.ConeGeometry(.07,.18,6),mat(skin));nose.rotation.x=Math.PI/2;nose.position.set(0,4.02,.60);g.add(nose);
+   const mouth=new THREE.Mesh(new THREE.BoxGeometry(.18,.035,.025),mouthMat);mouth.position.set(0,3.86,.59);g.add(mouth);
+   const earGeo=new THREE.SphereGeometry(.11,6,4);
+   [-.59,.59].forEach(x=>{const ear=new THREE.Mesh(earGeo,mat(skin));ear.position.set(x,4.12,0);ear.scale.z=.55;g.add(ear);});
+   const collar=new THREE.Mesh(new THREE.TorusGeometry(.27,.055,5,10),mat(0xe8e8e8));collar.rotation.x=Math.PI/2;collar.position.set(0,3.45,0);g.add(collar);
+ }
  g.add(armL,armR,legL,legR);g.userData.parts={armL,armR,legL,legR};return g;
 }
 function animateHuman(g,t,walking){
@@ -381,7 +397,7 @@ function animateHuman(g,t,walking){
  p.armL.rotation.x=swing;p.armR.rotation.x=-swing;p.legL.rotation.x=-swing;p.legR.rotation.x=swing;
  g.position.y=walking?Math.abs(Math.sin(t*9))*.035:0;
 }
-const player=makeHuman(0xc98f72,0x2468d8,0x20242a);player.position.set(40,0,20);player.userData.isPlayer=true;scene.add(player);
+const player=makeHuman(0xc98f72,0x2468d8,0x20242a,0x171717,0x201810,true);player.position.set(40,0,20);player.userData.isPlayer=true;scene.add(player);
 let weaponModel;
 
 function makeCar(x,z,color=0xc72c2c,police=false,type='sedan'){
