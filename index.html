@@ -1049,7 +1049,7 @@ function mpStatus(t){if(mpStatusEl)mpStatusEl.textContent=t}
 function mpServerUrl(){
   const q=new URLSearchParams(location.search).get('server');
   if(q)return q;
-  return window.GTA_MULTIPLAYER_SERVER||'';
+  return window.GTA_MULTIPLAYER_SERVER||'https://gta-indonesia-cirebon-multiplayer.onrender.com';
 }
 function mpAddRemote(data){
   if(!data||!data.id||data.id===mpSocket?.id)return;
