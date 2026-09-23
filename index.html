@@ -80,11 +80,11 @@ const boot=document.querySelector('#boot-status'); if(boot) boot.remove();
 
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x4f7890);
-scene.fog=new THREE.Fog(0x4f7890,145,420);
+scene.fog=new THREE.Fog(0x4f7890,160,520);
 const camera=new THREE.PerspectiveCamera(64,innerWidth/innerHeight,.1,700);
 const isMobileDevice=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 const renderer=new THREE.WebGLRenderer({antialias:!isMobileDevice,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio,isMobileDevice?.9:1.05));renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,isMobileDevice?1.1:1.25));renderer.setSize(innerWidth,innerHeight);
 const cameraControls={
  target:new THREE.Vector3(0,0,0),distance:8,height:2.0,
  yaw:0,pitch:0.28,dragging:false,lastX:0,lastY:0,pointers:new Map(),pinchStart:0,manualUntil:0
@@ -817,7 +817,7 @@ moonLight.intensity=.05+.38*night;
 fillLight.intensity=.10+.28*day;
 lampMat.emissiveIntensity=Math.max(0,night-.05)*2.2;
  streetLights.forEach(g=>{const on=Math.max(0,(night-.08)/.92);g.userData.streetLight.intensity=on*18;g.userData.bulb.material.emissiveIntensity=on*2.6;});
- sun.intensity=(.35+1.9*day)*(weather==='Hujan' ? .72 : weather==='Mendung' ? .88 : 1);hemi.intensity=(.55+1.4*day)*(weather==='Hujan' ? .8 : weather==='Mendung' ? .93 : 1);if(scene.fog)scene.fog.far=weather==='Hujan'?240:420;updateRain(dt,inCar?car:player);
+ sun.intensity=(.35+1.9*day)*(weather==='Hujan' ? .72 : weather==='Mendung' ? .88 : 1);hemi.intensity=(.55+1.4*day)*(weather==='Hujan' ? .8 : weather==='Mendung' ? .93 : 1);if(scene.fog)scene.fog.far=weather==='Hujan'?300:520;updateRain(dt,inCar?car:player);
  document.querySelector('#clock').textContent=String(Math.floor(hour)).padStart(2,'0')+':'+String(Math.floor(gameMinutes%60)).padStart(2,'0')+(day>.55?' Siang':' Malam');
 }
 function update(dt){
@@ -844,6 +844,7 @@ function update(dt){
   player.position.x=Math.max(-175,Math.min(175,player.position.x));player.position.z=Math.max(-175,Math.min(175,player.position.z));
  }
  traffic.forEach((c,i)=>{
+   if(c.userData.simulate===false)return;
    if(c.userData.stolen)return;
    const v=((c.userData.speed||38)/3.6)*dt*(c.userData.direction||1);
    const lane=c.userData.laneOffset||0;
@@ -851,6 +852,7 @@ function update(dt){
    else{c.position.z+=v;c.position.x=Math.round(c.position.x/40)*40+lane;if(c.position.z>180)c.position.z=-180;if(c.position.z<-180)c.position.z=180;}
  });
  npcs.forEach((n,i)=>{
+   if(n.userData.simulate===false)return;
    const now=performance.now()/1000;
    if(n.userData.weaponDownTimer>0){
      n.userData.weaponDownTimer-=dt;
@@ -962,7 +964,7 @@ function update(dt){
  const area=obj.position.distanceTo(gas.position)<30?'SPBU':obj.position.distanceTo(shop.position)<30?'Bengkel':obj.position.distanceTo(new THREE.Vector3(-100,0,-100))<35?'Keraton':obj.position.distanceTo(new THREE.Vector3(100,0,-100))<35?'Area Mall':obj.position.distanceTo(new THREE.Vector3(-100,0,100))<35?'Alun-Alun':'Kota';
  document.querySelector('#area').textContent=area;
  document.querySelector('#cash').textContent=Math.floor(cash).toLocaleString('id-ID');document.querySelector('#fuel').textContent=Math.round(fuel);document.querySelector('#wanted').textContent=wanted;document.querySelector('#health').textContent=Math.round(health);
- updateMap(obj);updateWorld(dt);updateWeapon(dt);updateAudio(dt);updateRealAudio();syncVehicleUI();updateContextControls();document.querySelector('#weather').textContent=weather==='Hujan'?'🌧️ Hujan':weather==='Mendung'?'☁️ Mendung':'☀️ Cerah';
+ updateMap(obj);updateWorld(dt);updatePerformance(dt,obj);updateWeapon(dt);updateAudio(dt);updateRealAudio();syncVehicleUI();updateContextControls();document.querySelector('#weather').textContent=weather==='Hujan'?'🌧️ Hujan':weather==='Mendung'?'☁️ Mendung':'☀️ Cerah';
 }
 function updateMap(obj){
  const c=document.querySelector('#map'),ctx=c.getContext('2d'),w=c.width,h=c.height,s=280/128;
@@ -984,22 +986,43 @@ document.querySelectorAll('button[data-action]').forEach(b=>{b.onpointerdown=e=>
 weaponModel=buildWeapon();buildWeaponPickups();setMission();buildWeatherFX();syncVehicleUI();syncWeaponModel();ensureAudio();
 // Performance pass: kurangi biaya GPU tanpa menghilangkan isi kota.
 (function optimizeScene(){
-  const maxNpc=isMobileDevice?85:125, maxTraffic=isMobileDevice?55:80;
-  let npcCount=0,trafficCount=0;
-  npcs.forEach(n=>{
-    npcCount++;
-    if(npcCount>maxNpc)n.visible=false;
-    n.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=true;}});
-  });
-  traffic.forEach(v=>{
-    trafficCount++;
-    if(trafficCount>maxTraffic)v.visible=false;
-    v.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=true;}});
-  });
+  // Semua NPC/mobil tetap ada. Yang berubah hanya tingkat aktivitas berdasarkan jarak.
+  npcs.forEach(n=>n.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=true;}}));
+  traffic.forEach(v=>v.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=true;}}));
   police.forEach(p=>p.traverse(o=>{if(o.isMesh)o.castShadow=false;}));
   if(player)player.traverse(o=>{if(o.isMesh)o.castShadow=true;});
   if(car)car.traverse(o=>{if(o.isMesh)o.castShadow=true;});
 })();
+let perfClock=0,perfFrames=0,perfTime=performance.now(),adaptiveScale=isMobileDevice?1.1:1.25;
+function updatePerformance(dt,obj){
+  perfClock+=dt;perfFrames++;
+  const now=performance.now();
+  // Evaluasi FPS sekali per detik agar resolusi tidak berubah-ubah setiap frame.
+  if(now-perfTime>1000){
+    const fps=perfFrames*1000/(now-perfTime);perfFrames=0;perfTime=now;
+    const minScale=isMobileDevice?.78:.92,maxScale=isMobileDevice?1.1:1.35;
+    if(fps<32)adaptiveScale=Math.max(minScale,adaptiveScale-.08);
+    else if(fps>52)adaptiveScale=Math.min(maxScale,adaptiveScale+.05);
+    const target=Math.min(devicePixelRatio,adaptiveScale);
+    if(Math.abs(renderer.getPixelRatio()-target)>.02)renderer.setPixelRatio(target);
+  }
+  if(perfClock<.18)return;
+  perfClock=0;
+  const px=obj.position.x,pz=obj.position.z;
+  // Jarak jauh tetap terlihat sebagai keramaian, tetapi AI/animasi tidak diproses penuh.
+  npcs.forEach(n=>{
+    const dx=n.position.x-px,dz=n.position.z-pz,d2=dx*dx+dz*dz;
+    n.userData.simulate=d2<110*110;
+    n.userData.detail=d2<75*75;
+    if(d2>180*180)n.visible=false;
+    else if(!n.userData.weaponDownTimer||n.userData.weaponDownTimer<=0)n.visible=true;
+  });
+  traffic.forEach(v=>{
+    const dx=v.position.x-px,dz=v.position.z-pz,d2=dx*dx+dz*dz;
+    v.userData.simulate=d2<190*190;
+    if(d2>250*250)v.visible=false;else v.visible=true;
+  });
+}
 
 let last=performance.now();
 let runtimeFaulted=false;
