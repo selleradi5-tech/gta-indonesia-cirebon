@@ -358,16 +358,26 @@ function beep(){}
 
 function makeHuman(skin=0xc98f72,shirt=0x2468d8,pants=0x20242a,shoe=0x171717,hair=0x201810){
  const g=new THREE.Group();g.userData.human=true;
- // Skala dunia: tinggi dasar manusia sekitar 1.9 m, agar proporsional dengan mobil, jalan, dan bangunan.
  g.scale.setScalar(.34);
- const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.72,1.45,5,10),mat(shirt));torso.position.y=2.55;torso.scale.z=.62;torso.castShadow=true;g.add(torso);
- const head=new THREE.Mesh(new THREE.SphereGeometry(.58,14,12),mat(skin));head.position.y=4.15;head.castShadow=true;g.add(head);
- const hairCap=new THREE.Mesh(new THREE.SphereGeometry(.61,14,8,0,Math.PI*2,0,Math.PI*.48),mat(hair));hairCap.position.y=4.35;hairCap.castShadow=true;g.add(hairCap);
- const neck=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.28,10),mat(skin));neck.position.y=3.55;g.add(neck);
- const limbMat=mat(shirt),pantsMat=mat(pants),shoeMat=mat(shoe);
+ const skinMat=mat(skin),shirtMat=mat(shirt),pantsMat=mat(pants),shoeMat=mat(shoe),hairMat=mat(hair);
+ const darkMat=mat(0x241b17),whiteMat=mat(0xf3f3ed),lipMat=mat(0x7d3030);
+ const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.72,1.45,5,10),shirtMat);torso.position.y=2.55;torso.scale.z=.62;torso.castShadow=true;g.add(torso);
+ const neck=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.28,10),skinMat);neck.position.y=3.55;neck.castShadow=true;g.add(neck);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.58,14,12),skinMat);head.position.set(0,4.15,0);head.castShadow=true;g.add(head);
+ const hairCap=new THREE.Mesh(new THREE.SphereGeometry(.61,14,8,0,Math.PI*2,0,Math.PI*.48),hairMat);hairCap.position.set(0,4.35,0);hairCap.castShadow=true;g.add(hairCap);
+ // Wajah sederhana: mata, pupil, alis, hidung, telinga, dan mulut.
+ const eyeGeo=new THREE.SphereGeometry(.075,8,6),pupilGeo=new THREE.SphereGeometry(.038,7,5);
+ const eyeL=new THREE.Mesh(eyeGeo,whiteMat),eyeR=eyeL.clone();eyeL.position.set(-.19,4.20,-.53);eyeR.position.set(.19,4.20,-.53);
+ const pupilL=new THREE.Mesh(pupilGeo,darkMat),pupilR=pupilL.clone();pupilL.position.set(-.19,4.20,-.592);pupilR.position.set(.19,4.20,-.592);
+ const browGeo=new THREE.BoxGeometry(.18,.035,.045),browL=new THREE.Mesh(browGeo,hairMat),browR=browL.clone();browL.position.set(-.19,4.34,-.55);browR.position.set(.19,4.34,-.55);browL.rotation.z=-.08;browR.rotation.z=.08;
+ const nose=new THREE.Mesh(new THREE.ConeGeometry(.07,.18,7),skinMat);nose.rotation.x=-Math.PI/2;nose.position.set(0,4.08,-.57);
+ const mouth=new THREE.Mesh(new THREE.BoxGeometry(.16,.035,.025),lipMat);mouth.position.set(0,3.92,-.565);
+ const earL=new THREE.Mesh(new THREE.SphereGeometry(.11,8,6),skinMat),earR=earL.clone();earL.position.set(-.57,4.13,0);earR.position.set(.57,4.13,0);
+ [eyeL,eyeR,pupilL,pupilR,browL,browR,nose,mouth,earL,earR].forEach(o=>{o.castShadow=true;g.add(o)});
+ const limbMat=shirtMat;
  const armL=new THREE.Group(),armR=new THREE.Group(),legL=new THREE.Group(),legR=new THREE.Group();
  const armGeo=new THREE.CapsuleGeometry(.22,.95,5,8),legGeo=new THREE.CapsuleGeometry(.25,1.05,5,8);
- const makeLimb=(parent,geo,m, x,y)=>{const q=new THREE.Mesh(geo,m);q.position.set(x,y,0);q.castShadow=true;parent.add(q);return q};
+ const makeLimb=(parent,geo,m,x,y)=>{const q=new THREE.Mesh(geo,m);q.position.set(x,y,0);q.castShadow=true;parent.add(q);return q};
  armL.position.set(-.82,2.95,0);armR.position.set(.82,2.95,0);legL.position.set(-.34,1.35,0);legR.position.set(.34,1.35,0);
  makeLimb(armL,armGeo,limbMat,0,-.52);makeLimb(armR,armGeo,limbMat,0,-.52);
  makeLimb(legL,legGeo,pantsMat,0,-.58);makeLimb(legR,legGeo,pantsMat,0,-.58);
