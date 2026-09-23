@@ -82,8 +82,9 @@ const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x4f7890);
 scene.fog=new THREE.Fog(0x4f7890,180,620);
 const camera=new THREE.PerspectiveCamera(64,innerWidth/innerHeight,.1,700);
-const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(innerWidth,innerHeight);
+const isMobileDevice=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const renderer=new THREE.WebGLRenderer({antialias:!isMobileDevice,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,isMobileDevice?1.15:1.35));renderer.setSize(innerWidth,innerHeight);
 const cameraControls={
  target:new THREE.Vector3(0,0,0),distance:8,height:6.2,
  yaw:0,pitch:0.28,dragging:false,lastX:0,lastY:0,pointers:new Map(),pinchStart:0
@@ -148,89 +149,9 @@ renderer.domElement.addEventListener('pointerup',endPointer);
 renderer.domElement.addEventListener('pointercancel',endPointer);
 window.addEventListener('keydown',e=>{if(e.key==='+'||e.key==='=')zoomCamera(-1.5);if(e.key==='-'||e.key==='_')zoomCamera(1.5);});
 clampCamera();
-let cameraModeInCar=false;
-function setCameraFromPlayer(player,inCar){
- if(!player)return;
- if(cameraModeInCar!==inCar){
-   cameraModeInCar=inCar;
-   cameraControls.panX=0;cameraControls.panZ=0;
-   cameraControls.distance=inCar?12:8;
-   cameraControls.height=inCar?7.2:6.2;
-   cameraControls.target.set(player.position.x,0,player.position.z);
- }
- const follow=.24;
- const tx=THREE.MathUtils.clamp(player.position.x,-250,250);
- const tz=THREE.MathUtils.clamp(player.position.z,-250,250);
- cameraControls.target.x=THREE.MathUtils.lerp(cameraControls.target.x,tx,follow);
- cameraControls.target.z=THREE.MathUtils.lerp(cameraControls.target.z,tz,follow);
- // Geser kamera mengelilingi karakter, tetapi titik fokus selalu tetap pada karakter.
- const sideX=cameraControls.panX;
- const sideZ=cameraControls.panZ;
- camera.position.set(
-   cameraControls.target.x+sideX,
-   cameraControls.height,
-   cameraControls.target.z+cameraControls.distance+sideZ
- );
- camera.lookAt(cameraControls.target.x,1.15,cameraControls.target.z);
-}
-renderer.domElement.style.touchAction='none';
-renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();zoomCamera(e.deltaY*.045)},{passive:false});
-function pointerPair(){
- const a=[...cameraControls.pointers.values()];
- return a.length>=2?[a[0],a[1]]:null;
-}
-renderer.domElement.addEventListener('pointerdown',e=>{
- if(e.pointerType==='mouse'&&e.button!==0)return;
- cameraControls.pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
- renderer.domElement.setPointerCapture?.(e.pointerId);
- const pair=pointerPair();
- if(pair){
-   cameraControls.dragging=false;
-   cameraControls.pinchStart=Math.hypot(pair[0].x-pair[1].x,pair[0].y-pair[1].y);
-   cameraControls.pinchMidX=(pair[0].x+pair[1].x)/2;
-   cameraControls.pinchMidY=(pair[0].y+pair[1].y)/2;
- }else{
-   cameraControls.dragging=true;
-   cameraControls.lastX=e.clientX;cameraControls.lastY=e.clientY;
- }
-});
-renderer.domElement.addEventListener('pointermove',e=>{
- const p=cameraControls.pointers.get(e.pointerId);
- if(p){p.x=e.clientX;p.y=e.clientY;}
- const pair=pointerPair();
- if(pair){
-   e.preventDefault();
-   const d=Math.hypot(pair[0].x-pair[1].x,pair[0].y-pair[1].y);
-   if(cameraControls.pinchStart)zoomCamera((cameraControls.pinchStart-d)*.055);
-   cameraControls.pinchStart=d;
-   return;
- }
- if(!cameraControls.dragging)return;
- const dx=e.clientX-cameraControls.lastX,dy=e.clientY-cameraControls.lastY;
- cameraControls.lastX=e.clientX;cameraControls.lastY=e.clientY;
- const scale=.045*(cameraControls.distance/18);
- cameraControls.panX-=dx*scale;
- cameraControls.panZ+=dy*scale;
- const maxPan=Math.max(3.5,cameraControls.distance*.32);
- cameraControls.panX=THREE.MathUtils.clamp(cameraControls.panX,-maxPan,maxPan);
- cameraControls.panZ=THREE.MathUtils.clamp(cameraControls.panZ,-maxPan,maxPan);
-});
-function endPointer(e){
- cameraControls.pointers.delete(e.pointerId);
- if(cameraControls.pointers.size<2)cameraControls.pinchStart=0;
- cameraControls.dragging=false;
-}
-renderer.domElement.addEventListener('pointerup',endPointer);
-renderer.domElement.addEventListener('pointercancel',endPointer);
-window.addEventListener('keydown',e=>{
- if(e.key==='+'||e.key==='=')zoomCamera(-2.5);
- if(e.key==='-'||e.key==='_')zoomCamera(2.5);
-});
-clampCamera();
-
 renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const hemi=new THREE.HemisphereLight(0xffffff,0x28432d,1.9);scene.add(hemi);
-const sun=new THREE.DirectionalLight(0xffffff,2.1);sun.position.set(80,120,40);sun.castShadow=true;sun.shadow.mapSize.set(1536,1536);sun.shadow.camera.near=1;sun.shadow.camera.far=360;sun.shadow.camera.left=-190;sun.shadow.camera.right=190;sun.shadow.camera.top=190;sun.shadow.camera.bottom=-190;scene.add(sun);
+const sun=new THREE.DirectionalLight(0xffffff,2.1);sun.position.set(80,120,40);sun.castShadow=true;sun.shadow.mapSize.set(isMobileDevice?768:1024,isMobileDevice?768:1024);sun.shadow.camera.near=1;sun.shadow.camera.far=360;sun.shadow.camera.left=-190;sun.shadow.camera.right=190;sun.shadow.camera.top=190;sun.shadow.camera.bottom=-190;scene.add(sun);
 document.querySelector('#game').appendChild(renderer.domElement);
 const moonLight=new THREE.DirectionalLight(0x9bbcff,0.0);moonLight.position.set(-70,90,-110);scene.add(moonLight);
 const fillLight=new THREE.DirectionalLight(0xffd9b0,0.35);fillLight.position.set(-60,45,80);scene.add(fillLight);
@@ -720,7 +641,37 @@ addEventListener('keydown',keyDown);addEventListener('keyup',e=>{keys.delete(e.k
 document.querySelectorAll('button[data-k]').forEach(b=>{const k=b.dataset.k;b.onpointerdown=e=>{e.preventDefault();ensureAudio();keys.add(k);if(k==='gas')keys.add('w')};b.onpointerup=b.onpointercancel=b.onpointerleave=()=>{keys.delete(k);if(k==='gas')keys.delete('w')}});
 document.querySelectorAll('button[data-action]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();const a=b.dataset.action;if(a==='enter')enterExit();if(a==='steal')stealNearestCar();if(a==='repair')service();if(a==='exit')enterExit()}});
 setMission();buildWeatherFX();syncVehicleUI();ensureAudio();
-let last=performance.now();function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);renderer.render(scene,camera)}requestAnimationFrame(loop);
+let last=performance.now();
+let runtimeFaulted=false;
+function loop(now){
+  requestAnimationFrame(loop);
+  if(runtimeFaulted)return;
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  try{
+    update(dt);
+    renderer.render(scene,camera);
+  }catch(err){
+    runtimeFaulted=true;
+    console.error('Runtime game error:',err);
+    const t=document.querySelector('#toast');
+    if(t){t.textContent='Game mengalami error. Coba refresh halaman.';t.style.opacity=1;t.style.whiteSpace='normal';t.style.maxWidth='90vw';}
+  }
+}
+requestAnimationFrame(loop);
+if(renderer.domElement){
+  renderer.domElement.addEventListener('webglcontextlost',e=>{
+    e.preventDefault();
+    runtimeFaulted=true;
+    const t=document.querySelector('#toast');
+    if(t){t.textContent='Grafis 3D kehilangan koneksi GPU. Coba refresh halaman.';t.style.opacity=1;t.style.whiteSpace='normal';t.style.maxWidth='90vw';}
+  },false);
+  renderer.domElement.addEventListener('webglcontextrestored',()=>{
+    runtimeFaulted=false;
+    last=performance.now();
+    const t=document.querySelector('#toast');
+    if(t){t.textContent='Grafis 3D berhasil dipulihkan';t.style.opacity=1;}
+  },false);
+}
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 
 }catch(err){
