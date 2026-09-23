@@ -101,20 +101,27 @@ function zoomCamera(amount){cameraControls.distance=Math.max(8,Math.min(70,camer
 let cameraModeInCar=false;
 function setCameraFromPlayer(player,inCar){
  if(!player)return;
- const follow=.22;
- const tx=THREE.MathUtils.clamp(player.position.x+cameraControls.panX,-250,250);
- const tz=THREE.MathUtils.clamp(player.position.z+cameraControls.panZ,-250,250);
  if(cameraModeInCar!==inCar){
    cameraModeInCar=inCar;
    cameraControls.panX=0;cameraControls.panZ=0;
-   cameraControls.distance=inCar?22:16;
-   cameraControls.height=inCar?9.5:8.5;
+   cameraControls.distance=inCar?18:12.5;
+   cameraControls.height=inCar?8.5:7.2;
    cameraControls.target.set(player.position.x,0,player.position.z);
  }
+ const follow=.24;
+ const tx=THREE.MathUtils.clamp(player.position.x,-250,250);
+ const tz=THREE.MathUtils.clamp(player.position.z,-250,250);
  cameraControls.target.x=THREE.MathUtils.lerp(cameraControls.target.x,tx,follow);
  cameraControls.target.z=THREE.MathUtils.lerp(cameraControls.target.z,tz,follow);
- camera.position.set(cameraControls.target.x,cameraControls.height,cameraControls.target.z+cameraControls.distance);
- camera.lookAt(cameraControls.target.x,1.1,cameraControls.target.z);
+ // Geser kamera mengelilingi karakter, tetapi titik fokus selalu tetap pada karakter.
+ const sideX=cameraControls.panX;
+ const sideZ=cameraControls.panZ;
+ camera.position.set(
+   cameraControls.target.x+sideX,
+   cameraControls.height,
+   cameraControls.target.z+cameraControls.distance+sideZ
+ );
+ camera.lookAt(cameraControls.target.x,1.15,cameraControls.target.z);
 }
 renderer.domElement.style.touchAction='none';
 renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();zoomCamera(e.deltaY*.045)},{passive:false});
@@ -151,9 +158,12 @@ renderer.domElement.addEventListener('pointermove',e=>{
  if(!cameraControls.dragging)return;
  const dx=e.clientX-cameraControls.lastX,dy=e.clientY-cameraControls.lastY;
  cameraControls.lastX=e.clientX;cameraControls.lastY=e.clientY;
- const scale=.075*(cameraControls.distance/34);
+ const scale=.045*(cameraControls.distance/18);
  cameraControls.panX-=dx*scale;
  cameraControls.panZ+=dy*scale;
+ const maxPan=Math.max(3.5,cameraControls.distance*.32);
+ cameraControls.panX=THREE.MathUtils.clamp(cameraControls.panX,-maxPan,maxPan);
+ cameraControls.panZ=THREE.MathUtils.clamp(cameraControls.panZ,-maxPan,maxPan);
 });
 function endPointer(e){
  cameraControls.pointers.delete(e.pointerId);
@@ -625,7 +635,7 @@ function update(dt){
    }
  }); handleWanted(dt,obj);
  if(obj.position.distanceTo(target.position)<9)completeMission();
- cameraControls.height=THREE.MathUtils.lerp(cameraControls.height,inCar?9.5:8.5,.14);
+ cameraControls.height=THREE.MathUtils.lerp(cameraControls.height,inCar?8.5:7.2,.16);
  setCameraFromPlayer(obj,inCar);
  clampCamera();
  const area=obj.position.distanceTo(gas.position)<30?'SPBU':obj.position.distanceTo(shop.position)<30?'Bengkel':obj.position.distanceTo(new THREE.Vector3(-100,0,-100))<35?'Keraton':obj.position.distanceTo(new THREE.Vector3(100,0,-100))<35?'Area Mall':obj.position.distanceTo(new THREE.Vector3(-100,0,100))<35?'Alun-Alun':'Kota';
