@@ -139,46 +139,63 @@ const target=new THREE.Mesh(new THREE.CylinderGeometry(5,5,.18,32),new THREE.Mes
 target.position.set(120,.18,120);scene.add(target);
 
 
-// ===== AUDIO SYSTEM =====
-// AudioListener mengikuti kamera, dan AudioContext dibuka setelah interaksi pengguna.
-const audioListener=new THREE.AudioListener();
-camera.add(audioListener);
-let audioReady=false,audioMaster=.34;
-let audioEngine=null,audioEngineGain=null,audioRain=null,audioRainGain=null,audioInitialized=false;
+// ===== REALISTIC PROCEDURAL AUDIO SYSTEM =====
+const audioListener=new THREE.AudioListener();camera.add(audioListener);
+let audioReady=false,audioInitialized=false,audioMaster=.28,audioEngineNodes=[],audioRainGain=null,audioAmbGain=null,audioSirenNodes=[],audioLastImpact=0;
 function ensureAudio(){
-  try{
-    const AC=window.AudioContext||window.webkitAudioContext;
-    if(!AC)return;
-    const ctx=audioListener.context;
-    if(ctx.state==='suspended')ctx.resume();
-    if(audioInitialized)return;
-    audioInitialized=true;audioReady=true;
-    audioEngineGain=ctx.createGain();audioEngineGain.gain.value=0;audioEngineGain.connect(ctx.destination);
-    audioEngine=ctx.createOscillator();audioEngine.type='sawtooth';audioEngine.frequency.value=55;audioEngine.connect(audioEngineGain);audioEngine.start();
-    audioRainGain=ctx.createGain();audioRainGain.gain.value=0;audioRainGain.connect(ctx.destination);
-    audioRain=ctx.createBufferSource();
-    const buf=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate),data=buf.getChannelData(0);
-    for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*.16;
-    audioRain.buffer=buf;audioRain.loop=true;
-    const filter=ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=2800;audioRain.connect(filter);filter.connect(audioRainGain);audioRain.start();
-    beep(420,.045,.035);
-  }catch(e){}
+ try{
+  const ctx=audioListener.context;if(ctx.state==='suspended')ctx.resume();if(audioInitialized)return;
+  audioInitialized=true;audioReady=true;audioListener.setMasterVolume(audioMaster);
+  // Layered engine: low rumble + harmonic + filtered noise.
+  const eg=ctx.createGain();eg.gain.value=0;eg.connect(ctx.destination);
+  const o1=ctx.createOscillator(),o2=ctx.createOscillator(),og=ctx.createGain();
+  o1.type='sawtooth';o2.type='triangle';o1.frequency.value=52;o2.frequency.value=104;og.gain.value=.34;
+  o1.connect(og);o2.connect(og);og.connect(eg);o1.start();o2.start();
+  const n=ctx.createBufferSource(),nb=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate),nd=nb.getChannelData(0);
+  for(let i=0;i<nd.length;i++)nd[i]=(Math.random()*2-1)*.12;
+  n.buffer=nb;n.loop=true;const nf=ctx.createBiquadFilter();nf.type='lowpass';nf.frequency.value=700;n.connect(nf);nf.connect(eg);n.start();
+  audioEngineNodes=[o1,o2,og,eg,nf,n];
+  const rg=ctx.createGain();rg.gain.value=0;rg.connect(ctx.destination);audioRainGain=rg;
+  const rn=ctx.createBufferSource(),rb=ctx.createBuffer(1,ctx.sampleRate*3,ctx.sampleRate),rd=rb.getChannelData(0);
+  for(let i=0;i<rd.length;i++)rd[i]=(Math.random()*2-1)*.055;rn.buffer=rb;rn.loop=true;
+  const rf=ctx.createBiquadFilter();rf.type='highpass';rf.frequency.value=900;rn.connect(rf);rf.connect(rg);rn.start();
+  const ag=ctx.createGain();ag.gain.value=.018;ag.connect(ctx.destination);audioAmbGain=ag;
+  const ao=ctx.createOscillator();ao.type='sine';ao.frequency.value=68;ao.connect(ag);ao.start();
+  beep(760,.07,.025);
+ }catch(e){}
 }
-function beep(freq=440,dur=.07,vol=.04){
-  if(!audioReady)return;
-  try{const ctx=audioListener.context,o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.value=freq;g.gain.setValueAtTime(vol,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+dur);o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+dur)}catch(e){}
+function soundBurst(type='click',vol=.05){
+ if(!audioReady)return;try{
+  const ctx=audioListener.context,o=ctx.createOscillator(),g=ctx.createGain(),f=ctx.createBiquadFilter();
+  o.type=type==='horn'?'sawtooth':'triangle';
+  const base={click:620,unlock:390,impact:90,boost:180,brake:120,horn:260}[type]||440;
+  o.frequency.setValueAtTime(base,ctx.currentTime);
+  if(type==='impact')o.frequency.exponentialRampToValueAtTime(42,ctx.currentTime+.18);
+  if(type==='boost')o.frequency.exponentialRampToValueAtTime(520,ctx.currentTime+.22);
+  f.type='lowpass';f.frequency.value=type==='impact'?650:2400;
+  g.gain.setValueAtTime(vol,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+(type==='impact'?.2:.1));
+  o.connect(f);f.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+(type==='impact'?.22:.11));
+ }catch(e){}
 }
 function updateAudio(dt){
-  if(!audioReady)return;
-  const ctx=audioListener.context;
-  if(audioEngineGain){
-    const target=inCar?Math.min(.12,.025+Math.abs(speed)/650):0;
-    audioEngineGain.gain.linearRampToValueAtTime(target,ctx.currentTime+.08);
-    if(audioEngine)audioEngine.frequency.setTargetAtTime(48+(inCar?Math.abs(speed)*2.1:0),ctx.currentTime,.06);
-  }
-  if(audioRainGain)audioRainGain.gain.linearRampToValueAtTime(weather==='Hujan'?.035:0,ctx.currentTime+.25);
+ if(!audioReady)return;const ctx=audioListener.context,eg=audioEngineNodes[3],o1=audioEngineNodes[0],o2=audioEngineNodes[1];
+ if(eg){
+  const rpm=inCar?(48+Math.abs(speed)*3.2+(pressed('w')?22:0)):0;
+  eg.gain.linearRampToValueAtTime(inCar?.025:0,ctx.currentTime+.08);
+  o1.frequency.setTargetAtTime(rpm,ctx.currentTime,.055);o2.frequency.setTargetAtTime(rpm*2.02,ctx.currentTime,.055);
+ }
+ if(audioRainGain)audioRainGain.gain.linearRampToValueAtTime(weather==='Hujan'?.06:weather==='Mendung'?.012,ctx.currentTime+.35);
+ if(audioAmbGain)audioAmbGain.gain.linearRampToValueAtTime(inCar?.012:.022,ctx.currentTime+.3);
+ const wantedLevel=Math.min(1,wanted/5);
+ if(wantedLevel>.01&&audioSirenNodes.length===0)startSiren();
+ if(wantedLevel<=0&&audioSirenNodes.length)stopSiren();
+ if(audioSirenNodes.length){const s=audioSirenNodes[0];s.frequency.setTargetAtTime(520+Math.sin(ctx.currentTime*4.5)*190,ctx.currentTime,.035)}
 }
-
+function startSiren(){
+ if(!audioReady)return;try{const ctx=audioListener.context,o=ctx.createOscillator(),g=ctx.createGain();o.type='square';g.gain.value=.018;o.connect(g);g.connect(ctx.destination);o.start();audioSirenNodes=[o,g]}catch(e){}
+}
+function stopSiren(){try{audioSirenNodes[0]?.stop()}catch(e){}audioSirenNodes=[]}
+function beep(freq=440,dur=.07,vol=.04){soundBurst('click',vol)}
 const player=new THREE.Group();const body=new THREE.Mesh(new THREE.CapsuleGeometry(1,2,6,10),mat(0x2468d8));body.position.y=2;player.add(body);player.position.set(40,0,20);scene.add(player);
 
 function makeCar(x,z,color=0xc72c2c,police=false){
@@ -239,14 +256,14 @@ function stealNearestCar(){
   toast('Kendaraan berhasil diambil');syncVehicleUI();
 }
 function enterExit(){
- if(!inCar&&nearby(player.position,car,9)){inCar=true;player.visible=false;document.querySelector('#mode').textContent='Mengemudi';toast('Kamu masuk kendaraan')}
- else if(inCar){inCar=false;player.visible=true;player.position.copy(car.position);player.position.x+=4;document.querySelector('#mode').textContent='Jalan kaki';toast('Kamu keluar kendaraan')}
+ if(!inCar&&nearby(player.position,car,9)){ensureAudio();soundBurst('unlock',.07);inCar=true;player.visible=false;document.querySelector('#mode').textContent='Mengemudi';toast('Kamu masuk kendaraan')}
+ else if(inCar){ensureAudio();soundBurst('click',.05);inCar=false;player.visible=true;player.position.copy(car.position);player.position.x+=4;document.querySelector('#mode').textContent='Jalan kaki';toast('Kamu keluar kendaraan')}
 }
 function service(){
  if(!inCar){toast('Naik kendaraan dulu');return}
  const d=car.position.distanceTo(shop.position),g=car.position.distanceTo(gas.position);
- if(d<16&&cash>=25000){cash-=25000;health=100;carHealth=100;speed=0;toast('Bengkel: kendaraan diperbaiki · Rp25.000')}
- else if(g<16&&cash>=15000){cash-=15000;fuel=100;toast('SPBU: tangki penuh · Rp15.000')}
+ if(d<16&&cash>=25000){cash-=25000;health=100;carHealth=100;speed=0;soundBurst('unlock',.08);toast('Bengkel: kendaraan diperbaiki · Rp25.000')}
+ else if(g<16&&cash>=15000){cash-=15000;fuel=100;soundBurst('unlock',.08);toast('SPBU: tangki penuh · Rp15.000')}
  else toast('Dekati BENGKEL atau SPBU')
 }
 function saveGame(){
@@ -263,7 +280,7 @@ function setMission(){
 }
 function completeMission(){
  cash+=missionReward;mission++;
- if(mission%4===0){wanted=Math.min(5,wanted+1);toast('Misi selesai! Polisi mulai mencari kamu ⭐ '+wanted)}
+ if(mission%4===0){wanted=Math.min(5,wanted+1);soundBurst('horn',.06);toast('Misi selesai! Polisi mulai mencari kamu ⭐ '+wanted)}
  else toast('Misi selesai! +Rp'+missionReward.toLocaleString('id-ID'));
  setMission();
 }
@@ -295,8 +312,8 @@ function update(dt){
   const boost=pressed('shift')&&fuel>2;
   const max=boost?95:70;
   const accelRate=boost?42:30;const drag=accel===0?7:1.8;speed+=accel*accelRate*dt-speed*drag*dt;speed=Math.max(-28,Math.min(max,speed));
-  if(boost){fuel=Math.max(0,fuel-dt*4.8);beep(880,.03,.018)}if(pressed('space'))speed*=.72;
-  if(Math.abs(speed)>0.8){const steerRate=(pressed('space')?0.82:1.12)*Math.min(1,Math.abs(speed)/28);car.rotation.y+=steer*steerRate*dt*(speed>=0?1:-1);}const drive=(speed/3.6)*dt;const forward=new THREE.Vector3(0,0,-1).applyQuaternion(car.quaternion);const moved=moveWithCollision(car,forward.x*drive,forward.z*drive,2.35);if(!moved){speed*=.15;carHealth=Math.max(0,carHealth-Math.abs(speed)*dt*3);if(Math.abs(speed)>.12)toast('🚧 Bangunan menghalangi jalan')}
+  if(boost){fuel=Math.max(0,fuel-dt*4.8);if(Math.random()<dt*8)soundBurst('boost',.012)}if(pressed('space')){speed*=.72;if(Math.abs(speed)>18)soundBurst('brake',.018)}
+  if(Math.abs(speed)>0.8){const steerRate=(pressed('space')?0.82:1.12)*Math.min(1,Math.abs(speed)/28);car.rotation.y+=steer*steerRate*dt*(speed>=0?1:-1);}const drive=(speed/3.6)*dt;const forward=new THREE.Vector3(0,0,-1).applyQuaternion(car.quaternion);const moved=moveWithCollision(car,forward.x*drive,forward.z*drive,2.35);if(!moved){if(audioReady&&Math.abs(speed)>8&&performance.now()/1000-audioLastImpact>.7){soundBurst('impact',.12);audioLastImpact=performance.now()/1000}speed*=.15;carHealth=Math.max(0,carHealth-Math.abs(speed)*dt*3);if(Math.abs(speed)>.12)toast('🚧 Bangunan menghalangi jalan')}
   fuel=Math.max(0,fuel-Math.abs(speed)*dt*.006);
   if(fuel<=0){speed=0}
   // Keep vehicle inside the playable city.
