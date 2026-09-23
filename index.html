@@ -11,7 +11,7 @@
 .box{background:#000b;border:1px solid #fff3;border-radius:11px;padding:6px 8px;line-height:1.25;font-weight:700;backdrop-filter:blur(4px)}
 #gps{position:fixed;left:10px;bottom:225px;background:#000c;border:1px solid #fff3;border-radius:12px;padding:8px 10px;font-size:12px;z-index:6;pointer-events:none;max-width:210px}#mission{position:fixed;top:68px;left:50%;transform:translateX(-50%);background:#000d;border:1px solid #fff2;padding:6px 10px;border-radius:12px;text-align:center;font-size:11px;min-width:190px;max-width:52vw;z-index:5;pointer-events:none;white-space:nowrap}
 #minimap{position:fixed;right:10px;top:62px;width:104px;height:104px;background:#122018e8;border:2px solid #fff8;border-radius:15px;overflow:hidden;z-index:5}
-#map{width:100%;height:100%}#vehicleHud{position:fixed;left:10px;bottom:170px;background:#000c;border:1px solid #fff3;border-radius:14px;padding:8px 12px;min-width:135px;text-align:center;z-index:6;pointer-events:none;display:none;font-weight:800;text-shadow:0 2px 3px #000}#speed{font-size:21px}#vehicleControls{position:fixed;left:50%;bottom:max(10px,env(safe-area-inset-bottom));transform:translateX(-50%);display:none;grid-template-columns:repeat(5,62px);gap:5px;z-index:7;pointer-events:none}.vbtn{pointer-events:auto;height:50px!important;border-radius:15px!important;background:#0b0b0dcc!important}.gas{grid-column:auto!important;background:#176b2acc!important;font-size:12px!important}.brake{background:#7a2022cc!important}.reverse{background:#725515cc!important}@media(max-width:430px){#vehicleControls{grid-template-columns:repeat(5,54px)}.vbtn{height:52px!important}}#toast{position:fixed;left:50%;bottom:112px;transform:translateX(-50%);background:#000d;border:1px solid #fff3;padding:9px 14px;border-radius:13px;opacity:0;transition:.2s;pointer-events:none;z-index:10;white-space:nowrap}
+#map{width:100%;height:100%}#vehicleHud{position:fixed;left:10px;bottom:170px;background:#000c;border:1px solid #fff3;border-radius:14px;padding:8px 12px;min-width:135px;text-align:center;z-index:6;pointer-events:none;display:none;font-weight:800;text-shadow:0 2px 3px #000}#speed{font-size:21px}#vehicleControls{position:fixed;left:50%;right:10px;bottom:max(10px,env(safe-area-inset-bottom));transform:translateX(-50%);display:none;grid-template-columns:repeat(6,minmax(48px,1fr));gap:6px;z-index:7;pointer-events:none;max-width:520px}.vbtn{pointer-events:auto;height:52px!important;border-radius:15px!important;background:#0b0b0dcc!important;font-size:22px!important;padding:0!important}.vbtn.gas{background:#176b2acc!important}.vbtn.brake{background:#7a2022cc!important}.vbtn.reverse{background:#725515cc!important}.vbtn.exit{background:#27384acc!important}@media(max-width:430px){#vehicleControls{left:8px;right:8px;transform:none;grid-template-columns:repeat(6,1fr);gap:5px}.vbtn{height:52px!important;font-size:21px!important}}#toast{position:fixed;left:50%;bottom:112px;transform:translateX(-50%);background:#000d;border:1px solid #fff3;padding:9px 14px;border-radius:13px;opacity:0;transition:.2s;pointer-events:none;z-index:10;white-space:nowrap}
 #controls{position:fixed;left:8px;right:8px;bottom:max(10px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:end;z-index:6;pointer-events:none}.actions button{height:42px;font-size:11px;padding:0 8px;border-radius:12px}.pad button{height:42px;font-size:13px}.analog{position:relative;width:142px;height:142px;border-radius:50%;background:#111a;border:2px solid #fff5;pointer-events:auto;touch-action:none;box-shadow:0 5px 18px #0008}.analog::after{content:'GERAK';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff6;font-size:10px;font-weight:800;pointer-events:none}.stick{position:absolute;left:50%;top:50%;width:62px;height:62px;margin:-31px;border-radius:50%;background:#ffffff2b;border:2px solid #fff8;box-shadow:0 3px 10px #0008;transform:translate(0,0);z-index:2;pointer-events:none}
 .pad,.actions{display:grid;gap:7px;pointer-events:auto}.pad{grid-template-columns:repeat(3,54px)}.actions{grid-template-columns:repeat(3,56px)}
 button{height:52px;border:1px solid #fff5;border-radius:14px;background:#111c;color:#fff;font-size:15px;font-weight:800;touch-action:none;user-select:none;-webkit-user-select:none;backdrop-filter:blur(5px)}
@@ -35,7 +35,7 @@ button:active{background:#fff3}.spacer{visibility:hidden}.hidden{display:none!im
   <button id="btnBrake" data-k="space">REM</button>
  </div>
 </div>
-<div id="vehicleControls"><button class="vbtn" data-k="a">◀</button><button class="vbtn" data-k="d">▶</button><button class="vbtn gas" data-k="gas">GAS 🚗</button><button class="vbtn brake" data-k="space">REM</button><button class="vbtn reverse" data-k="s">MUNDUR</button></div>
+<div id="vehicleControls"><button class="vbtn" data-k="a" aria-label="Belok kiri">◀</button><button class="vbtn" data-k="d" aria-label="Belok kanan">▶</button><button class="vbtn reverse" data-k="s" aria-label="Mundur">↩</button><button class="vbtn brake" data-k="space" aria-label="Rem">🛑</button><button class="vbtn gas" data-k="gas" aria-label="Gas">🚗</button><button class="vbtn exit" data-action="exit" aria-label="Turun dari mobil">🚪</button></div>
 <script>
 (function(){
   const status=document.createElement('div');
@@ -368,13 +368,13 @@ n.userData.workTarget=null;
 let cash=150000,wanted=0,speed=0,fuel=100,health=100,mission=1,gameMinutes=720,carHealth=100,engineOn=false,weather='Cerah',weatherTimer=0;
 function updateSafeNpc(n,i,dt,now){
  const u=n.userData;if(!n.visible)return;
- if(!u.safeAxis){u.safeAxis=i%2?'h':'v';u.safeRoad=npcRoad[i%npcRoad.length];u.safeSide=i%2?-7.2:7.2;u.safeDir=i%3===0?-1:1;}
+ if(!u.safeAxis){u.safeAxis=i%2?'h':'v';u.safeRoad=npcRoad[i%npcRoad.length];u.safeSide=i%2?-7.2:7.2;u.safeDir=i%3===0?-1:1;u.safeSpeed=1.15+(i%5)*.12;}
  const axis=u.safeAxis,side=u.safeSide;u.safeRoad=Math.round(u.safeRoad/40)*40;
  if(axis==='v'){
-  n.position.x=u.safeRoad+side;n.position.z+=u.safeDir*.9*dt;
+  n.position.x=u.safeRoad+side;n.position.z+=u.safeDir*u.safeSpeed*dt;
   if(n.position.z>166||n.position.z<-166){n.position.z=Math.max(-166,Math.min(166,n.position.z));u.safeAxis='h';u.safeRoad=Math.round(n.position.z/40)*40;u.safeDir=i%4<2?1:-1;}
  }else{
-  n.position.z=u.safeRoad+side;n.position.x+=u.safeDir*.9*dt;
+  n.position.z=u.safeRoad+side;n.position.x+=u.safeDir*u.safeSpeed*dt;
   if(n.position.x>166||n.position.x<-166){n.position.x=Math.max(-166,Math.min(166,n.position.x));u.safeAxis='v';u.safeRoad=Math.round(n.position.x/40)*40;u.safeDir=i%4<2?-1:1;}
  }
  n.position.y=0;n.rotation.y=axis==='v'?(u.safeDir>0?0:Math.PI):(u.safeDir>0?Math.PI/2:-Math.PI/2);
@@ -506,8 +506,8 @@ function update(dt){
   const analogSteer=Math.abs(analogState.x)>.05 ? analogState.x : 0;
   const driveInput=Math.abs(analogForward)>.05 ? analogForward : keyForward;
   const steerInput=Math.abs(analogSteer)>.05 ? analogSteer : keyStrafe;
-  const max=boost?95:78;
-  const accelRate=boost?52:34;const drag=driveInput===0?7:1.8;speed+=driveInput*accelRate*dt-speed*drag*dt;speed=Math.max(-34,Math.min(max,speed));
+  const max=boost?135:105;
+  const accelRate=boost?72:48;const drag=driveInput===0?7:1.8;speed+=driveInput*accelRate*dt-speed*drag*dt;speed=Math.max(-48,Math.min(max,speed));
   if(boost){fuel=Math.max(0,fuel-dt*4.8);if(Math.random()<dt*8)soundBurst('boost',.012)}if(pressed('space')){speed*=.72;if(Math.abs(speed)>18)soundBurst('brake',.018)}
   if(Math.abs(speed)>0.8){const steerRate=(pressed('space')?0.82:1.12)*Math.min(1,Math.abs(speed)/28);car.rotation.y-=steerInput*steerRate*dt*(speed>=0?1:-1);}const drive=(speed/3.6)*dt;const forward=new THREE.Vector3(0,0,-1).applyQuaternion(car.quaternion);const moved=moveWithCollision(car,forward.x*drive,forward.z*drive,2.35);if(!moved){if(audioReady&&Math.abs(speed)>8&&performance.now()/1000-audioLastImpact>.7){soundBurst('impact',.12);audioLastImpact=performance.now()/1000}speed*=.15;carHealth=Math.max(0,carHealth-Math.abs(speed)*dt*3);if(Math.abs(speed)>.12)toast('🚧 Bangunan menghalangi jalan')}
   fuel=Math.max(0,fuel-Math.abs(speed)*dt*.006);
@@ -538,7 +538,7 @@ function update(dt){
      const doorX=20+((i%3)-1)*3.5,doorZ=31;
      if(n.userData.workState==='commute'){
        const dx=doorX-n.position.x,dz=doorZ-n.position.z,d=Math.hypot(dx,dz);
-       if(d>1.5){const step=Math.min(d,.06*dt*60);n.position.x+=dx/d*step;n.position.z+=dz/d*step;n.rotation.y=Math.atan2(dx,-dz);animateHuman(n,now+n.userData.walkPhase,true)}
+       if(d>1.5){const step=Math.min(d,1.35*dt);n.position.x+=dx/d*step;n.position.z+=dz/d*step;n.rotation.y=Math.atan2(dx,-dz);animateHuman(n,now+n.userData.walkPhase,true)}
        else{n.userData.workState='inside';n.userData.workTimer=5+Math.random()*7;n.visible=false}
      }else if(n.userData.workState==='inside'){
        if(n.userData.workTimer<=0){n.visible=true;n.userData.workState='leaving';setTarget(n.position.x,doorZ+5)}
@@ -556,7 +556,7 @@ function update(dt){
      if(n.userData.workState==='commute'){
        const doorX=v.position.x+((i%2)?2.8:-2.8),doorZ=v.position.z+((i%2)?0:2.8);
        const dx=doorX-n.position.x,dz=doorZ-n.position.z,d=Math.hypot(dx,dz);
-       if(d>1.6){const step=Math.min(d,.07*dt*60);n.position.x+=dx/d*step;n.position.z+=dz/d*step;n.rotation.y=Math.atan2(dx,-dz);animateHuman(n,now+n.userData.walkPhase,true)}
+       if(d>1.6){const step=Math.min(d,1.45*dt);n.position.x+=dx/d*step;n.position.z+=dz/d*step;n.rotation.y=Math.atan2(dx,-dz);animateHuman(n,now+n.userData.walkPhase,true)}
        else{n.userData.workState='driving';n.userData.workTimer=role==='taksi'?8+Math.random()*6:10+Math.random()*8;n.visible=false;v.userData.driver=n;v.userData.workStartX=v.position.x;v.userData.workStartZ=v.position.z;v.userData.workDir=i%2?1:-1}
      }else if(n.userData.workState==='driving'){
        const dir=v.userData.workDir||1;
@@ -618,7 +618,7 @@ function update(dt){
          }
        }
      }else{
-       const step=Math.min(d,.065*dt*60);
+       const step=Math.min(d,1.2*dt);
        n.position.x+=dx/d*step;n.position.z+=dz/d*step;n.rotation.y=Math.atan2(dx,-dz);
        animateHuman(n,now+n.userData.walkPhase,true);
      }
@@ -626,8 +626,8 @@ function update(dt){
  }); handleWanted(dt,obj);
  if(obj.position.distanceTo(target.position)<9)completeMission();
  cameraControls.height=THREE.MathUtils.lerp(cameraControls.height,inCar?7.2:6.2,.16);
- cameraControls.target.x=THREE.MathUtils.lerp(cameraControls.target.x,obj.position.x,.22);
- cameraControls.target.z=THREE.MathUtils.lerp(cameraControls.target.z,obj.position.z,.22);
+ cameraControls.target.x=THREE.MathUtils.lerp(cameraControls.target.x,obj.position.x,.34);
+ cameraControls.target.z=THREE.MathUtils.lerp(cameraControls.target.z,obj.position.z,.34);
  clampCamera();
  applyCamera(obj);
  const area=obj.position.distanceTo(gas.position)<30?'SPBU':obj.position.distanceTo(shop.position)<30?'Bengkel':obj.position.distanceTo(new THREE.Vector3(-100,0,-100))<35?'Keraton':obj.position.distanceTo(new THREE.Vector3(100,0,-100))<35?'Area Mall':obj.position.distanceTo(new THREE.Vector3(-100,0,100))<35?'Alun-Alun':'Kota';
@@ -651,7 +651,7 @@ function keyDown(e){ensureAudio();
 }
 addEventListener('keydown',keyDown);addEventListener('keyup',e=>{keys.delete(e.key.toLowerCase());if(e.key==='ArrowUp')keys.delete('w');if(e.key==='ArrowDown')keys.delete('s');if(e.key==='ArrowLeft')keys.delete('a');if(e.key==='ArrowRight')keys.delete('d');if(e.key===' ')keys.delete('space');if(e.key==='shift')keys.delete('shift')});
 document.querySelectorAll('button[data-k]').forEach(b=>{const k=b.dataset.k;b.onpointerdown=e=>{e.preventDefault();ensureAudio();keys.add(k);if(k==='gas')keys.add('w')};b.onpointerup=b.onpointercancel=b.onpointerleave=()=>{keys.delete(k);if(k==='gas')keys.delete('w')}});
-document.querySelectorAll('button[data-action]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();const a=b.dataset.action;if(a==='enter')enterExit();if(a==='steal')stealNearestCar();if(a==='repair')service();if(a==='exit')enterExit()}});
+document.querySelectorAll('button[data-action]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();const a=b.dataset.action;if(a==='enter')enterExit();if(a==='steal')stealNearestCar();if(a==='repair')service();if(a==='exit')enterExit()};b.onpointerup=b.onpointercancel=b.onpointerleave=()=>{}});
 setMission();buildWeatherFX();syncVehicleUI();ensureAudio();
 let last=performance.now();
 let runtimeFaulted=false;
