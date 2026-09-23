@@ -100,9 +100,8 @@ function applyCamera(player){
  if(!player)return;
  const now=performance.now();
  if(now>cameraControls.manualUntil&&!cameraControls.dragging){
-   const moving=inCar?Math.abs(speed)>2:Math.hypot(moveStrafe||0,moveForward||0)>.12;
-   if(moving){
-     const desiredYaw=player.rotation.y;
+   const desiredYaw=player.rotation.y;
+   if(true){
      let delta=THREE.MathUtils.euclideanModulo(desiredYaw-cameraControls.yaw+Math.PI,Math.PI*2)-Math.PI;
      cameraControls.yaw+=delta*Math.min(1,0.12*(now-(cameraControls.manualUntil||now))/16.67);
    }
