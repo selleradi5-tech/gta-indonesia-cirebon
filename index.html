@@ -87,10 +87,6 @@ renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.setSize(innerWi
 renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;document.querySelector('#game').appendChild(renderer.domElement);
 
 const hemi=new THREE.HemisphereLight(0xffffff,0x28432d,1.9);scene.add(hemi);
-const moon=new THREE.DirectionalLight(0x7aa8ff,.18);moon.position.set(-80,90,-60);scene.add(moon);
-const streetLights=[];
-function addStreetLight(x,z){const pole=meshBox(null,x,3,z,.18,6,.18,0x202020);pole.castShadow=true;const lamp=new THREE.PointLight(0xffd27a,1.15,28,.7);lamp.position.set(x,6,z);scene.add(lamp);streetLights.push(lamp);const glow=new THREE.Mesh(new THREE.SphereGeometry(.28,10,10),new THREE.MeshBasicMaterial({color:0xffd27a}));glow.position.set(x,6,z);scene.add(glow)}
-for(let x=-160;x<=160;x+=40)for(let z=-160;z<=160;z+=40){addStreetLight(x+6,z+6)}
 const sun=new THREE.DirectionalLight(0xffffff,2.1);sun.position.set(80,120,40);scene.add(sun);
 const mat=c=>new THREE.MeshStandardMaterial({color:c,roughness:.8});
 const rnd=(a,b)=>a+Math.random()*(b-a);
@@ -138,7 +134,7 @@ for(let p=-160;p<=160;p+=40){meshBox(null,p,.11,-174,12,.12,2,0x777777);meshBox(
 
 const treeGroup=new THREE.Group();scene.add(treeGroup);
 function addTree(x,z,scale=1){const g=new THREE.Group();const trunk=meshBox(g,0,1.6,0,.65,3.2,.65,0x76502f);trunk.castShadow=true;const crown=new THREE.Mesh(new THREE.SphereGeometry(2.5,10,8),new THREE.MeshStandardMaterial({color:0x2f7d3c,roughness:1}));crown.position.y=4.1;crown.scale.set(scale,1.05*scale,scale);crown.castShadow=true;crown.receiveShadow=true;g.position.set(x,0,z);treeGroup.add(g)}
-for(let x=-170;x<=170;x+=20)for(let z=-170;z<=170;z+=20){if(Math.abs(x%40)>7&&Math.abs(z%40)>7&&Math.random()<.24)addTree(x+rnd(-3,3),z+rnd(-3,3),rnd(.75,1.15))}
+for(let x=-170;x<=170;x+=20)for(let z=-170;z<=170;z+=20){if(Math.abs(x%40)>7&&Math.abs(z%40)>7&&Math.random()<.12)addTree(x+rnd(-3,3),z+rnd(-3,3),rnd(.75,1.15))}
 const target=new THREE.Mesh(new THREE.CylinderGeometry(5,5,.18,32),new THREE.MeshStandardMaterial({color:0xffd21a,emissive:0x6b4d00,emissiveIntensity:.45}));
 target.position.set(120,.18,120);scene.add(target);
 
@@ -274,8 +270,7 @@ function update(dt){
  handleWanted(dt,obj);
  if(obj.position.distanceTo(target.position)<9)completeMission();
  const desired=new THREE.Vector3(0,inCar?9:7,inCar?16:13).applyQuaternion(obj.quaternion).add(obj.position);
-const lookAhead=new THREE.Vector3(0,1.4,inCar?-5:-2).applyQuaternion(obj.quaternion).add(obj.position);
- camera.position.lerp(desired,inCar?.085:.11);camera.lookAt(lookAhead);
+ camera.position.lerp(desired,.11);camera.lookAt(obj.position.x,obj.position.y+1.3,obj.position.z);
  const area=obj.position.distanceTo(gas.position)<30?'SPBU':obj.position.distanceTo(shop.position)<30?'Bengkel':obj.position.distanceTo(new THREE.Vector3(-90,0,-90))<35?'Keraton':obj.position.distanceTo(new THREE.Vector3(90,0,-90))<35?'Area Mall':obj.position.distanceTo(new THREE.Vector3(-90,0,90))<35?'Alun-Alun':'Kota';
  document.querySelector('#area').textContent=area;
  document.querySelector('#cash').textContent=Math.floor(cash).toLocaleString('id-ID');document.querySelector('#fuel').textContent=Math.round(fuel);document.querySelector('#wanted').textContent=wanted;document.querySelector('#health').textContent=Math.round(health);
