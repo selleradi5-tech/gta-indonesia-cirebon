@@ -200,38 +200,65 @@ const player=makeHuman(0xc98f72,0x2468d8,0x20242a);player.position.set(40,0,20);
 function makeCar(x,z,color=0xc72c2c,police=false,type='sedan'){
  const g=new THREE.Group();g.userData.vehicle=true;g.userData.carType=type;
  const specs={
-   sedan:{w:2.05,h:1.02,l:4.55,cabinW:1.55,cabinH:.52,cabinL:2.05,wheel:.38,front:1.48,rear:1.48},
-   hatch:{w:1.92,h:.98,l:4.05,cabinW:1.48,cabinH:.50,cabinL:1.90,wheel:.36,front:1.30,rear:1.30},
-   suv:{w:2.28,h:1.22,l:4.80,cabinW:1.72,cabinH:.64,cabinL:2.35,wheel:.42,front:1.52,rear:1.52},
-   mpv:{w:2.12,h:1.14,l:4.65,cabinW:1.68,cabinH:.61,cabinL:2.35,wheel:.39,front:1.45,rear:1.45},
-   pickup:{w:2.16,h:1.10,l:4.95,cabinW:1.52,cabinH:.58,cabinL:1.85,wheel:.40,front:1.58,rear:1.58},
-   taxi:{w:2.05,h:1.02,l:4.55,cabinW:1.55,cabinH:.52,cabinL:2.05,wheel:.38,front:1.48,rear:1.48}
+  sedan:{w:2.05,h:1.02,l:4.55,cw:1.55,ch:.52,cl:2.05,wheel:.38,ax:1.48},
+  hatch:{w:1.92,h:.98,l:4.05,cw:1.48,ch:.50,cl:1.90,wheel:.36,ax:1.30},
+  suv:{w:2.28,h:1.22,l:4.80,cw:1.72,ch:.64,cl:2.35,wheel:.42,ax:1.52},
+  mpv:{w:2.12,h:1.14,l:4.65,cw:1.68,ch:.61,cl:2.35,wheel:.39,ax:1.45},
+  pickup:{w:2.16,h:1.10,l:4.95,cw:1.52,ch:.58,cl:1.82,wheel:.40,ax:1.58},
+  taxi:{w:2.05,h:1.02,l:4.55,cw:1.55,ch:.52,cl:2.05,wheel:.38,ax:1.48},
+  sport:{w:2.12,h:.88,l:4.65,cw:1.48,ch:.43,cl:1.72,wheel:.40,ax:1.50},
+  van:{w:2.24,h:1.42,l:4.95,cw:1.78,ch:.78,cl:2.75,wheel:.41,ax:1.58},
+  truck:{w:2.35,h:1.35,l:5.55,cw:1.70,ch:.72,cl:1.75,wheel:.45,ax:1.85}
  };
  const s=specs[type]||specs.sedan;
+ const bodyMat=new THREE.MeshStandardMaterial({color,roughness:.32,metalness:.28});
+ const darkMat=new THREE.MeshStandardMaterial({color:0x1d2730,roughness:.20,metalness:.25});
+ const tireMat=mat(0x111111);
+ const chromeMat=new THREE.MeshStandardMaterial({color:0xb8c0c6,roughness:.18,metalness:.8});
  meshBox(g,0,s.h*.76,0,s.w,s.h,s.l,color);
- meshBox(g,0,s.h*1.32,-.18,s.cabinW,s.cabinH,s.cabinL,0x202832);
- const glass=new THREE.Mesh(new THREE.BoxGeometry(s.cabinW*.92,s.cabinH*.68,s.cabinL*.82),new THREE.MeshStandardMaterial({color:0x273b4d,roughness:.22,metalness:.15}));
- glass.position.set(0,s.h*1.34,-.18);glass.castShadow=false;g.add(glass);
- const wheelMat=mat(0x111111);
- for(const sx of[-s.w*.45,s.w*.45])for(const sz of[-s.front,s.rear]){const w=new THREE.Mesh(new THREE.CylinderGeometry(s.wheel,s.wheel,.28,14),wheelMat);w.rotation.z=Math.PI/2;w.position.set(sx,s.wheel+.03,sz);w.castShadow=true;g.add(w)}
- const lamp=new THREE.MeshStandardMaterial({color:0xfff3cf,emissive:0xffe0a0,emissiveIntensity:.25});
- meshBox(g,-s.w*.34,s.h*.76,-s.l*.505,.30,.16,.10,0xfff4cf);
- meshBox(g,s.w*.34,s.h*.76,-s.l*.505,.30,.16,.10,0xfff4cf);
- if(type==='pickup')meshBox(g,0,s.h*1.02,s.l*.20,s.w*.92,.34,s.l*.28,color);
- if(type==='taxi'){meshBox(g,0,s.h*1.72,-.05,.58,.12,.72,0xffd21a);g.userData.taxi=true}
+ const body=g.children[g.children.length-1];body.material=bodyMat;
+ if(type==='sport'){
+   meshBox(g,0,s.h*1.20,-.10,s.cw,s.ch,s.cl,0x18232c);
+   meshBox(g,0,s.h*.55,-s.l*.20,s.w*.88,.16,.75,color);
+ }else if(type==='pickup'){
+   meshBox(g,0,s.h*1.28,-.35,s.cw,s.ch,1.78,darkMat.color.getHex());
+   meshBox(g,0,s.h*.95,s.l*.24,s.w*.90,.34,s.l*.28,color);
+ }else if(type==='van'){
+   meshBox(g,0,s.h*1.22,.05,s.cw,s.ch,s.cl,darkMat.color.getHex());
+ }else if(type==='truck'){
+   meshBox(g,0,s.h*1.30,-.75,s.cw,s.ch,1.72,darkMat.color.getHex());
+   meshBox(g,0,s.h*1.18,1.45,s.w*.92,.95,2.15,color);
+ }else{
+   meshBox(g,0,s.h*1.30,-.18,s.cw,s.ch,s.cl,darkMat.color.getHex());
+ }
+ const glass=new THREE.Mesh(new THREE.BoxGeometry(s.cw*.90,s.ch*.68,s.cl*.80),new THREE.MeshStandardMaterial({color:0x263b4b,roughness:.16,metalness:.22}));
+ glass.position.set(0,s.h*1.32,-.18);glass.castShadow=false;g.add(glass);
+ for(const sx of[-s.w*.45,s.w*.45])for(const sz of[-s.ax,s.ax]){
+   const w=new THREE.Mesh(new THREE.CylinderGeometry(s.wheel,s.wheel,.30,16),tireMat);w.rotation.z=Math.PI/2;w.position.set(sx,s.wheel+.03,sz);w.castShadow=true;g.add(w);
+   const hub=new THREE.Mesh(new THREE.CylinderGeometry(s.wheel*.42,s.wheel*.42,.32,12),chromeMat);hub.rotation.z=Math.PI/2;hub.position.copy(w.position);g.add(hub);
+ }
+ const headMat=new THREE.MeshStandardMaterial({color:0xfff4cf,emissive:0xffd990,emissiveIntensity:.18});
+ meshBox(g,-s.w*.34,s.h*.76,-s.l*.505,.30,.16,.10,headMat.color.getHex());
+ meshBox(g,s.w*.34,s.h*.76,-s.l*.505,.30,.16,.10,headMat.color.getHex());
+ meshBox(g,-s.w*.34,s.h*.76,s.l*.505,.30,.16,.10,0xff453f);
+ meshBox(g,s.w*.34,s.h*.76,s.l*.505,.30,.16,.10,0xff453f);
+ if(type==='sport'){meshBox(g,0,s.h*1.62,.78,1.30,.12,.28,0x151515)}
+ if(type==='taxi'){meshBox(g,0,s.h*1.72,-.05,.58,.12,.72,0xffd21a)}
+ if(type==='van'){meshBox(g,-s.w*.505,s.h*1.05,.10,.04,.62,1.70,0x333c42)}
+ if(type==='truck'){meshBox(g,0,s.h*1.82,-.02,.55,.14,.82,0xf0f0f0)}
  if(police){meshBox(g,0,s.h*1.72,0,.58,.16,.82,0xeeeeee);meshBox(g,0,s.h*1.83,0,.26,.12,.38,0xff3030)}
  g.position.set(x,0,z);scene.add(g);return g;
 }
 let car=makeCar(40,20,0x1d7c45,false,'sedan'),inCar=false;
 const traffic=[];
 const roadXs=[-160,-120,-80,-40,0,40,80,120,160];
-const carTypes=['sedan','hatch','suv','mpv','pickup','taxi'];
-const carColors=[0xc72c2c,0xeeeeee,0x2457a6,0xd7b23f,0x222222,0x8b5cf6,0x16835b,0xd65a31,0xbfc5cc];
-for(let i=0;i<36;i++){
+const carTypes=['sedan','hatch','suv','mpv','pickup','taxi','sport','van','truck'];
+const carColors=[0xc72c2c,0xeeeeee,0x2457a6,0xd7b23f,0x222222,0x8b5cf6,0x16835b,0xd65a31,0xbfc5cc,0x5b6ee1,0xeeeecc,0x3b3f46];
+for(let i=0;i<100;i++){
  const roadX=roadXs[i%roadXs.length],lane=(i%2===0?-2.5:2.5);
  const type=carTypes[i%carTypes.length],cc=carColors[i%carColors.length];
- const c=makeCar(roadX+lane,-170+(i%9)*38,cc,false,type);
- c.rotation.y=i%2?Math.PI:0;c.userData.speed=30+(i%7)*3;c.userData.stolen=false;c.userData.laneOffset=lane;c.userData.roadAxis='z';c.userData.direction=i%2?1:-1;traffic.push(c)
+ const c=makeCar(roadX+lane,-178+(i%25)*14.4,cc,false,type);
+ c.rotation.y=i%2?Math.PI:0;c.userData.speed=30+(i%9)*2.4;c.userData.stolen=false;c.userData.laneOffset=lane;c.userData.direction=i%2?1:-1;traffic.push(c);
 }
 const police=[];for(let i=0;i<4;i++)police.push(makeCar(-120+i*80,120,0xf2f2f2,true));
 const npcs=[];const npcRoad=[-160,-120,-80,-40,0,40,80,120,160];
