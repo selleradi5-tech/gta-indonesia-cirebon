@@ -3,7 +3,7 @@ const { Server } = require('socket.io');
 
 const PORT = process.env.PORT || 3000;
 const server = http.createServer((req,res)=>{res.writeHead(200,{'Content-Type':'application/json'});res.end(JSON.stringify({ok:true,service:'GTA Indonesia Cirebon Multiplayer'}));});
-const io = new Server(server,{cors:{origin:'*'},transports:['websocket','polling'],pingInterval:25000,pingTimeout:20000});
+const io = new Server(server,{cors:{origin:['https://selleradi5-tech.github.io'],methods:['GET','POST']},transports:['websocket','polling'],pingInterval:25000,pingTimeout:20000});
 const rooms = new Map();
 function safe(v,f=''){return String(v??f).replace(/[^\\p{L}\\p{N} _-]/gu,'').slice(0,16)||f}
 function roomPlayers(room){return [...(rooms.get(room)||new Map()).values()].map(p=>({id:p.id,name:p.name,x:p.x,z:p.z,ry:p.ry,vehicle:p.vehicle}));}
