@@ -102,25 +102,21 @@ function applyCamera(player){
  if(!player)return;
  const now=performance.now();
  if(now>cameraControls.manualUntil&&!cameraControls.dragging){
-   const desiredYaw=player.rotation.y;
+   const desiredYaw=isAiming&&aimTarget?.visible?Math.atan2(aimTarget.position.x-cameraControls.target.x,aimTarget.position.z-cameraControls.target.z):player.rotation.y;
    let delta=THREE.MathUtils.euclideanModulo(desiredYaw-cameraControls.yaw+Math.PI,Math.PI*2)-Math.PI;
-   cameraControls.yaw+=delta*.055;
+   cameraControls.yaw+=delta*(isAiming&&aimTarget?.visible?.075:.055);
  }
- const aimDistance=isAiming&&!inCar?Math.min(cameraControls.distance,6.4):cameraControls.distance;
- const aimPitch=isAiming&&!inCar?Math.max(.18,cameraControls.pitch-.06):cameraControls.pitch;
- const horizontal=aimDistance*Math.cos(aimPitch);
- const vertical=aimDistance*Math.sin(aimPitch);
- cameraDesiredPosition.set(
-   cameraControls.target.x+Math.sin(cameraControls.yaw)*horizontal,
-   cameraControls.height+vertical,
-   cameraControls.target.z+Math.cos(cameraControls.yaw)*horizontal
- );
- // Pergerakan kamera dibuat halus supaya tidak terasa patah saat berjalan maupun mengemudi.
- camera.position.lerp(cameraDesiredPosition,.12);
- cameraLookTarget.set(cameraControls.target.x,1.05,cameraControls.target.z);
- camera.lookAt(cameraLookTarget);
- const targetFov=isAiming&&!inCar?52:60;
- if(Math.abs(camera.fov-targetFov)>.05){camera.fov=THREE.MathUtils.lerp(camera.fov,targetFov,.14);camera.updateProjectionMatrix();}
+ const aimDistance=isAiming&&!inCar?Math.min(cameraControls.distance,5.8):cameraControls.distance;
+ const aimPitch=isAiming&&!inCar?Math.max(.16,cameraControls.pitch-.08):cameraControls.pitch;
+ const horizontal=aimDistance*Math.cos(aimPitch),vertical=aimDistance*Math.sin(aimPitch);
+ const shoulder=isAiming&&!inCar?.62:0;
+ cameraDesiredPosition.set(cameraControls.target.x+Math.sin(cameraControls.yaw)*horizontal+Math.cos(cameraControls.yaw)*shoulder,cameraControls.height+vertical,cameraControls.target.z+Math.cos(cameraControls.yaw)*horizontal-Math.sin(cameraControls.yaw)*shoulder);
+ camera.position.lerp(cameraDesiredPosition,.16);
+ const tx=isAiming&&aimTarget?.visible?THREE.MathUtils.lerp(cameraControls.target.x,aimTarget.position.x,.28):cameraControls.target.x;
+ const tz=isAiming&&aimTarget?.visible?THREE.MathUtils.lerp(cameraControls.target.z,aimTarget.position.z,.28):cameraControls.target.z;
+ cameraLookTarget.set(tx,1.05,tz);camera.lookAt(cameraLookTarget);
+ const targetFov=isAiming&&!inCar?48:60;
+ if(Math.abs(camera.fov-targetFov)>.05){camera.fov=THREE.MathUtils.lerp(camera.fov,targetFov,.16);camera.updateProjectionMatrix();}
  if(weaponRecoil>0)camera.rotateX(-weaponRecoil*.35);
 }
 function zoomCamera(amount){cameraControls.distance=THREE.MathUtils.clamp(cameraControls.distance+amount,5,34);clampCamera();}
@@ -458,8 +454,29 @@ function spawnImpact(point,hit){
  const f=hit?.16:.08; s.scale.setScalar(f);impactFx.push({m:s,t:.12});
 }
 function findNpcRoot(o){let p=o;while(p&&p!==scene){if(p.userData?.isNpc)return p;p=p.parent}return null}
+let aimTarget=null;
+const aimTargetPos=new THREE.Vector3();
+function findAimTarget(){
+ if(!weaponEquipped||inCar||!npcs?.length)return null;
+ camera.getWorldDirection(weaponDirection);
+ let best=null,bestScore=Infinity;
+ for(const n of npcs){
+   if(!n.visible||!n.userData?.isNpc||n.userData.weaponDownTimer>0)continue;
+   const dist=n.position.distanceTo(camera.position);if(dist<2||dist>95)continue;
+   aimTargetPos.set(n.position.x,n.position.y+1.05,n.position.z);
+   const to=aimTargetPos.clone().sub(camera.position).normalize(),dot=weaponDirection.dot(to);
+   if(dot<.89)continue;
+   const score=(1-dot)*180+dist*.02;if(score<bestScore){bestScore=score;best=n}
+ }
+ return best;
+}
+function updateAimTarget(){
+ if(!isAiming||inCar||!weaponEquipped){aimTarget=null;return}
+ const next=findAimTarget();if(next)aimTarget=next;else if(!aimTarget?.visible)aimTarget=null;
+}
 function doShot(){
  if(inCar||!weaponEquipped||weaponReloadTimer>0)return;
+ if(isAiming)updateAimTarget();
  const w=currentWeapon();
  if(weaponAmmo<=0){toast('Peluru habis · tekan R untuk isi ulang');reloadWeapon();return}
  weaponAmmo--;ammoMags[weaponIndex]=weaponAmmo;weaponCooldown=w.rate*(isAiming?.92:1);weaponRecoil=Math.min(.14,weaponRecoil+w.recoil*(isAiming?.72:1));flashMuzzle();
@@ -467,24 +484,20 @@ function doShot(){
  let hitSomething=false;
  for(let pellet=0;pellet<w.pellets;pellet++){
    camera.getWorldDirection(weaponDirection);
-   const precision=isAiming?.48:1;const spreadX=(Math.random()-.5)*w.spread*precision,spreadY=(Math.random()-.5)*w.spread*precision;
-   weaponShotDirection.copy(weaponDirection);weaponShotDirection.x+=spreadX;weaponShotDirection.y+=spreadY;weaponShotDirection.normalize();
+   const precision=isAiming?.18:1;
+   const spreadX=(Math.random()-.5)*w.spread*precision,spreadY=(Math.random()-.5)*w.spread*precision;
+   if(isAiming&&aimTarget?.visible){aimTargetPos.set(aimTarget.position.x,aimTarget.position.y+1.05,aimTarget.position.z);weaponShotDirection.copy(aimTargetPos).sub(camera.position).normalize()}
+   else{weaponShotDirection.copy(weaponDirection);weaponShotDirection.x+=spreadX;weaponShotDirection.y+=spreadY;weaponShotDirection.normalize()}
    weaponOrigin.copy(camera.position);weaponRaycaster.set(weaponOrigin,weaponShotDirection);weaponRaycaster.far=180;
-   const candidates=weaponRaycaster.intersectObjects(npcs,true);
-   const hit=candidates.find(x=>findNpcRoot(x.object));
+   const candidates=weaponRaycaster.intersectObjects(npcs,true),hit=candidates.find(x=>findNpcRoot(x.object));
    if(hit){
-     const npc=findNpcRoot(hit.object);const distance=hit.distance;const head=hit.point.y>(npc.position.y+1.05);
-     const damage=w.damage*(head?1.65:1)*(1-Math.min(.55,distance/260));
-     npc.userData.weaponHealth=(npc.userData.weaponHealth??100)-damage;npc.userData.weaponDownTimer=3.5;
-     npc.userData.activity='wait';spawnImpact(hit.point,true);hitSomething=true;
-     if(npc.userData.weaponHealth<=0){npc.visible=false;npc.userData.weaponHealth=100;wanted=Math.min(5,wanted+1);toast('⭐ Polisi diperingatkan · wanted '+wanted+'/5')}
-   }else{
-     const p=weaponOrigin.clone().add(weaponShotDirection.clone().multiplyScalar(90));spawnImpact(p,false);
-   }
+     const npc=findNpcRoot(hit.object);const distance=hit.distance,head=hit.point.y>(npc.position.y+1.05);
+     npc.userData.weaponHealth=0;npc.userData.weaponDownTimer=999;npc.userData.activity='wait';spawnImpact(hit.point,true);hitSomething=true;npc.visible=false;
+     if(aimTarget===npc)aimTarget=null;
+     wanted=Math.min(5,wanted+1);toast('💀 NPC tumbang · wanted '+wanted+'/5');
+   }else{const p=weaponOrigin.clone().add(weaponShotDirection.clone().multiplyScalar(90));spawnImpact(p,false)}
  }
- weaponHitTimer=hitSomething?.14:.0;
- if(hitSomething)toast('✚ TARGET TERKENA');
- syncWeaponModel();
+ weaponHitTimer=hitSomething?.14:0;if(hitSomething)toast('✚ TARGET TERKENA');syncWeaponModel();
 }
 function fireWeapon(){doShot()}
 function pickupWeapon(p){
@@ -518,6 +531,7 @@ function setAim(on){
 function toggleAim(){setAim(!isAiming);toast(isAiming?'🎯 Mode bidik aktif':'🎯 Mode bidik dilepas')}
 function updateWeapon(dt){
  weaponCooldown=Math.max(0,weaponCooldown-dt);
+ if(isAiming)updateAimTarget();
  if(weaponReloadTimer>0){weaponReloadTimer-=dt;if(weaponReloadTimer<=0)finishReload()}
  if(weaponRecoil>0)weaponRecoil=Math.max(0,weaponRecoil-dt*.24);
  weaponSway+=dt*(isAiming?4:7);
