@@ -243,8 +243,7 @@ function updateWorld(dt){
  gameMinutes=(gameMinutes+dt*2.2)%1440;const hour=gameMinutes/60,day=Math.max(.15,Math.sin((hour-6)/12*Math.PI));
  const sky=new THREE.Color().setHSL(.57,.42,.17+.48*day);scene.background=sky;
 const night=1-day;
-moon.intensity=.12+.55*night;
-streetLights.forEach(l=>l.intensity=(.08+1.25*night)*(weather==='Hujan'?1.15:1));if(scene.fog)scene.fog.color.copy(sky);
+if(scene.fog)scene.fog.color.copy(sky);
  sun.intensity=(.35+1.9*day)*(weather==='Hujan'?.72:weather==='Mendung'?.88:1);hemi.intensity=(.55+1.4*day)*(weather==='Hujan'?.8:weather==='Mendung'?.93:1);if(scene.fog)scene.fog.far=weather==='Hujan'?300:620;
  document.querySelector('#clock').textContent=String(Math.floor(hour)).padStart(2,'0')+':'+String(Math.floor(gameMinutes%60)).padStart(2,'0')+(day>.55?' Siang':' Malam');
 }
