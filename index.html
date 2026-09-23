@@ -89,7 +89,9 @@ renderer.shadowMap.enabled=false;document.querySelector('#game').appendChild(ren
 const hemi=new THREE.HemisphereLight(0xffffff,0x28432d,1.9);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xffffff,2.1);sun.position.set(80,120,40);scene.add(sun);
 const mat=c=>new THREE.MeshStandardMaterial({color:c,roughness:.8});
-const rnd=(a,b)=>a+Math.random()*(b-a);\nconst colliders=[];\nfunction addCollider(x,z,w,d,pad=0){colliders.push({x,z,w:w+pad,d:d+pad})}\nfunction blocked(pos,r=2){return colliders.some(b=>Math.abs(pos.x-b.x)<b.w/2+r&&Math.abs(pos.z-b.z)<b.d/2+r)}\nfunction moveWithCollision(obj,dx,dz,r=2){const nx=obj.position.x+dx,nz=obj.position.z+dz;if(!blocked(new THREE.Vector3(nx,obj.position.y,nz),r)){obj.position.x=nx;obj.position.z=nz;return true}return false}
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const colliders=[];
+function addCollider(x,z,w,d,pad=0){colliders.push({x,z,w:w+pad,d:d+pad})}\nfunction blocked(pos,r=2){return colliders.some(b=>Math.abs(pos.x-b.x)<b.w/2+r&&Math.abs(pos.z-b.z)<b.d/2+r)}\nfunction moveWithCollision(obj,dx,dz,r=2){const nx=obj.position.x+dx,nz=obj.position.z+dz;if(!blocked(new THREE.Vector3(nx,obj.position.y,nz),r)){obj.position.x=nx;obj.position.z=nz;return true}return false}
 function meshBox(parent,x,y,z,sx,sy,sz,c){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat(c));m.position.set(x,y,z);(parent||scene).add(m);return m}
 function label(text,x,z){const c=document.createElement('canvas');c.width=512;c.height=80;const ctx=c.getContext('2d');ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(0,0,512,80);ctx.fillStyle='#fff';ctx.font='bold 34px Arial';ctx.textAlign='center';ctx.fillText(text,256,52);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true}));s.scale.set(20,3.2,1);s.position.set(x,8,z);scene.add(s)}
 
