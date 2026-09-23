@@ -816,7 +816,7 @@ if(scene.fog)scene.fog.color.copy(sky);
 moonLight.intensity=.05+.38*night;
 fillLight.intensity=.10+.28*day;
 lampMat.emissiveIntensity=Math.max(0,night-.05)*2.2;
- streetLights.forEach(g=>{const on=Math.max(0,(night-.08)/.92);g.userData.streetLight.intensity=on*18;g.userData.bulb.material.emissiveIntensity=on*2.6;});
+ lightUpdateClock+=dt;if(lightUpdateClock>=.12){lightUpdateClock=0;const on=Math.max(0,(night-.08)/.92);streetLights.forEach(g=>{g.userData.streetLight.intensity=on*18;g.userData.bulb.material.emissiveIntensity=on*2.6;});}
  sun.intensity=(.35+1.9*day)*(weather==='Hujan' ? .72 : weather==='Mendung' ? .88 : 1);hemi.intensity=(.55+1.4*day)*(weather==='Hujan' ? .8 : weather==='Mendung' ? .93 : 1);if(scene.fog)scene.fog.far=weather==='Hujan'?300:520;updateRain(dt,inCar?car:player);
  document.querySelector('#clock').textContent=String(Math.floor(hour)).padStart(2,'0')+':'+String(Math.floor(gameMinutes%60)).padStart(2,'0')+(day>.55?' Siang':' Malam');
 }
@@ -961,7 +961,7 @@ function update(dt){
  cameraControls.target.z=THREE.MathUtils.lerp(cameraControls.target.z,obj.position.z,.34);
  clampCamera();
  applyCamera(obj);
- const area=obj.position.distanceTo(gas.position)<30?'SPBU':obj.position.distanceTo(shop.position)<30?'Bengkel':obj.position.distanceTo(new THREE.Vector3(-100,0,-100))<35?'Keraton':obj.position.distanceTo(new THREE.Vector3(100,0,-100))<35?'Area Mall':obj.position.distanceTo(new THREE.Vector3(-100,0,100))<35?'Alun-Alun':'Kota';
+ const area=(()=>{const x=obj.position.x,z=obj.position.z;if((x-140)*(x-140)+(z-140)*(z-140)<900)return 'SPBU';if((x+140)*(x+140)+(z-140)*(z-140)<900)return 'Bengkel';if((x+100)*(x+100)+(z+100)*(z+100)<1225)return 'Keraton';if((x-100)*(x-100)+(z+100)*(z+100)<1225)return 'Area Mall';if((x+100)*(x+100)+(z-100)*(z-100)<1225)return 'Alun-Alun';return 'Kota'})()
  document.querySelector('#area').textContent=area;
  document.querySelector('#cash').textContent=Math.floor(cash).toLocaleString('id-ID');document.querySelector('#fuel').textContent=Math.round(fuel);document.querySelector('#wanted').textContent=wanted;document.querySelector('#health').textContent=Math.round(health);
  mapClock+=dt;if(mapClock>=.12){mapClock=0;updateMap(obj)}updateWorld(dt);updatePerformance(dt,obj);updateWeapon(dt);updateAudio(dt);updateRealAudio();syncVehicleUI();updateContextControls();document.querySelector('#weather').textContent=weather==='Hujan'?'🌧️ Hujan':weather==='Mendung'?'☁️ Mendung':'☀️ Cerah';
