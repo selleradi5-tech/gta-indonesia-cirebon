@@ -106,8 +106,10 @@ function applyCamera(player){
    let delta=THREE.MathUtils.euclideanModulo(desiredYaw-cameraControls.yaw+Math.PI,Math.PI*2)-Math.PI;
    cameraControls.yaw+=delta*.055;
  }
- const horizontal=cameraControls.distance*Math.cos(cameraControls.pitch);
- const vertical=cameraControls.distance*Math.sin(cameraControls.pitch);
+ const aimDistance=isAiming&&!inCar?Math.min(cameraControls.distance,6.4):cameraControls.distance;
+ const aimPitch=isAiming&&!inCar?Math.max(.18,cameraControls.pitch-.06):cameraControls.pitch;
+ const horizontal=aimDistance*Math.cos(aimPitch);
+ const vertical=aimDistance*Math.sin(aimPitch);
  cameraDesiredPosition.set(
    cameraControls.target.x+Math.sin(cameraControls.yaw)*horizontal,
    cameraControls.height+vertical,
@@ -117,6 +119,8 @@ function applyCamera(player){
  camera.position.lerp(cameraDesiredPosition,.12);
  cameraLookTarget.set(cameraControls.target.x,1.05,cameraControls.target.z);
  camera.lookAt(cameraLookTarget);
+ const targetFov=isAiming&&!inCar?52:60;
+ if(Math.abs(camera.fov-targetFov)>.05){camera.fov=THREE.MathUtils.lerp(camera.fov,targetFov,.14);camera.updateProjectionMatrix();}
  if(weaponRecoil>0)camera.rotateX(-weaponRecoil*.35);
 }
 function zoomCamera(amount){cameraControls.distance=THREE.MathUtils.clamp(cameraControls.distance+amount,5,34);clampCamera();}
