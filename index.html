@@ -249,39 +249,70 @@ const treeGroup=new THREE.Group();scene.add(treeGroup);
 const environmentGroup=new THREE.Group();scene.add(environmentGroup);
 function addTree(x,z,scale=1){const g=new THREE.Group();const trunk=meshBox(g,0,1.6,0,.65,3.2,.65,0x76502f);trunk.castShadow=true;const crown=new THREE.Mesh(new THREE.SphereGeometry(2.5,10,8),new THREE.MeshStandardMaterial({color:0x2f7d3c,roughness:1}));crown.position.y=4.1;crown.scale.set(scale,1.05*scale,scale);crown.castShadow=true;crown.receiveShadow=true;g.position.set(x,0,z);treeGroup.add(g)}
 for(let x=-170;x<=170;x+=20)for(let z=-170;z<=170;z+=20){if(Math.abs(x%40)>7&&Math.abs(z%40)>7&&Math.random()<.12)addTree(x+rnd(-3,3),z+rnd(-3,3),rnd(.75,1.15))}
+const streetLights=[];
 function addUtilityPole(x,z){
   const g=new THREE.Group();g.position.set(x,0,z);
-  const pole=meshBox(g,0,4,0,.32,8,.32,0x4b4b4b);
-  meshBox(g,0,7.75,0,3.6,.14,.14,0x555555);
-  meshBox(g,-1.15,7.45,0,.12,.55,.12,0x555555);meshBox(g,1.15,7.45,0,.12,.55,.12,0x555555);
+  meshBox(g,0,4,0,.30,8,.30,0x4b4b4b);
+  meshBox(g,0,7.75,0,3.4,.14,.14,0x555555);
+  meshBox(g,-1.05,7.45,0,.10,.50,.10,0x555555);meshBox(g,1.05,7.45,0,.10,.50,.10,0x555555);
   environmentGroup.add(g);return g;
 }
 function addCable(a,b,y=7.8){
-  const curve=new THREE.CatmullRomCurve3([new THREE.Vector3(a.x,y,a.z),new THREE.Vector3((a.x+b.x)/2,y-.9,(a.z+b.z)/2),new THREE.Vector3(b.x,y,b.z)]);
-  const cable=new THREE.Mesh(new THREE.TubeGeometry(curve,10,.045,5,false),mat(0x151515));cable.castShadow=true;environmentGroup.add(cable);
+  const curve=new THREE.CatmullRomCurve3([
+    new THREE.Vector3(a.x,y,a.z),
+    new THREE.Vector3((a.x+b.x)/2,y-.9,(a.z+b.z)/2),
+    new THREE.Vector3(b.x,y,b.z)
+  ]);
+  const cable=new THREE.Mesh(new THREE.TubeGeometry(curve,10,.045,5,false),mat(0x151515));
+  cable.castShadow=true;environmentGroup.add(cable);
 }
-function addStreetLamp(x,z,rot=0){
+function addStreetLamp(x,z,rot=0,median=false){
   const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;
-  meshBox(g,0,2.8,0,.16,5.6,.16,0x333333);meshBox(g,.65,5.5,0,1.4,.1,.1,0x333333);
-  const bulb=new THREE.Mesh(new THREE.SphereGeometry(.18,8,6),new THREE.MeshStandardMaterial({color:0xffe4a3,emissive:0xffb52e,emissiveIntensity:1.2}));
-  bulb.position.set(1.3,5.35,0);g.add(bulb);environmentGroup.add(g);
+  meshBox(g,0,3.0,0,.18,6,.18,0x333333);
+  meshBox(g,median?.95:.65,5.75,0,median?1.9:1.4,.11,.11,0x333333);
+  const bulbX=median?1.8:1.3;
+  const bulb=new THREE.Mesh(new THREE.SphereGeometry(.18,8,6),new THREE.MeshStandardMaterial({color:0xffe4a3,emissive:0xffb52e,emissiveIntensity:0}));
+  bulb.position.set(bulbX,5.60,0);g.add(bulb);
+  const light=new THREE.PointLight(0xffd58a,0,30,2);light.position.set(bulbX,5.45,0);light.castShadow=false;g.add(light);
+  g.userData.streetLight=light;g.userData.bulb=bulb;streetLights.push(g);
+  environmentGroup.add(g);return g;
+}
+function addMedianBarrier(z){
+  for(let x=-170;x<=170;x+=5){
+    const post=meshBox(environmentGroup,x,.65,z,.16,1.3,.34,0x777777);
+    if(x<170)meshBox(environmentGroup,x+2.5,.65,z,5,.22,.34,0xb0b0b0);
+  }
+  meshBox(environmentGroup,0,.15,z,352,.22,.72,0x8a8a8a);
 }
 function addRoadFence(x,z,len,axis){
-  for(let p=-len/2;p<=len/2;p+=3.5){const px=axis==='x'?x+p:x,pz=axis==='x'?z:z+p;meshBox(environmentGroup,px,1,pz,.12,2,.12,0x626262)}
-  const rail=meshBox(environmentGroup,x,1.35,z,len,.08,.08,0x626262);if(axis==='z')rail.rotation.y=Math.PI/2;
-  const rail2=meshBox(environmentGroup,x,.7,z,len,.08,.08,0x626262);if(axis==='z')rail2.rotation.y=Math.PI/2;
+  for(let p=-len/2;p<=len/2;p+=3.5){
+    const px=axis==='x'?x+p:x,pz=axis==='x'?z:z+p;
+    meshBox(environmentGroup,px,1,pz,.12,2,.12,0x626262);
+  }
+  const rail=meshBox(environmentGroup,x,1.35,z,len,.08,.08,0x626262);
+  if(axis==='z')rail.rotation.y=Math.PI/2;
+  const rail2=meshBox(environmentGroup,x,.7,z,len,.08,.08,0x626262);
+  if(axis==='z')rail2.rotation.y=Math.PI/2;
 }
 function addCityInfrastructure(){
+  // Jalan Pantura: jalur arteri dengan median/pembatas di tengah dan lampu di median.
+  const panturaZ=160;
+  addMedianBarrier(panturaZ);
+  for(let x=-160;x<=160;x+=40){addStreetLamp(x,panturaZ,0,true);}
+  // Jalan kota biasa: tidak ada median, jadi lampu berada di sisi jalan.
   for(let p=-160;p<=160;p+=40){
-    addStreetLamp(p,7.2,0);addStreetLamp(p,-7.2,Math.PI);
-    addStreetLamp(7.2,p,Math.PI/2);addStreetLamp(-7.2,p,-Math.PI/2);
+    if(p!==panturaZ){
+      addStreetLamp(p,7.2,0,false);addStreetLamp(p,-7.2,Math.PI,false);
+      addStreetLamp(7.2,p,Math.PI/2,false);addStreetLamp(-7.2,p,-Math.PI/2,false);
+    }
+    // Tiang listrik selalu di luar badan jalan, bukan di tengah jalan.
     addUtilityPole(p,13);addUtilityPole(p,-13);
     if(p<160){addCable({x:p,z:13},{x:p+40,z:13},8);addCable({x:p,z:-13},{x:p+40,z:-13},8)}
   }
-  for(let p=-140;p<=140;p+=20){if(p%40!==0){addRoadFence(0,p,7,'x');addRoadFence(p,0,7,'z')}}
+  // Pembatas pedestrian hanya di titik tertentu, bukan di semua jalan.
+  for(const p of[-120,-80,80,120]){addRoadFence(0,p,7,'x');}
 }
 addCityInfrastructure();
-
 const target=new THREE.Mesh(new THREE.CylinderGeometry(5,5,.18,32),new THREE.MeshStandardMaterial({color:0xffd21a,emissive:0x6b4d00,emissiveIntensity:.45}));
 target.position.set(120,.18,120);scene.add(target);
 
@@ -785,6 +816,7 @@ if(scene.fog)scene.fog.color.copy(sky);
 moonLight.intensity=.05+.38*night;
 fillLight.intensity=.10+.28*day;
 lampMat.emissiveIntensity=Math.max(0,night-.05)*2.2;
+ streetLights.forEach(g=>{const on=Math.max(0,(night-.08)/.92);g.userData.streetLight.intensity=on*18;g.userData.bulb.material.emissiveIntensity=on*2.6;});
  sun.intensity=(.35+1.9*day)*(weather==='Hujan' ? .72 : weather==='Mendung' ? .88 : 1);hemi.intensity=(.55+1.4*day)*(weather==='Hujan' ? .8 : weather==='Mendung' ? .93 : 1);if(scene.fog)scene.fog.far=weather==='Hujan'?300:620;updateRain(dt,inCar?car:player);
  document.querySelector('#clock').textContent=String(Math.floor(hour)).padStart(2,'0')+':'+String(Math.floor(gameMinutes%60)).padStart(2,'0')+(day>.55?' Siang':' Malam');
 }
