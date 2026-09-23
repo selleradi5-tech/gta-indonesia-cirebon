@@ -219,7 +219,7 @@ function stealNearestCar(){
 }
 function enterExit(){
  if(!inCar&&nearby(player.position,car,9)){ensureAudio();soundBurst('unlock',.07);inCar=true;player.visible=false;document.querySelector('#mode').textContent='Mengemudi';toast('Kamu masuk kendaraan')}
- else if(inCar){ensureAudio();soundBurst('click',.05);inCar=false;player.visible=true;player.position.copy(car.position);player.position.x+=4;document.querySelector('#mode').textContent='Jalan kaki';toast('Kamu keluar kendaraan')}
+ else if(inCar){ensureAudio();soundBurst('click',.05);inCar=false;player.visible=true;player.position.copy(car.position);const side=new THREE.Vector3(1,0,0).applyQuaternion(car.quaternion);player.position.add(side.multiplyScalar(5));player.position.y=0;player.rotation.y=car.rotation.y;keys.delete('w');keys.delete('a');keys.delete('s');keys.delete('d');keys.delete('gas');keys.delete('space');document.querySelector('#mode').textContent='Jalan kaki';toast('Kamu keluar kendaraan · siap berjalan')}
 }
 function service(){
  if(!inCar){toast('Naik kendaraan dulu');return}
@@ -284,7 +284,7 @@ function update(dt){
   // Keep vehicle inside the playable city.
   car.position.x=Math.max(-178,Math.min(178,car.position.x));car.position.z=Math.max(-178,Math.min(178,car.position.z));
  }else{
-  player.rotation.y+=steer*.065;const walk=accel*3.4*dt;const pf=new THREE.Vector3(0,0,-1).applyQuaternion(player.quaternion);moveWithCollision(player,pf.x*walk,pf.z*walk,1.2);
+  const walkSpeed=5.2;if(steer!==0)player.rotation.y+=steer*2.6*dt;const walk=accel*walkSpeed*dt;const pf=new THREE.Vector3(0,0,-1).applyQuaternion(player.quaternion);if(Math.abs(walk)>0.0001)moveWithCollision(player,pf.x*walk,pf.z*walk,1.15);
   player.position.x=Math.max(-175,Math.min(175,player.position.x));player.position.z=Math.max(-175,Math.min(175,player.position.z));
  }
  traffic.forEach((c,i)=>{if(c.userData.stolen)return;const v=((c.userData.speed||24)/3.6)*dt*(c.rotation.y?1:-1);c.position.z+=v;const lane=c.userData.laneOffset||0;c.position.x=Math.round(c.position.x/40)*40+lane;if(c.position.z>175)c.position.z=-175;if(c.position.z<-175)c.position.z=175});
@@ -309,10 +309,10 @@ function updateMap(obj){
  dot(obj.position.x,obj.position.z,'#37a8ff',4);
 }
 function keyDown(e){ensureAudio();
- const k=e.key.toLowerCase();if(e.key===' ')keys.add('space');else if(e.key==='shift')keys.add('shift');else keys.add(k);
+ const k=e.key.toLowerCase();if(e.key===' ')keys.add('space');else if(e.key==='shift')keys.add('shift');else {keys.add(k);if(k==='arrowup')keys.add('w');if(k==='arrowdown')keys.add('s');if(k==='arrowleft')keys.add('a');if(k==='arrowright')keys.add('d');}
  if(k==='e')enterExit();if(k==='r')service();if(k==='f5')saveGame();if(k==='f9')loadGame();
 }
-addEventListener('keydown',keyDown);addEventListener('keyup',e=>{keys.delete(e.key.toLowerCase());if(e.key===' ')keys.delete('space');if(e.key==='shift')keys.delete('shift')});
+addEventListener('keydown',keyDown);addEventListener('keyup',e=>{keys.delete(e.key.toLowerCase());if(e.key==='ArrowUp')keys.delete('w');if(e.key==='ArrowDown')keys.delete('s');if(e.key==='ArrowLeft')keys.delete('a');if(e.key==='ArrowRight')keys.delete('d');if(e.key===' ')keys.delete('space');if(e.key==='shift')keys.delete('shift')});
 document.querySelectorAll('button[data-k]').forEach(b=>{const k=b.dataset.k;b.onpointerdown=e=>{e.preventDefault();ensureAudio();keys.add(k);if(k==='gas')keys.add('w')};b.onpointerup=b.onpointercancel=b.onpointerleave=()=>{keys.delete(k);if(k==='gas')keys.delete('w')}});
 document.querySelectorAll('button[data-action]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();const a=b.dataset.action;if(a==='enter')enterExit();if(a==='steal')stealNearestCar();if(a==='repair')service();if(a==='exit')enterExit()}});
 setMission();buildWeatherFX();syncVehicleUI();ensureAudio();
