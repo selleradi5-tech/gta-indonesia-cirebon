@@ -249,7 +249,7 @@ for(let i=0;i<170;i++){
  const start=new THREE.Vector3(road+side,0,cross+rnd(-7,7));
  n.position.copy(start);
  n.scale.multiplyScalar(.92+rnd(0,.16));
- n.userData.side=side;n.userData.roadIndex=i%npcRoad.length;n.userData.pathIndex=(i*3)%npcRoad.length;
+ n.userData.side=side;n.userData.roadIndex=i%npcRoad.length;n.userData.homeRoad=i%npcRoad.length;n.userData.pathIndex=(i*3)%npcRoad.length;n.userData.routeRoad=npcRoad[(i*3)%npcRoad.length];n.userData.routePhase=0;
  n.userData.target=new THREE.Vector3(road+side,0,cross);
  n.userData.walkPhase=i*.43;
  n.userData.pathMode='sidewalk';n.userData.workState='commute';n.userData.workTimer=0;
@@ -389,11 +389,8 @@ function update(dt){
    const now=performance.now()/1000;
    n.userData.activityTimer-=dt;
    const side=n.userData.side||((i%2===0)?-7.2:7.2);
-   const road=npcRoad[n.userData.roadIndex%npcRoad.length];
-   const path=n.userData.pathIndex%npcRoad.length;
-   const targetRoad=npcRoad[path];
    const setTarget=(x,z)=>n.userData.target.set(x,0,z);
-   // Jalur pejalan kaki permanen: NPC hanya bergerak di koridor trotoar ±7.2 dari sumbu jalan.
+   // Sistem trotoar berbasis waypoint. NPC tidak lagi bergerak diagonal menembus lajur kendaraan.
    if(n.userData.activity==='work'){
      const jobs=[[20,20],[-100,-100],[100,-100],[-100,100],[140,140],[-140,140]];
      const j=jobs[i%jobs.length];
@@ -403,7 +400,13 @@ function update(dt){
        if(d>2.0){const step=Math.min(d,.055*dt*60);n.position.x+=dx/d*step;n.position.z+=dz/d*step;n.rotation.y=Math.atan2(dx,-dz);animateHuman(n,now+n.userData.walkPhase,true)}
        else{n.userData.workState='inside';n.userData.workTimer=5+Math.random()*8;n.visible=false}
      }else if(n.userData.workState==='inside'){
-       if(n.userData.workTimer<=0){n.visible=true;n.userData.workState='return';setTarget(road+side,n.position.z);n.userData.activity='walk';n.userData.activityTimer=2+Math.random()*4}
+       if(n.userData.workTimer<=0){
+         n.visible=true;n.userData.workState='return';n.userData.activity='walk';
+         n.userData.routePhase=0;
+         const homeRoad=n.userData.homeRoad||0;
+         n.userData.routeRoad=npcRoad[homeRoad%npcRoad.length];
+         setTarget(n.position.x,npcRoad[(homeRoad+2)%npcRoad.length]);
+       }
      }
      return;
    }
@@ -422,17 +425,27 @@ function update(dt){
      if(n.userData.activityTimer<=0)n.userData.activity='walk';
    }else{
      const t=n.userData.target,dx=t.x-n.position.x,dz=t.z-n.position.z,d=Math.hypot(dx,dz);
-     if(d<1.2){
-       n.userData.pathIndex=(n.userData.pathIndex+1+npcs.length)%npcRoad.length;
-       const nextRoad=npcRoad[n.userData.pathIndex%npcRoad.length];
-       // Di persimpangan, pindah koridor trotoar dengan segmen pendek, bukan memotong badan jalan.
-       if(Math.random()<.28){
-         const altSide=(Math.random()<.5?-7.2:7.2);
-         n.userData.side=altSide;
+     if(d<1.1){
+       if(n.userData.routePhase===0){
+         // Fase 1: menyusuri trotoar yang sejajar jalan utama.
+         n.userData.routePhase=1;
+         const nextRoad=n.userData.routeRoad;
+         setTarget(nextRoad+side,n.position.z);
+       }else{
+         // Fase 2: setelah sampai persimpangan, lanjut pada trotoar jalan berikutnya.
+         n.userData.routePhase=0;
+         const nextIndex=(n.userData.pathIndex+1+npcs.length)%npcRoad.length;
+         n.userData.pathIndex=nextIndex;
+         const nextRoad=npcRoad[nextIndex%npcRoad.length];
+         n.userData.routeRoad=nextRoad;
+         setTarget(n.position.x,npcRoad[(nextIndex+2)%npcRoad.length]);
+         if(Math.random()<.14){
+           const act=['talk','phone','wait','work'][Math.floor(Math.random()*4)];
+           n.userData.activity=act;
+           n.userData.activityTimer=2+Math.random()*5;
+           if(act==='work')n.userData.workState='commute';
+         }
        }
-       setTarget(nextRoad+(n.userData.side||side),npcRoad[(n.userData.pathIndex+2)%npcRoad.length]);
-       if(Math.random()<.14)n.userData.activity=['talk','phone','wait','work'][Math.floor(Math.random()*4)];
-       n.userData.activityTimer=2+Math.random()*5;
      }else{
        const step=Math.min(d,.065*dt*60);
        n.position.x+=dx/d*step;n.position.z+=dz/d*step;n.rotation.y=Math.atan2(dx,-dz);
