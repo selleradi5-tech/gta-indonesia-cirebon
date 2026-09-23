@@ -246,6 +246,7 @@ meshBox(null,-140,2,140,20,4,14,0x287bb8);addCollider(-140,140,20,14,1);
 for(let p=-160;p<=160;p+=40){meshBox(null,p,.11,-174,12,.12,2,0x777777);meshBox(null,p,.11,174,12,.12,2,0x777777);meshBox(null,-174,.11,p,2,.12,12,0x777777);meshBox(null,174,.11,p,2,.12,12,0x777777)}
 
 const treeGroup=new THREE.Group();scene.add(treeGroup);
+const environmentGroup=new THREE.Group();scene.add(environmentGroup);
 function addTree(x,z,scale=1){const g=new THREE.Group();const trunk=meshBox(g,0,1.6,0,.65,3.2,.65,0x76502f);trunk.castShadow=true;const crown=new THREE.Mesh(new THREE.SphereGeometry(2.5,10,8),new THREE.MeshStandardMaterial({color:0x2f7d3c,roughness:1}));crown.position.y=4.1;crown.scale.set(scale,1.05*scale,scale);crown.castShadow=true;crown.receiveShadow=true;g.position.set(x,0,z);treeGroup.add(g)}
 for(let x=-170;x<=170;x+=20)for(let z=-170;z<=170;z+=20){if(Math.abs(x%40)>7&&Math.abs(z%40)>7&&Math.random()<.12)addTree(x+rnd(-3,3),z+rnd(-3,3),rnd(.75,1.15))}
 function addUtilityPole(x,z){
