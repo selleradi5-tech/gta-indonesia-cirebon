@@ -35,12 +35,46 @@ button:active{background:#fff3}.spacer{visibility:hidden}
   <button data-k="space">REM</button><button data-action="save">SAVE</button><button data-action="load">LOAD</button>
  </div>
 </div>
-<script src="https://unpkg.com/three@0.180.0/build/three.min.js"></script>
 <script>
-window.addEventListener('error',e=>{const t=document.querySelector('#toast');if(t){t.textContent='Game gagal memuat: '+(e.message||'error JavaScript');t.style.opacity=1;t.style.whiteSpace='normal';t.style.maxWidth='90vw';}});
+(function(){
+  const status=document.createElement('div');
+  status.id='boot-status';
+  status.style='position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#101820;color:#fff;font:700 16px Arial;z-index:9999;padding:24px;text-align:center;';
+  status.textContent='Memuat mesin 3D Cirebon...';
+  document.body.appendChild(status);
+  window.__threeReady=new Promise((resolve,reject)=>{
+    if(window.THREE) return resolve(window.THREE);
+    const urls=[
+      'https://unpkg.com/three@0.180.0/build/three.min.js',
+      'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.min.js'
+    ];
+    let i=0;
+    const load=()=>{
+      if(window.THREE) return resolve(window.THREE);
+      if(i>=urls.length) return reject(new Error('Three.js tidak dapat dimuat. Periksa koneksi internet lalu refresh.'));
+      const s=document.createElement('script');
+      s.src=urls[i++];
+      s.async=false;
+      s.onload=()=>window.THREE?resolve(window.THREE):load();
+      s.onerror=load;
+      document.head.appendChild(s);
+    };
+    load();
+  });
+})();
+window.addEventListener('error',e=>{
+  const t=document.querySelector('#toast');
+  const b=document.querySelector('#boot-status');
+  const msg=e.message||'error JavaScript';
+  if(t){t.textContent='Game gagal memuat: '+msg;t.style.opacity=1;t.style.whiteSpace='normal';t.style.maxWidth='90vw';}
+  if(b){b.textContent='Game gagal memuat: '+msg;b.style.color='#ff8080';}
+});
 </script>
 <script>
-
+(async()=>{
+try{
+const THREE=await window.__threeReady;
+const boot=document.querySelector('#boot-status'); if(boot) boot.remove();
 
 const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(64,innerWidth/innerHeight,.1,700);
@@ -197,6 +231,13 @@ document.querySelectorAll('button[data-action]').forEach(b=>{b.onpointerdown=e=>
 setMission();
 let last=performance.now();function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);renderer.render(scene,camera)}requestAnimationFrame(loop);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+
+}catch(err){
+  const boot=document.querySelector("#boot-status");
+  if(boot){boot.textContent="Game gagal memuat: "+(err.message||err);boot.style.color="#ff8080";}
+  console.error(err);
+}
+})();
 </script>
 </body>
 </html>
