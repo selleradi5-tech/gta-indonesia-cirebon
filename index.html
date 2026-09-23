@@ -104,11 +104,9 @@ function applyCamera(player){
  // Saat pemain menggeser layar/mouse, kamera bebas berputar 360 derajat.
  // Auto-follow hanya aktif setelah beberapa saat tanpa input kamera.
  if(now>cameraControls.manualUntil&&!cameraControls.dragging){
-   const desiredYaw=isAiming&&aimTarget?.visible
-     ?Math.atan2(aimTarget.position.x-cameraControls.target.x,aimTarget.position.z-cameraControls.target.z)
-     :player.rotation.y;
+   const desiredYaw=isAiming&&aimTarget?.visible?Math.atan2(aimTarget.position.x-cameraControls.target.x,aimTarget.position.z-cameraControls.target.z):player.rotation.y;
    let delta=THREE.MathUtils.euclideanModulo(desiredYaw-cameraControls.yaw+Math.PI,Math.PI*2)-Math.PI;
-   cameraControls.yaw+=delta*(isAiming&&aimTarget?.visible?.075:.035);
+   cameraControls.yaw+=delta*(isAiming&&aimTarget?.visible?.018:.025);
  }
  const aimDistance=isAiming&&!inCar?Math.min(cameraControls.distance,3.4):cameraControls.distance;
  const aimPitch=isAiming&&!inCar?THREE.MathUtils.clamp(cameraControls.pitch-.04,.02,1.28):cameraControls.pitch;
@@ -119,9 +117,9 @@ function applyCamera(player){
    cameraControls.height+vertical,
    cameraControls.target.z+Math.cos(cameraControls.yaw)*horizontal-Math.sin(cameraControls.yaw)*shoulder
  );
- camera.position.lerp(cameraDesiredPosition,.16);
- const tx=isAiming&&aimTarget?.visible?THREE.MathUtils.lerp(cameraControls.target.x,aimTarget.position.x,.28):cameraControls.target.x;
- const tz=isAiming&&aimTarget?.visible?THREE.MathUtils.lerp(cameraControls.target.z,aimTarget.position.z,.28):cameraControls.target.z;
+ camera.position.lerp(cameraDesiredPosition,isAiming?.24:.16);
+ const tx=isAiming&&aimTarget?.visible?THREE.MathUtils.lerp(cameraControls.target.x,aimTarget.position.x,.12):cameraControls.target.x;
+ const tz=isAiming&&aimTarget?.visible?THREE.MathUtils.lerp(cameraControls.target.z,aimTarget.position.z,.12):cameraControls.target.z;
  cameraLookTarget.set(tx,1.05,tz);
  camera.lookAt(cameraLookTarget);
  const targetFov=isAiming&&!inCar?48:60;
