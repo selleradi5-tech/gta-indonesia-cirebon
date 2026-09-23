@@ -84,7 +84,7 @@ scene.fog=new THREE.Fog(0x4f7890,160,520);
 const camera=new THREE.PerspectiveCamera(64,innerWidth/innerHeight,.1,700);
 const isMobileDevice=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 const renderer=new THREE.WebGLRenderer({antialias:!isMobileDevice,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio,isMobileDevice?1.1:1.25));renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,isMobileDevice?1.35:1.5));renderer.setSize(innerWidth,innerHeight);
 const cameraControls={
  target:new THREE.Vector3(0,0,0),distance:8,height:2.0,
  yaw:0,pitch:0.28,dragging:false,lastX:0,lastY:0,pointers:new Map(),pinchStart:0,manualUntil:0
@@ -993,16 +993,16 @@ weaponModel=buildWeapon();buildWeaponPickups();setMission();buildWeatherFX();syn
   if(player)player.traverse(o=>{if(o.isMesh)o.castShadow=true;});
   if(car)car.traverse(o=>{if(o.isMesh)o.castShadow=true;});
 })();
-let perfClock=0,perfFrames=0,perfTime=performance.now(),adaptiveScale=isMobileDevice?1.1:1.25;
+let perfClock=0,perfFrames=0,perfTime=performance.now(),adaptiveScale=isMobileDevice?1.35:1.5;
 function updatePerformance(dt,obj){
   perfClock+=dt;perfFrames++;
   const now=performance.now();
   // Evaluasi FPS sekali per detik agar resolusi tidak berubah-ubah setiap frame.
   if(now-perfTime>1000){
     const fps=perfFrames*1000/(now-perfTime);perfFrames=0;perfTime=now;
-    const minScale=isMobileDevice?.78:.92,maxScale=isMobileDevice?1.1:1.35;
-    if(fps<32)adaptiveScale=Math.max(minScale,adaptiveScale-.08);
-    else if(fps>52)adaptiveScale=Math.min(maxScale,adaptiveScale+.05);
+    const minScale=isMobileDevice?.82:1.0,maxScale=isMobileDevice?1.5:1.75;
+    if(fps<30)adaptiveScale=Math.max(minScale,adaptiveScale-.08);
+    else if(fps>48)adaptiveScale=Math.min(maxScale,adaptiveScale+.06);
     const target=Math.min(devicePixelRatio,adaptiveScale);
     if(Math.abs(renderer.getPixelRatio()-target)>.02)renderer.setPixelRatio(target);
   }
