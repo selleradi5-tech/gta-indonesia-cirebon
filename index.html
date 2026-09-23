@@ -11,7 +11,7 @@
 .box{background:#000b;border:1px solid #fff3;border-radius:11px;padding:6px 8px;line-height:1.25;font-weight:700;backdrop-filter:blur(4px)}
 #gps{position:fixed;left:10px;bottom:225px;background:#000c;border:1px solid #fff3;border-radius:12px;padding:8px 10px;font-size:12px;z-index:6;pointer-events:none;max-width:210px}#mission{position:fixed;top:68px;left:50%;transform:translateX(-50%);background:#000d;border:1px solid #fff2;padding:6px 10px;border-radius:12px;text-align:center;font-size:11px;min-width:190px;max-width:52vw;z-index:5;pointer-events:none;white-space:nowrap}
 #minimap{position:fixed;right:10px;top:62px;width:104px;height:104px;background:#122018e8;border:2px solid #fff8;border-radius:15px;overflow:hidden;z-index:5}
-#map{width:100%;height:100%}#vehicleHud{position:fixed;left:10px;bottom:170px;background:#000c;border:1px solid #fff3;border-radius:14px;padding:8px 12px;min-width:135px;text-align:center;z-index:6;pointer-events:none;display:none;font-weight:800;text-shadow:0 2px 3px #000}#speed{font-size:21px}#vehicleControls{position:fixed;left:50%;right:10px;bottom:max(10px,env(safe-area-inset-bottom));transform:translateX(-50%);display:none;grid-template-columns:repeat(6,minmax(48px,1fr));gap:6px;z-index:7;pointer-events:none;max-width:520px}.vbtn{pointer-events:auto;height:52px!important;border-radius:15px!important;background:#0b0b0dcc!important;font-size:22px!important;padding:0!important}.vbtn.gas{background:#176b2acc!important}.vbtn.brake{background:#7a2022cc!important}.vbtn.reverse{background:#725515cc!important}.vbtn.exit{background:#27384acc!important}@media(max-width:430px){#vehicleControls{left:8px;right:8px;transform:none;grid-template-columns:repeat(6,1fr);gap:5px}.vbtn{height:52px!important;font-size:21px!important}}#toast{position:fixed;left:50%;bottom:112px;transform:translateX(-50%);background:#000d;border:1px solid #fff3;padding:9px 14px;border-radius:13px;opacity:0;transition:.2s;pointer-events:none;z-index:10;white-space:nowrap}
+#map{width:100%;height:100%}#weaponHud{position:fixed;right:10px;bottom:170px;background:#000c;border:1px solid #fff3;border-radius:14px;padding:8px 12px;min-width:120px;text-align:center;z-index:6;pointer-events:none;display:none;font-weight:800;text-shadow:0 2px 3px #000}#weaponName{font-size:15px}#ammo{font-size:22px}#vehicleHud{position:fixed;left:10px;bottom:170px;background:#000c;border:1px solid #fff3;border-radius:14px;padding:8px 12px;min-width:135px;text-align:center;z-index:6;pointer-events:none;display:none;font-weight:800;text-shadow:0 2px 3px #000}#speed{font-size:21px}#vehicleControls{position:fixed;left:50%;right:10px;bottom:max(10px,env(safe-area-inset-bottom));transform:translateX(-50%);display:none;grid-template-columns:repeat(6,minmax(48px,1fr));gap:6px;z-index:7;pointer-events:none;max-width:520px}.vbtn{pointer-events:auto;height:52px!important;border-radius:15px!important;background:#0b0b0dcc!important;font-size:22px!important;padding:0!important}.vbtn.gas{background:#176b2acc!important}.vbtn.brake{background:#7a2022cc!important}.vbtn.reverse{background:#725515cc!important}.vbtn.exit{background:#27384acc!important}@media(max-width:430px){#vehicleControls{left:8px;right:8px;transform:none;grid-template-columns:repeat(6,1fr);gap:5px}.vbtn{height:52px!important;font-size:21px!important}}#toast{position:fixed;left:50%;bottom:112px;transform:translateX(-50%);background:#000d;border:1px solid #fff3;padding:9px 14px;border-radius:13px;opacity:0;transition:.2s;pointer-events:none;z-index:10;white-space:nowrap}
 #controls{position:fixed;left:8px;right:8px;bottom:max(10px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:end;z-index:6;pointer-events:none}.actions button{height:42px;font-size:11px;padding:0 8px;border-radius:12px}.pad button{height:42px;font-size:13px}.analog{position:relative;width:142px;height:142px;border-radius:50%;background:#111a;border:2px solid #fff5;pointer-events:auto;touch-action:none;box-shadow:0 5px 18px #0008}.analog::after{content:'GERAK';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff6;font-size:10px;font-weight:800;pointer-events:none}.stick{position:absolute;left:50%;top:50%;width:62px;height:62px;margin:-31px;border-radius:50%;background:#ffffff2b;border:2px solid #fff8;box-shadow:0 3px 10px #0008;transform:translate(0,0);z-index:2;pointer-events:none}
 .pad,.actions{display:grid;gap:7px;pointer-events:auto}.pad{grid-template-columns:repeat(3,54px)}.actions{grid-template-columns:repeat(3,56px)}
 button{height:52px;border:1px solid #fff5;border-radius:14px;background:#111c;color:#fff;font-size:15px;font-weight:800;touch-action:none;user-select:none;-webkit-user-select:none;backdrop-filter:blur(5px)}
@@ -27,11 +27,11 @@ button:active{background:#fff3}.spacer{visibility:hidden}.hidden{display:none!im
 </div>
 <div id="gps">📍 GPS: <span id="gpsText">Menuju titik misi</span></div><div id="mission">MISI 1 · ANTAR PAKET<br><small id="missionText">Datangi titik kuning</small></div>
 <div id="minimap"><canvas id="map" width="128" height="128"></canvas></div>
-<div id="vehicleHud">🚗 <span id="vehicleName">Cirebon Car</span><br><span id="speed">0</span> km/j<br><small>⚙️ <span id="gear">N</span> · ❤️ <span id="carHealth">100</span>%</small></div><div id="toast"></div>
+<div id="weaponHud">🔫 <span id="weaponName">Pistol</span><br><span id="ammo">12</span> / <small id="reserveAmmo">48</small></div><div id="vehicleHud">🚗 <span id="vehicleName">Cirebon Car</span><br><span id="speed">0</span> km/j<br><small>⚙️ <span id="gear">N</span> · ❤️ <span id="carHealth">100</span>%</small></div><div id="toast"></div>
 <div id="controls">
  <div class="pad"><div id="analog" class="analog" aria-label="Analog gerak"><div id="stick" class="stick"></div></div></div>
  <div class="actions">
-  <button id="btnEnter" data-action="enter">MASUK</button><button id="btnSteal" data-action="steal">AMBIL</button><button id="btnNitro" data-k="shift">NITRO</button><button id="btnRepair" data-action="repair">BENGKEL</button><button id="btnExit" data-action="exit" class="hidden">TURUN</button>
+  <button id="btnEnter" data-action="enter">MASUK</button><button id="btnSteal" data-action="steal">AMBIL</button><button id="btnNitro" data-k="shift">NITRO</button><button id="btnRepair" data-action="repair">BENGKEL</button><button id="btnWeapon" data-action="weapon">🔫 SENJATA</button><button id="btnFire" data-action="fire">🔥 TEMBAK</button><button id="btnExit" data-action="exit" class="hidden">TURUN</button>
   <button id="btnBrake" data-k="space">REM</button>
  </div>
 </div>
@@ -272,7 +272,8 @@ function animateHuman(g,t,walking){
  p.armL.rotation.x=swing;p.armR.rotation.x=-swing;p.legL.rotation.x=-swing;p.legR.rotation.x=swing;
  g.position.y=walking?Math.abs(Math.sin(t*9))*.035:0;
 }
-const player=makeHuman(0xc98f72,0x2468d8,0x20242a);player.position.set(40,0,20);scene.add(player);
+const player=makeHuman(0xc98f72,0x2468d8,0x20242a);player.position.set(40,0,20);player.userData.isPlayer=true;scene.add(player);
+let weaponModel;
 
 function makeCar(x,z,color=0xc72c2c,police=false,type='sedan'){
  const g=new THREE.Group();g.userData.vehicle=true;g.userData.carType=type;
@@ -358,6 +359,7 @@ const npcLooks=[
 // Populasi kota ditambah agar jalan terasa hidup, tetapi tetap ringan untuk perangkat mobile.
 for(let i=0;i<170;i++){
  const look=npcLooks[i%npcLooks.length],n=makeHuman(...look);
+ n.userData.isNpc=true;n.userData.weaponDownTimer=0;
  const side=(i%2===0?-7.2:7.2);
  const road=npcRoad[i%npcRoad.length],cross=npcRoad[(i*3)%npcRoad.length];
  const start=new THREE.Vector3(road+side,0,cross+rnd(-7,7));
@@ -378,6 +380,72 @@ n.userData.workTarget=null;
 }
 
 let cash=150000,wanted=0,speed=0,fuel=100,health=100,mission=1,gameMinutes=720,carHealth=100,engineOn=false,weather='Cerah',weatherTimer=0;
+let weaponEquipped=false,weaponAmmo=12,weaponReserve=48,weaponCooldown=0;
+const weaponRaycaster=new THREE.Raycaster();
+const weaponDirection=new THREE.Vector3();
+const weaponOrigin=new THREE.Vector3();
+let muzzleFlash=null,muzzleFlashTimer=0;
+function buildWeapon(){
+ const g=new THREE.Group();
+ const body=new THREE.Mesh(new THREE.BoxGeometry(.18,.18,.62),new THREE.MeshStandardMaterial({color:0x222222,roughness:.4,metalness:.55}));
+ body.position.set(.32,2.48,-.48);
+ const grip=new THREE.Mesh(new THREE.BoxGeometry(.16,.32,.18),new THREE.MeshStandardMaterial({color:0x171717,roughness:.7}));
+ grip.position.set(.32,2.29,-.28);grip.rotation.x=-.2;
+ g.add(body,grip);g.visible=false;player.add(g);return g;
+}
+function equipWeapon(){
+ if(inCar){toast('Keluar dari kendaraan untuk memakai senjata');return}
+ weaponEquipped=!weaponEquipped;
+ weaponModel.visible=weaponEquipped;
+ document.querySelector('#weaponHud').style.display=weaponEquipped?'block':'none';
+ document.querySelector('#btnWeapon').textContent=weaponEquipped?'🔫 HOLSTER':'🔫 SENJATA';
+ toast(weaponEquipped?'Pistol dilengkapi':'Senjata disimpan');
+}
+function reloadWeapon(){
+ if(!weaponEquipped||weaponAmmo>=12||weaponReserve<=0)return;
+ const need=12-weaponAmmo,take=Math.min(need,weaponReserve);
+ weaponAmmo+=take;weaponReserve-=take;toast('🔄 Isi ulang · '+weaponAmmo+' peluru');
+}
+function flashMuzzle(){
+ if(muzzleFlash)scene.remove(muzzleFlash);
+ const mat=new THREE.MeshBasicMaterial({color:0xffdf65,transparent:true,opacity:.9});
+ muzzleFlash=new THREE.Mesh(new THREE.SphereGeometry(.16,8,8),mat);
+ muzzleFlash.position.copy(player.position);
+ muzzleFlash.position.y+=2.7;
+ const dir=new THREE.Vector3(0,0,-1).applyQuaternion(player.quaternion);
+ muzzleFlash.position.add(dir.multiplyScalar(.8));scene.add(muzzleFlash);muzzleFlashTimer=.06;
+}
+function findNpcRoot(o){
+ let p=o;
+ while(p&&p!==scene){if(p.userData?.isNpc)return p;p=p.parent}
+ return null;
+}
+function fireWeapon(){
+ if(inCar||!weaponEquipped){toast('Lengkapi senjata dulu');return}
+ if(weaponCooldown>0)return;
+ if(weaponAmmo<=0){toast('Peluru habis · tekan R untuk isi ulang');return}
+ weaponAmmo--;weaponCooldown=.28;flashMuzzle();
+ weaponOrigin.copy(camera.position);camera.getWorldDirection(weaponDirection);weaponRaycaster.set(weaponOrigin,weaponDirection);
+ const candidates=weaponRaycaster.intersectObjects(npcs,true);
+ const hit=candidates.find(x=>findNpcRoot(x.object));
+ if(hit){
+   const npc=findNpcRoot(hit.object);
+   npc.userData.weaponDownTimer=5;
+   npc.visible=false;
+   wanted=Math.min(5,wanted+1);
+   toast('⭐ Polisi diperingatkan · wanted '+wanted+'/5');
+ }
+}
+function updateWeapon(dt){
+ weaponCooldown=Math.max(0,weaponCooldown-dt);
+ if(muzzleFlash){muzzleFlashTimer-=dt;muzzleFlash.material.opacity=Math.max(0,muzzleFlashTimer/.06);if(muzzleFlashTimer<=0){scene.remove(muzzleFlash);muzzleFlash.geometry.dispose();muzzleFlash.material.dispose();muzzleFlash=null}}
+ if(weaponEquipped){
+   const aimYaw=cameraControls.yaw;
+   player.rotation.y=THREE.MathUtils.lerp(player.rotation.y,aimYaw,.08);
+ }
+ document.querySelector('#ammo').textContent=weaponAmmo;
+ document.querySelector('#reserveAmmo').textContent=weaponReserve;
+}
 function updateSafeNpc(n,i,dt,now){
  const u=n.userData;if(!n.visible)return;
  if(!u.safeAxis){u.safeAxis=i%2?'h':'v';u.safeRoad=npcRoad[i%npcRoad.length];u.safeSide=i%2?-7.2:7.2;u.safeDir=i%3===0?-1:1;u.safeSpeed=1.15+(i%5)*.12;}
@@ -390,6 +458,8 @@ function updateSafeNpc(n,i,dt,now){
   if(n.position.x>166||n.position.x<-166){n.position.x=Math.max(-166,Math.min(166,n.position.x));u.safeAxis='v';u.safeRoad=Math.round(n.position.x/40)*40;u.safeDir=i%4<2?-1:1;}
  }
  n.position.y=0;n.rotation.y=axis==='v'?(u.safeDir>0?0:Math.PI):(u.safeDir>0?Math.PI/2:-Math.PI/2);
+ if(u.weaponDownTimer>0){u.weaponDownTimer-=dt;if(u.weaponDownTimer<=0){n.visible=true;u.activity='walk';}}
+ if(!n.visible)return;
  if(u.activity==='talk'||u.activity==='phone'||u.activity==='wait'){
   animateHuman(n,now+u.walkPhase,false);if(u.activity==='phone'&&u.parts)u.parts.armR.rotation.x=-.9;
   u.activityTimer-=dt;if(u.activityTimer<=0)u.activity='walk';return;
@@ -455,8 +525,9 @@ function updateContextControls(){
  const nearCar=!inCar&&nearby(player.position,car,9);
  const nearTraffic=!inCar&&!!nearestTraffic();
  const nearService=inCar&&(car.position.distanceTo(shop.position)<20||car.position.distanceTo(gas.position)<20);
+ const weaponReady=!inCar&&weaponEquipped;
  const set=(id,on)=>{const e=document.querySelector(id);if(e)e.classList.toggle('hidden',!on)};
- set('#btnEnter',nearCar);set('#btnSteal',nearTraffic);set('#btnNitro',inCar&&fuel>2);set('#btnBrake',inCar);set('#btnRepair',nearService);set('#btnExit',inCar);
+ set('#btnEnter',nearCar);set('#btnSteal',nearTraffic);set('#btnNitro',inCar&&fuel>2);set('#btnBrake',inCar);set('#btnRepair',nearService);set('#btnExit',inCar);set('#btnWeapon',!inCar);set('#btnFire',weaponReady);
 }
 function syncControlMode(){
   const walkingControls=document.querySelector('#controls');
@@ -677,7 +748,7 @@ function update(dt){
  const area=obj.position.distanceTo(gas.position)<30?'SPBU':obj.position.distanceTo(shop.position)<30?'Bengkel':obj.position.distanceTo(new THREE.Vector3(-100,0,-100))<35?'Keraton':obj.position.distanceTo(new THREE.Vector3(100,0,-100))<35?'Area Mall':obj.position.distanceTo(new THREE.Vector3(-100,0,100))<35?'Alun-Alun':'Kota';
  document.querySelector('#area').textContent=area;
  document.querySelector('#cash').textContent=Math.floor(cash).toLocaleString('id-ID');document.querySelector('#fuel').textContent=Math.round(fuel);document.querySelector('#wanted').textContent=wanted;document.querySelector('#health').textContent=Math.round(health);
- updateMap(obj);updateWorld(dt);updateAudio(dt);updateRealAudio();syncVehicleUI();updateContextControls();document.querySelector('#weather').textContent=weather==='Hujan'?'🌧️ Hujan':weather==='Mendung'?'☁️ Mendung':'☀️ Cerah';
+ updateMap(obj);updateWorld(dt);updateWeapon(dt);updateAudio(dt);updateRealAudio();syncVehicleUI();updateContextControls();document.querySelector('#weather').textContent=weather==='Hujan'?'🌧️ Hujan':weather==='Mendung'?'☁️ Mendung':'☀️ Cerah';
 }
 function updateMap(obj){
  const c=document.querySelector('#map'),ctx=c.getContext('2d'),w=c.width,h=c.height,s=280/128;
@@ -691,12 +762,12 @@ function updateMap(obj){
 }
 function keyDown(e){ensureAudio();
  const k=e.key.toLowerCase();if(e.key===' ')keys.add('space');else if(e.key==='shift')keys.add('shift');else {keys.add(k);if(k==='arrowup')keys.add('w');if(k==='arrowdown')keys.add('s');if(k==='arrowleft')keys.add('a');if(k==='arrowright')keys.add('d');}
- if(k==='e')enterExit();if(k==='r')service();if(k==='f5')saveGame();if(k==='f9')loadGame();
+ if(k==='e')enterExit();if(k==='r'){if(weaponEquipped)reloadWeapon();else service()}if(k==='f')fireWeapon();if(k==='1')equipWeapon();if(k==='f5')saveGame();if(k==='f9')loadGame();
 }
 addEventListener('keydown',keyDown);addEventListener('keyup',e=>{keys.delete(e.key.toLowerCase());if(e.key==='ArrowUp')keys.delete('w');if(e.key==='ArrowDown')keys.delete('s');if(e.key==='ArrowLeft')keys.delete('a');if(e.key==='ArrowRight')keys.delete('d');if(e.key===' ')keys.delete('space');if(e.key==='shift')keys.delete('shift')});
 document.querySelectorAll('button[data-k]').forEach(b=>{const k=b.dataset.k;b.style.touchAction='none';b.onpointerdown=e=>{e.preventDefault();ensureAudio();b.setPointerCapture?.(e.pointerId);keys.add(k);if(k==='gas')keys.add('w')};const release=()=>{keys.delete(k);if(k==='gas')keys.delete('w')};b.onpointerup=release;b.onpointercancel=release;});
-document.querySelectorAll('button[data-action]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();const a=b.dataset.action;if(a==='enter')enterExit();if(a==='steal')stealNearestCar();if(a==='repair')service();if(a==='exit')enterExit()};b.onpointerup=b.onpointercancel=b.onpointerleave=()=>{}});
-setMission();buildWeatherFX();syncVehicleUI();ensureAudio();
+document.querySelectorAll('button[data-action]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();const a=b.dataset.action;if(a==='enter')enterExit();if(a==='steal')stealNearestCar();if(a==='repair')service();if(a==='weapon')equipWeapon();if(a==='fire')fireWeapon();if(a==='exit')enterExit()};b.onpointerup=b.onpointercancel=b.onpointerleave=()=>{}});
+weaponModel=buildWeapon();setMission();buildWeatherFX();syncVehicleUI();ensureAudio();
 let last=performance.now();
 let runtimeFaulted=false;
 function loop(now){
