@@ -458,8 +458,6 @@ function updateSafeNpc(n,i,dt,now){
   if(n.position.x>166||n.position.x<-166){n.position.x=Math.max(-166,Math.min(166,n.position.x));u.safeAxis='v';u.safeRoad=Math.round(n.position.x/40)*40;u.safeDir=i%4<2?-1:1;}
  }
  n.position.y=0;n.rotation.y=axis==='v'?(u.safeDir>0?0:Math.PI):(u.safeDir>0?Math.PI/2:-Math.PI/2);
- if(u.weaponDownTimer>0){u.weaponDownTimer-=dt;if(u.weaponDownTimer<=0){n.visible=true;u.activity='walk';}}
- if(!n.visible)return;
  if(u.activity==='talk'||u.activity==='phone'||u.activity==='wait'){
   animateHuman(n,now+u.walkPhase,false);if(u.activity==='phone'&&u.parts)u.parts.armR.rotation.x=-.9;
   u.activityTimer-=dt;if(u.activityTimer<=0)u.activity='walk';return;
@@ -642,6 +640,11 @@ function update(dt){
  });
  npcs.forEach((n,i)=>{
    const now=performance.now()/1000;
+   if(n.userData.weaponDownTimer>0){
+     n.userData.weaponDownTimer-=dt;
+     if(n.userData.weaponDownTimer<=0){n.visible=true;n.userData.activity='walk';}
+   }
+   if(!n.visible)return;
    n.userData.activityTimer-=dt;
    if(n.userData.workState==='inside'||n.userData.workState==='driving'||n.userData.workState==='rest') n.userData.workTimer-=dt;
    const side=n.userData.side||((i%2===0)?-7.2:7.2);
@@ -689,7 +692,6 @@ function update(dt){
      return;
    }
 
-   if(!n.visible)return;
    if(role==='warga'){updateSafeNpc(n,i,dt,now);return;}
 
    // Interaksi sosial nyata: dua NPC yang berdekatan berhenti, saling menghadap,
