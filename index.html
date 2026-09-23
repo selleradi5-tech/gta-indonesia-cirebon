@@ -11,7 +11,7 @@
 .box{background:#000b;border:1px solid #fff3;border-radius:11px;padding:6px 8px;line-height:1.25;font-weight:700;backdrop-filter:blur(4px)}
 #gps{position:fixed;left:10px;bottom:225px;background:#000c;border:1px solid #fff3;border-radius:12px;padding:8px 10px;font-size:12px;z-index:6;pointer-events:none;max-width:210px}#mission{position:fixed;top:68px;left:50%;transform:translateX(-50%);background:#000d;border:1px solid #fff2;padding:6px 10px;border-radius:12px;text-align:center;font-size:11px;min-width:190px;max-width:52vw;z-index:5;pointer-events:none;white-space:nowrap}
 #minimap{position:fixed;right:10px;top:62px;width:104px;height:104px;background:#122018e8;border:2px solid #fff8;border-radius:15px;overflow:hidden;z-index:5}
-#map{width:100%;height:100%}#vehicleHud{position:fixed;left:10px;bottom:170px;background:#000c;border:1px solid #fff3;border-radius:14px;padding:8px 12px;min-width:135px;text-align:center;z-index:6;pointer-events:none;display:none;font-weight:800;text-shadow:0 2px 3px #000}#speed{font-size:21px}#vehicleControls{position:fixed;left:50%;bottom:max(10px,env(safe-area-inset-bottom));transform:translateX(-50%);display:none;grid-template-columns:repeat(2,62px);gap:5px;z-index:7;pointer-events:none}.vbtn{pointer-events:auto;height:50px!important;border-radius:15px!important;background:#0b0b0dcc!important}.gas{grid-column:2/4!important;background:#176b2acc!important;font-size:12px!important}.brake{background:#7a2022cc!important}.reverse{background:#725515cc!important}@media(max-width:430px){#vehicleControls{grid-template-columns:repeat(2,60px)}.vbtn{height:52px!important}}#toast{position:fixed;left:50%;bottom:112px;transform:translateX(-50%);background:#000d;border:1px solid #fff3;padding:9px 14px;border-radius:13px;opacity:0;transition:.2s;pointer-events:none;z-index:10;white-space:nowrap}
+#map{width:100%;height:100%}#vehicleHud{position:fixed;left:10px;bottom:170px;background:#000c;border:1px solid #fff3;border-radius:14px;padding:8px 12px;min-width:135px;text-align:center;z-index:6;pointer-events:none;display:none;font-weight:800;text-shadow:0 2px 3px #000}#speed{font-size:21px}#vehicleControls{position:fixed;left:50%;bottom:max(10px,env(safe-area-inset-bottom));transform:translateX(-50%);display:none;grid-template-columns:repeat(5,62px);gap:5px;z-index:7;pointer-events:none}.vbtn{pointer-events:auto;height:50px!important;border-radius:15px!important;background:#0b0b0dcc!important}.gas{grid-column:auto!important;background:#176b2acc!important;font-size:12px!important}.brake{background:#7a2022cc!important}.reverse{background:#725515cc!important}@media(max-width:430px){#vehicleControls{grid-template-columns:repeat(5,54px)}.vbtn{height:52px!important}}#toast{position:fixed;left:50%;bottom:112px;transform:translateX(-50%);background:#000d;border:1px solid #fff3;padding:9px 14px;border-radius:13px;opacity:0;transition:.2s;pointer-events:none;z-index:10;white-space:nowrap}
 #controls{position:fixed;left:8px;right:8px;bottom:max(10px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:end;z-index:6;pointer-events:none}.actions button{height:42px;font-size:11px;padding:0 8px;border-radius:12px}.pad button{height:42px;font-size:13px}.analog{position:relative;width:142px;height:142px;border-radius:50%;background:#111a;border:2px solid #fff5;pointer-events:auto;touch-action:none;box-shadow:0 5px 18px #0008}.analog::after{content:'GERAK';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff6;font-size:10px;font-weight:800;pointer-events:none}.stick{position:absolute;left:50%;top:50%;width:62px;height:62px;margin:-31px;border-radius:50%;background:#ffffff2b;border:2px solid #fff8;box-shadow:0 3px 10px #0008;transform:translate(0,0);z-index:2;pointer-events:none}
 .pad,.actions{display:grid;gap:7px;pointer-events:auto}.pad{grid-template-columns:repeat(3,54px)}.actions{grid-template-columns:repeat(3,56px)}
 button{height:52px;border:1px solid #fff5;border-radius:14px;background:#111c;color:#fff;font-size:15px;font-weight:800;touch-action:none;user-select:none;-webkit-user-select:none;backdrop-filter:blur(5px)}
@@ -35,7 +35,7 @@ button:active{background:#fff3}.spacer{visibility:hidden}.hidden{display:none!im
   <button id="btnBrake" data-k="space">REM</button>
  </div>
 </div>
-<div id="vehicleControls"><button class="vbtn brake" data-k="space">REM</button><button class="vbtn reverse" data-k="s">MUNDUR</button><button class="vbtn gas" data-k="gas">GAS 🚗</button></div>
+<div id="vehicleControls"><button class="vbtn" data-k="a">◀</button><button class="vbtn" data-k="d">▶</button><button class="vbtn gas" data-k="gas">GAS 🚗</button><button class="vbtn brake" data-k="space">REM</button><button class="vbtn reverse" data-k="s">MUNDUR</button></div>
 <script>
 (function(){
   const status=document.createElement('div');
@@ -414,12 +414,19 @@ function updateContextControls(){
  const set=(id,on)=>{const e=document.querySelector(id);if(e)e.classList.toggle('hidden',!on)};
  set('#btnEnter',nearCar);set('#btnSteal',nearTraffic);set('#btnNitro',inCar&&fuel>2);set('#btnBrake',inCar);set('#btnRepair',nearService);set('#btnExit',inCar);
 }
+function syncControlMode(){
+  const walkingControls=document.querySelector('#controls');
+  const vehicleControls=document.querySelector('#vehicleControls');
+  if(walkingControls) walkingControls.style.display=inCar?'none':'flex';
+  if(vehicleControls) vehicleControls.style.display=inCar?'grid':'none';
+}
 function syncVehicleUI(){
   const hud=document.querySelector('#vehicleHud');
   const controls=document.querySelector('#vehicleControls');
   if(!hud||!controls)return;
   hud.style.display=inCar?'block':'none';
   controls.style.display=inCar?'grid':'none';
+  syncControlMode();
   document.querySelector('#vehicleName').textContent=car&&car.userData.stolen?'Kendaraan Curian':'Cirebon Car';
   document.querySelector('#speed').textContent=Math.round(Math.abs(speed));
   document.querySelector('#gear').textContent=speed>0.03?'D':speed<-.03?'R':'N';
@@ -432,11 +439,12 @@ function stealNearestCar(){
   car.visible=false;
   car=v;car.visible=true;inCar=true;engineOn=true;player.visible=false;
   car.userData.stolen=true;document.querySelector('#mode').textContent='Mengemudi';
+  resetAnalog();
   toast('Kendaraan berhasil diambil');syncVehicleUI();
 }
 function enterExit(){
- if(!inCar&&nearby(player.position,car,9)){ensureAudio();soundBurst('unlock',.07);inCar=true;player.visible=false;document.querySelector('#mode').textContent='Mengemudi';toast('Kamu masuk kendaraan')}
- else if(inCar){ensureAudio();soundBurst('click',.05);inCar=false;player.visible=true;player.position.copy(car.position);const side=new THREE.Vector3(1,0,0).applyQuaternion(car.quaternion);player.position.add(side.multiplyScalar(5));player.position.y=0;player.rotation.y=car.rotation.y;keys.delete('w');keys.delete('a');keys.delete('s');keys.delete('d');keys.delete('gas');keys.delete('space');document.querySelector('#mode').textContent='Jalan kaki';toast('Kamu keluar kendaraan · siap berjalan')}
+ if(!inCar&&nearby(player.position,car,9)){ensureAudio();soundBurst('unlock',.07);inCar=true;player.visible=false;resetAnalog();document.querySelector('#mode').textContent='Mengemudi';toast('Kamu masuk kendaraan')}
+ else if(inCar){ensureAudio();soundBurst('click',.05);inCar=false;player.visible=true;player.position.copy(car.position);const side=new THREE.Vector3(1,0,0).applyQuaternion(car.quaternion);player.position.add(side.multiplyScalar(5));player.position.y=0;player.rotation.y=car.rotation.y;keys.delete('w');keys.delete('a');keys.delete('s');keys.delete('d');keys.delete('gas');keys.delete('space');document.querySelector('#mode').textContent='Jalan kaki';syncControlMode();toast('Kamu keluar kendaraan · siap berjalan')}
 }
 function service(){
  if(!inCar){toast('Naik kendaraan dulu');return}
