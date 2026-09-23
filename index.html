@@ -86,11 +86,11 @@ const isMobileDevice=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 const renderer=new THREE.WebGLRenderer({antialias:!isMobileDevice,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio,isMobileDevice?1.15:1.35));renderer.setSize(innerWidth,innerHeight);
 const cameraControls={
- target:new THREE.Vector3(0,0,0),distance:8,height:6.2,
+ target:new THREE.Vector3(0,0,0),distance:8,height:2.0,
  yaw:0,pitch:0.28,dragging:false,lastX:0,lastY:0,pointers:new Map(),pinchStart:0,manualUntil:0
 };
 function clampCamera(){
- cameraControls.distance=THREE.MathUtils.clamp(cameraControls.distance,.85,34);
+ cameraControls.distance=THREE.MathUtils.clamp(cameraControls.distance,.35,34);
  cameraControls.pitch=THREE.MathUtils.clamp(cameraControls.pitch,0.02,1.28);
  const maxPan=Math.max(3,cameraControls.distance*.30);
  cameraControls.target.x=THREE.MathUtils.clamp(cameraControls.target.x,-250+maxPan,250-maxPan);
@@ -108,7 +108,7 @@ function applyCamera(player){
    let delta=THREE.MathUtils.euclideanModulo(desiredYaw-cameraControls.yaw+Math.PI,Math.PI*2)-Math.PI;
    cameraControls.yaw+=delta*(isAiming&&aimTarget?.visible?.018:.025);
  }
- const aimDistance=isAiming&&!inCar?Math.min(cameraControls.distance,2.6):cameraControls.distance;
+ const aimDistance=isAiming&&!inCar?Math.min(cameraControls.distance,2.2):cameraControls.distance;
  const aimPitch=isAiming&&!inCar?THREE.MathUtils.clamp(cameraControls.pitch-.04,.02,1.28):cameraControls.pitch;
  const horizontal=aimDistance*Math.cos(aimPitch),vertical=aimDistance*Math.sin(aimPitch);
  const shoulder=isAiming&&!inCar?.52:0;
@@ -122,11 +122,11 @@ function applyCamera(player){
  const tz=isAiming&&aimTarget?.visible?THREE.MathUtils.lerp(cameraControls.target.z,aimTarget.position.z,.12):cameraControls.target.z;
  cameraLookTarget.set(tx,1.05,tz);
  camera.lookAt(cameraLookTarget);
- const targetFov=isAiming&&!inCar?(cameraControls.distance<1.5?42:48):60;
+ const targetFov=isAiming&&!inCar?(cameraControls.distance<1.0?38:cameraControls.distance<1.8?42:48):60;
  if(Math.abs(camera.fov-targetFov)>.05){camera.fov=THREE.MathUtils.lerp(camera.fov,targetFov,.16);camera.updateProjectionMatrix();}
  if(weaponRecoil>0)camera.rotateX(-weaponRecoil*.35);
 }
-function zoomCamera(amount){cameraControls.distance=THREE.MathUtils.clamp(cameraControls.distance+amount,5,34);clampCamera();}
+function zoomCamera(amount){cameraControls.distance=THREE.MathUtils.clamp(cameraControls.distance+amount,.35,34);clampCamera();}
 renderer.domElement.style.touchAction='none';
 renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();zoomCamera(e.deltaY*.035);},{passive:false});
 function isControlElement(e){return !!e.target.closest?.('#controls,#vehicleControls,button');}
@@ -850,7 +850,7 @@ function update(dt){
    }
  }); handleWanted(dt,obj);
  if(obj.position.distanceTo(target.position)<9)completeMission();
- cameraControls.height=THREE.MathUtils.lerp(cameraControls.height,inCar?7.2:6.2,.16);
+ cameraControls.height=THREE.MathUtils.lerp(cameraControls.height,inCar?2.35:1.75,.16);
  cameraControls.target.x=THREE.MathUtils.lerp(cameraControls.target.x,obj.position.x,.34);
  cameraControls.target.z=THREE.MathUtils.lerp(cameraControls.target.z,obj.position.z,.34);
  clampCamera();
