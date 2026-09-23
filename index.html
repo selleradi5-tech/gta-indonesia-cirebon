@@ -106,8 +106,17 @@ function label(text,x,z){const c=document.createElement('canvas');c.width=512;c.
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(620,620),mat(0x416f45));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
 
 // Cirebon-inspired grid district, not a copy of Google Maps.
-for(let x=-160;x<=160;x+=40){const road=meshBox(null,x,.035,0,11,.07,360,0x3d3d3d);road.receiveShadow=true;const line=meshBox(null,x,.075,0,.25,.09,360,0xf0d35a);line.receiveShadow=true}
-for(let z=-160;z<=160;z+=40){const road=meshBox(null,0,.035,z,360,.07,11,0x3d3d3d);road.receiveShadow=true;const line=meshBox(null,0,.075,z,360,.09,.25,0xf0d35a);line.receiveShadow=true;meshBox(null,0,.085,z-2.6,360,.05,.10,0xffffff);meshBox(null,0,.085,z+2.6,360,.05,.10,0xffffff)}
+const roadMat=mat(0x3d3d3d),edgeMat=mat(0xd9d9d9),centerMat=mat(0xf4f4f4);
+function roadMarkH(z){
+  for(let x=-177;x<177;x+=10) meshBox(null,x,.085,z,5.2,.035,.12,0xf4f4f4);
+  meshBox(null,0,.09,z-5.05,354,.035,.12,0xffffff);meshBox(null,0,.09,z+5.05,354,.035,.12,0xffffff);
+}
+function roadMarkV(x){
+  for(let z=-177;z<177;z+=10) meshBox(null,x,.085,z,.12,.035,5.2,0xf4f4f4);
+  meshBox(null,x-5.05,.09,0,.12,.035,354,0xffffff);meshBox(null,x+5.05,.09,0,.12,.035,354,0xffffff);
+}
+for(let x=-160;x<=160;x+=40){const road=meshBox(null,x,.035,0,11,.07,360,0x3d3d3d);road.receiveShadow=true;roadMarkV(x)}
+for(let z=-160;z<=160;z+=40){const road=meshBox(null,0,.035,z,360,.07,11,0x3d3d3d);road.receiveShadow=true;roadMarkH(z)}
 // Strict city-block placement. Roads have an 11-unit width, so every building
 // is kept at least 7 units from the road center and never overlaps the road surface.
 for(let bx=-150;bx<=150;bx+=20)for(let bz=-150;bz<=150;bz+=20){
@@ -116,6 +125,9 @@ for(let bx=-150;bx<=150;bx+=20)for(let bz=-150;bz<=150;bz+=20){
   const roadClearX=5.8, roadClearZ=5.8;
   const cx=bx,cz=bz;
   if(Math.abs(cx%40)<roadClearX || Math.abs(cz%40)<roadClearZ) continue;
+  // Blok fasilitas utama dicadangkan agar bangunan prosedural tidak menutup landmark atau badan jalan.
+  const reserved=[[20,20],[-100,-100],[100,-100],[-100,100],[100,120],[-100,120]];
+  if(reserved.some(([rx,rz])=>Math.abs(cx-rx)<10&&Math.abs(cz-rz)<10)) continue;
   const cc=[0xd6b08c,0xb7c9d9,0xd0d0c0,0xc59b79,0xa9c5a8][Math.floor(rnd(0,5))];
   const building=meshBox(null,cx,h/2,cz,bw,h,bd,cc);building.castShadow=true;building.receiveShadow=true;
   addCollider(cx,cz,bw,bd,.35);
@@ -128,10 +140,10 @@ for(let bx=-150;bx<=150;bx+=20)for(let bz=-150;bz<=150;bz+=20){
 }
 
 // Landmarks and districts
-meshBox(null,10,4,10,24,8,19,0xd3ad47);addCollider(10,10,24,19,2);meshBox(null,10,9,10,13,2,10,0xf1dfb7);label('BALAI KOTA',10,10);
-meshBox(null,-90,4,-90,30,8,24,0xc98b46);addCollider(-90,-90,30,24,2);meshBox(null,-90,9,-90,20,2,14,0xeee0b0);label('KERATON',-90,-90);
-meshBox(null,90,5,-90,34,10,25,0x8798aa);addCollider(90,-90,34,25,2);meshBox(null,90,11,-90,27,2,18,0x4b6680);label('AREA MALL',90,-90);
-meshBox(null,-90,3,90,28,6,22,0x4b7652);addCollider(-90,90,28,22,2);label('ALUN-ALUN',-90,90);
+meshBox(null,20,4,20,22,8,18,0xd3ad47);addCollider(20,20,22,18,2);meshBox(null,20,9,20,12,2,9,0xf1dfb7);label('BALAI KOTA',20,20);
+meshBox(null,-100,4,-100,28,8,20,0xc98b46);addCollider(-100,-100,28,20,2);meshBox(null,-100,9,-100,18,2,12,0xeee0b0);label('KERATON',-100,-100);
+meshBox(null,100,5,-100,28,10,20,0x8798aa);addCollider(100,-100,28,20,2);meshBox(null,100,11,-100,22,2,14,0x4b6680);label('AREA MALL',100,-100);
+meshBox(null,-100,3,100,28,6,20,0x4b7652);addCollider(-100,100,28,20,2);label('ALUN-ALUN',-100,100);
 
 // Gas station / workshop
 function marker(x,z,color,text){const p=new THREE.Mesh(new THREE.CylinderGeometry(5,5,.2,32),new THREE.MeshBasicMaterial({color}));p.position.set(x,.15,z);scene.add(p);label(text,x,z);return p}
@@ -161,7 +173,7 @@ function beep(){}
 function makeHuman(skin=0xc98f72,shirt=0x2468d8,pants=0x20242a,shoe=0x171717,hair=0x201810){
  const g=new THREE.Group();g.userData.human=true;
  // Skala dunia: tinggi dasar manusia sekitar 1.9 m, agar proporsional dengan mobil, jalan, dan bangunan.
- g.scale.setScalar(.41);
+ g.scale.setScalar(.34);
  const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.72,1.45,5,10),mat(shirt));torso.position.y=2.55;torso.scale.z=.62;torso.castShadow=true;g.add(torso);
  const head=new THREE.Mesh(new THREE.SphereGeometry(.58,14,12),mat(skin));head.position.y=4.15;head.castShadow=true;g.add(head);
  const hairCap=new THREE.Mesh(new THREE.SphereGeometry(.61,14,8,0,Math.PI*2,0,Math.PI*.48),mat(hair));hairCap.position.y=4.35;hairCap.castShadow=true;g.add(hairCap);
@@ -324,16 +336,16 @@ function update(dt){
   // Keep vehicle inside the playable city.
   car.position.x=Math.max(-178,Math.min(178,car.position.x));car.position.z=Math.max(-178,Math.min(178,car.position.z));
  }else{
-  const walkSpeed=5.2;if(steer!==0)player.rotation.y+=steer*2.6*dt;const walk=accel*walkSpeed*dt;const pf=new THREE.Vector3(0,0,-1).applyQuaternion(player.quaternion);if(Math.abs(walk)>0.0001){moveWithCollision(player,pf.x*walk,pf.z*walk,1.15);animateHuman(player,performance.now()/1000,true)}else animateHuman(player,performance.now()/1000,false);
+  const walkSpeed=5.2;if(steer!==0)player.rotation.y+=steer*2.6*dt;const walk=accel*walkSpeed*dt;const pf=new THREE.Vector3(0,0,-1).applyQuaternion(player.quaternion);if(Math.abs(walk)>0.0001){moveWithCollision(player,pf.x*walk,pf.z*walk,.68);animateHuman(player,performance.now()/1000,true)}else animateHuman(player,performance.now()/1000,false);
   player.position.x=Math.max(-175,Math.min(175,player.position.x));player.position.z=Math.max(-175,Math.min(175,player.position.z));
  }
  traffic.forEach((c,i)=>{if(c.userData.stolen)return;const v=((c.userData.speed||24)/3.6)*dt*(c.rotation.y?1:-1);c.position.z+=v;const lane=c.userData.laneOffset||0;c.position.x=Math.round(c.position.x/40)*40+lane;if(c.position.z>175)c.position.z=-175;if(c.position.z<-175)c.position.z=175});
  npcs.forEach((n,i)=>{const t=n.userData.target;const dx=t.x-n.position.x,dz=t.z-n.position.z,d=Math.hypot(dx,dz);if(d<2){const pick=(i+Math.floor(performance.now()/4000))%npcRoad.length;t.set(npcRoad[pick],0,npcRoad[(pick+i+3)%npcRoad.length])}else{const step=Math.min(d,.055*dt*60);n.position.x+=dx/d*step;n.position.z+=dz/d*step;n.rotation.y=Math.atan2(dx,-dz);animateHuman(n,performance.now()/1000+n.userData.walkPhase,true)}});
  handleWanted(dt,obj);
  if(obj.position.distanceTo(target.position)<9)completeMission();
- const desired=new THREE.Vector3(0,inCar?9:7,inCar?16:13).applyQuaternion(obj.quaternion).add(obj.position);
+ const desired=new THREE.Vector3(0,inCar?9:5.2,inCar?16:11).applyQuaternion(obj.quaternion).add(obj.position);
  camera.position.lerp(desired,.11);camera.lookAt(obj.position.x,obj.position.y+1.3,obj.position.z);
- const area=obj.position.distanceTo(gas.position)<30?'SPBU':obj.position.distanceTo(shop.position)<30?'Bengkel':obj.position.distanceTo(new THREE.Vector3(-90,0,-90))<35?'Keraton':obj.position.distanceTo(new THREE.Vector3(90,0,-90))<35?'Area Mall':obj.position.distanceTo(new THREE.Vector3(-90,0,90))<35?'Alun-Alun':'Kota';
+ const area=obj.position.distanceTo(gas.position)<30?'SPBU':obj.position.distanceTo(shop.position)<30?'Bengkel':obj.position.distanceTo(new THREE.Vector3(-100,0,-100))<35?'Keraton':obj.position.distanceTo(new THREE.Vector3(100,0,-100))<35?'Area Mall':obj.position.distanceTo(new THREE.Vector3(-100,0,100))<35?'Alun-Alun':'Kota';
  document.querySelector('#area').textContent=area;
  document.querySelector('#cash').textContent=Math.floor(cash).toLocaleString('id-ID');document.querySelector('#fuel').textContent=Math.round(fuel);document.querySelector('#wanted').textContent=wanted;document.querySelector('#health').textContent=Math.round(health);
  updateMap(obj);updateWorld(dt);updateAudio(dt);updateRealAudio();syncVehicleUI();updateContextControls();document.querySelector('#weather').textContent=weather==='Hujan'?'🌧️ Hujan':weather==='Mendung'?'☁️ Mendung':'☀️ Cerah';
