@@ -145,6 +145,17 @@ function nearestTraffic(){
   traffic.forEach(v=>{const d=v.position.distanceTo(player.position);if(d<bd){bd=d;best=v}});
   return best;
 }
+function syncVehicleUI(){
+  const hud=document.querySelector('#vehicleHud');
+  const controls=document.querySelector('#vehicleControls');
+  if(!hud||!controls)return;
+  hud.style.display=inCar?'block':'none';
+  controls.style.display=inCar?'grid':'none';
+  document.querySelector('#vehicleName').textContent=car&&car.userData.stolen?'Kendaraan Curian':'Cirebon Car';
+  document.querySelector('#speed').textContent=Math.round(Math.abs(speed)*95);
+  document.querySelector('#gear').textContent=speed>0.03?'D':speed<-.03?'R':'N';
+  document.querySelector('#carHealth').textContent=Math.round(carHealth);
+}
 function stealNearestCar(){
   if(inCar)return;
   const v=nearestTraffic();
@@ -227,7 +238,7 @@ function update(dt){
  const area=obj.position.distanceTo(gas.position)<30?'SPBU':obj.position.distanceTo(shop.position)<30?'Bengkel':obj.position.distanceTo(new THREE.Vector3(-80,0,-80))<35?'Keraton':obj.position.distanceTo(new THREE.Vector3(80,0,-80))<35?'Area Mall':obj.position.distanceTo(new THREE.Vector3(-80,0,80))<35?'Alun-Alun':'Kota';
  document.querySelector('#area').textContent=area;
  document.querySelector('#cash').textContent=Math.floor(cash).toLocaleString('id-ID');document.querySelector('#fuel').textContent=Math.round(fuel);document.querySelector('#wanted').textContent=wanted;document.querySelector('#health').textContent=Math.round(health);
- updateMap(obj);updateWorld(dt);
+ updateMap(obj);updateWorld(dt);syncVehicleUI();
 }
 function updateMap(obj){
  const c=document.querySelector('#map'),ctx=c.getContext('2d'),w=c.width,h=c.height,s=280/128;
@@ -245,7 +256,7 @@ function keyDown(e){
 }
 addEventListener('keydown',keyDown);addEventListener('keyup',e=>{keys.delete(e.key.toLowerCase());if(e.key===' ')keys.delete('space');if(e.key==='shift')keys.delete('shift')});
 document.querySelectorAll('button[data-k]').forEach(b=>{const k=b.dataset.k;b.onpointerdown=e=>{e.preventDefault();keys.add(k)};b.onpointerup=b.onpointercancel=b.onpointerleave=()=>keys.delete(k)});
-document.querySelectorAll('button[data-action]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();const a=b.dataset.action;if(a==='enter')enterExit();if(a==='repair')service();if(a==='save')saveGame();if(a==='load')loadGame()}});
+document.querySelectorAll('button[data-action]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();const a=b.dataset.action;if(a==='enter')enterExit();if(a==='steal')stealNearestCar();if(a==='repair')service();if(a==='save')saveGame();if(a==='load')loadGame()}});
 setMission();syncVehicleUI();
 let last=performance.now();function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);renderer.render(scene,camera)}requestAnimationFrame(loop);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
