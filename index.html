@@ -197,16 +197,42 @@ function animateHuman(g,t,walking){
 }
 const player=makeHuman(0xc98f72,0x2468d8,0x20242a);player.position.set(40,0,20);scene.add(player);
 
-function makeCar(x,z,color=0xc72c2c,police=false){
- const g=new THREE.Group();g.userData.vehicle=true;meshBox(g,0,.78,0,2.05,1.02,4.55,color);
- meshBox(g,0,1.35,-.25,1.55,.52,2.05,0x202832);
+function makeCar(x,z,color=0xc72c2c,police=false,type='sedan'){
+ const g=new THREE.Group();g.userData.vehicle=true;g.userData.carType=type;
+ const specs={
+   sedan:{w:2.05,h:1.02,l:4.55,cabinW:1.55,cabinH:.52,cabinL:2.05,wheel:.38,front:1.48,rear:1.48},
+   hatch:{w:1.92,h:.98,l:4.05,cabinW:1.48,cabinH:.50,cabinL:1.90,wheel:.36,front:1.30,rear:1.30},
+   suv:{w:2.28,h:1.22,l:4.80,cabinW:1.72,cabinH:.64,cabinL:2.35,wheel:.42,front:1.52,rear:1.52},
+   mpv:{w:2.12,h:1.14,l:4.65,cabinW:1.68,cabinH:.61,cabinL:2.35,wheel:.39,front:1.45,rear:1.45},
+   pickup:{w:2.16,h:1.10,l:4.95,cabinW:1.52,cabinH:.58,cabinL:1.85,wheel:.40,front:1.58,rear:1.58},
+   taxi:{w:2.05,h:1.02,l:4.55,cabinW:1.55,cabinH:.52,cabinL:2.05,wheel:.38,front:1.48,rear:1.48}
+ };
+ const s=specs[type]||specs.sedan;
+ meshBox(g,0,s.h*.76,0,s.w,s.h,s.l,color);
+ meshBox(g,0,s.h*1.32,-.18,s.cabinW,s.cabinH,s.cabinL,0x202832);
+ const glass=new THREE.Mesh(new THREE.BoxGeometry(s.cabinW*.92,s.cabinH*.68,s.cabinL*.82),new THREE.MeshStandardMaterial({color:0x273b4d,roughness:.22,metalness:.15}));
+ glass.position.set(0,s.h*1.34,-.18);glass.castShadow=false;g.add(glass);
  const wheelMat=mat(0x111111);
- for(const sx of[-.92,.92])for(const sz of[-1.48,1.48]){const w=new THREE.Mesh(new THREE.CylinderGeometry(.38,.38,.28,14),wheelMat);w.rotation.z=Math.PI/2;w.position.set(sx,.4,sz);g.add(w)}
- if(police){meshBox(g,0,1.72,0,.52,.16,.8,0xeeeeee)}
+ for(const sx of[-s.w*.45,s.w*.45])for(const sz of[-s.front,s.rear]){const w=new THREE.Mesh(new THREE.CylinderGeometry(s.wheel,s.wheel,.28,14),wheelMat);w.rotation.z=Math.PI/2;w.position.set(sx,s.wheel+.03,sz);w.castShadow=true;g.add(w)}
+ const lamp=new THREE.MeshStandardMaterial({color:0xfff3cf,emissive:0xffe0a0,emissiveIntensity:.25});
+ meshBox(g,-s.w*.34,s.h*.76,-s.l*.505,.30,.16,.10,0xfff4cf);
+ meshBox(g,s.w*.34,s.h*.76,-s.l*.505,.30,.16,.10,0xfff4cf);
+ if(type==='pickup')meshBox(g,0,s.h*1.02,s.l*.20,s.w*.92,.34,s.l*.28,color);
+ if(type==='taxi'){meshBox(g,0,s.h*1.72,-.05,.58,.12,.72,0xffd21a);g.userData.taxi=true}
+ if(police){meshBox(g,0,s.h*1.72,0,.58,.16,.82,0xeeeeee);meshBox(g,0,s.h*1.83,0,.26,.12,.38,0xff3030)}
  g.position.set(x,0,z);scene.add(g);return g;
 }
-let car=makeCar(40,20,0x1d7c45),inCar=false;
-const traffic=[];const roadXs=[-160,-120,-80,-40,0,40,80,120,160];for(let i=0;i<20;i++){const roadX=roadXs[i%roadXs.length];const lane=(i%2===0?-2.5:2.5);const c=makeCar(roadX+lane,-150+(i%5)*60,[0xc72c2c,0xeeeeee,0x2457a6,0xd7b23f,0x222222][i%5]);c.rotation.y=i%2?Math.PI:0;c.userData.speed=22+(i%5)*3;c.userData.stolen=false;c.userData.laneOffset=lane;traffic.push(c)}
+let car=makeCar(40,20,0x1d7c45,false,'sedan'),inCar=false;
+const traffic=[];
+const roadXs=[-160,-120,-80,-40,0,40,80,120,160];
+const carTypes=['sedan','hatch','suv','mpv','pickup','taxi'];
+const carColors=[0xc72c2c,0xeeeeee,0x2457a6,0xd7b23f,0x222222,0x8b5cf6,0x16835b,0xd65a31,0xbfc5cc];
+for(let i=0;i<36;i++){
+ const roadX=roadXs[i%roadXs.length],lane=(i%2===0?-2.5:2.5);
+ const type=carTypes[i%carTypes.length],cc=carColors[i%carColors.length];
+ const c=makeCar(roadX+lane,-170+(i%9)*38,cc,false,type);
+ c.rotation.y=i%2?Math.PI:0;c.userData.speed=30+(i%7)*3;c.userData.stolen=false;c.userData.laneOffset=lane;c.userData.roadAxis='z';c.userData.direction=i%2?1:-1;traffic.push(c)
+}
 const police=[];for(let i=0;i<4;i++)police.push(makeCar(-120+i*80,120,0xf2f2f2,true));
 const npcs=[];const npcRoad=[-160,-120,-80,-40,0,40,80,120,160];
 const npcLooks=[
@@ -216,13 +242,17 @@ const npcLooks=[
  [0x70452f,0xf2f2f2,0x252525,0x111111,0x17120e],[0xe1ad82,0x6cc070,0x394b35,0x191919,0x281810]
 ];
 // Populasi kota ditambah agar jalan terasa hidup, tetapi tetap ringan untuk perangkat mobile.
-for(let i=0;i<108;i++){
+for(let i=0;i<170;i++){
  const look=npcLooks[i%npcLooks.length],n=makeHuman(...look);
- const road=npcRoad[i%npcRoad.length],side=(i%2===0?-5.0:5.0),cross=npcRoad[(i*3)%npcRoad.length];
- n.position.set(road+side,0,cross+rnd(-4,4));
+ const side=(i%2===0?-7.2:7.2);
+ const road=npcRoad[i%npcRoad.length],cross=npcRoad[(i*3)%npcRoad.length];
+ const start=new THREE.Vector3(road+side,0,cross+rnd(-7,7));
+ n.position.copy(start);
  n.scale.multiplyScalar(.92+rnd(0,.16));
- n.userData.target=new THREE.Vector3(npcRoad[(i*5+2)%npcRoad.length]+(i%2===0?-5.0:5.0),0,npcRoad[(i*7+1)%npcRoad.length]);
+ n.userData.side=side;n.userData.roadIndex=i%npcRoad.length;n.userData.pathIndex=(i*3)%npcRoad.length;
+ n.userData.target=new THREE.Vector3(road+side,0,cross);
  n.userData.walkPhase=i*.43;
+ n.userData.pathMode='sidewalk';n.userData.workState='commute';n.userData.workTimer=0;
  n.userData.activity=['walk','talk','talk','phone','wait','walk','work'][i%7];
  n.userData.activityTimer=3+(i%5)*1.7;
 n.userData.workTarget=null;
@@ -346,26 +376,70 @@ function update(dt){
   const walkSpeed=5.2;if(steer!==0)player.rotation.y+=steer*2.6*dt;const walk=accel*walkSpeed*dt;const pf=new THREE.Vector3(0,0,-1).applyQuaternion(player.quaternion);if(Math.abs(walk)>0.0001){moveWithCollision(player,pf.x*walk,pf.z*walk,.68);animateHuman(player,performance.now()/1000,true)}else animateHuman(player,performance.now()/1000,false);
   player.position.x=Math.max(-175,Math.min(175,player.position.x));player.position.z=Math.max(-175,Math.min(175,player.position.z));
  }
- traffic.forEach((c,i)=>{if(c.userData.stolen)return;const v=((c.userData.speed||38)/3.6)*dt*(c.rotation.y?1:-1);c.position.z+=v;const lane=c.userData.laneOffset||0;c.position.x=Math.round(c.position.x/40)*40+lane;if(c.position.z>175)c.position.z=-175;if(c.position.z<-175)c.position.z=175});
- npcs.forEach((n,i)=>{const t=n.userData.target;const now=performance.now()/1000;n.userData.activityTimer-=dt;
-   // NPC selalu menggunakan trotoar/bahu jalan, tidak berjalan di lajur kendaraan.
-   if(n.userData.activity!=='work' && Math.abs((n.position.x%40))-5.0<0.2) n.position.x += n.position.x%40>0?0.35:-0.35;
- if(n.userData.activity==='work'){
-   const jobs=[[20,20],[-100,-100],[100,-100],[-100,100],[140,140],[-140,140]]; const j=jobs[i%jobs.length];
-   if(!n.userData.workTarget)n.userData.workTarget=new THREE.Vector3(j[0]+((i%3)-1)*4,0,j[1]+((i%2)*6-3));
-   const dx=n.userData.workTarget.x-n.position.x,dz=n.userData.workTarget.z-n.position.z,d=Math.hypot(dx,dz);
-   if(d>1.5){const step=Math.min(d,.045*dt*60);n.position.x+=dx/d*step;n.position.z+=dz/d*step;n.rotation.y=Math.atan2(dx,-dz);animateHuman(n,now+n.userData.walkPhase,true)}else{animateHuman(n,now+n.userData.walkPhase,false);if(n.userData.activityTimer<=0){n.userData.activity='walk';n.userData.workTarget=null;n.userData.activityTimer=3+Math.random()*4}}
- }else if(n.userData.activity==='talk'){
-   let p=n.userData.talkPartner;
-   if(!p||!p.parent){p=npcs[(i%2===0)?Math.min(i+1,npcs.length-1):Math.max(0,i-1)];n.userData.talkPartner=p;}
-   if(p&&p!==n){const mx=(n.position.x+p.position.x)/2,mz=(n.position.z+p.position.z)/2;n.position.x+=(mx-n.position.x)*dt*.7;n.position.z+=(mz-n.position.z)*dt*.7;n.rotation.y=Math.atan2(p.position.x-n.position.x,-(p.position.z-n.position.z));animateHuman(n,now+n.userData.walkPhase,false);if(n.userData.activityTimer<=0)n.userData.activity='walk';}
- }else if(n.userData.activity==='phone'){
-   n.rotation.y=Math.sin(now*.35+n.userData.walkPhase)*.12;animateHuman(n,now+n.userData.walkPhase,false);if(n.userData.phone)n.userData.phone.rotation.y+=dt*1.5;if(n.userData.activityTimer<=0)n.userData.activity='walk';
- }else if(n.userData.activity==='wait'){
-   n.rotation.y=Math.sin(now*.25+n.userData.walkPhase)*.18;animateHuman(n,now+n.userData.walkPhase,false);if(n.userData.activityTimer<=0)n.userData.activity='walk';
- }else{
-   const dx=t.x-n.position.x,dz=t.z-n.position.z,d=Math.hypot(dx,dz);if(d<2){const pick=(i+Math.floor(now/4))%npcRoad.length;t.set(npcRoad[pick],0,npcRoad[(pick+i+3)%npcRoad.length]);if(Math.random()<.3)n.userData.activity=['talk','phone','wait'][Math.floor(Math.random()*3)];n.userData.activityTimer=2+Math.random()*5;}else{const step=Math.min(d,.055*dt*60);n.position.x+=dx/d*step;n.position.z+=dz/d*step;n.rotation.y=Math.atan2(dx,-dz);animateHuman(n,now+n.userData.walkPhase,true)}}});
- handleWanted(dt,obj);
+ traffic.forEach((c,i)=>{
+   if(c.userData.stolen)return;
+   const v=((c.userData.speed||38)/3.6)*dt*(c.userData.direction||1);
+   c.position.z+=v;
+   const lane=c.userData.laneOffset||0;
+   c.position.x=Math.round(c.position.x/40)*40+lane;
+   if(c.position.z>180)c.position.z=-180;
+   if(c.position.z<-180)c.position.z=180;
+ });
+ npcs.forEach((n,i)=>{
+   const now=performance.now()/1000;
+   n.userData.activityTimer-=dt;
+   const side=n.userData.side||((i%2===0)?-7.2:7.2);
+   const road=npcRoad[n.userData.roadIndex%npcRoad.length];
+   const path=n.userData.pathIndex%npcRoad.length;
+   const targetRoad=npcRoad[path];
+   const setTarget=(x,z)=>n.userData.target.set(x,0,z);
+   // Jalur pejalan kaki permanen: NPC hanya bergerak di koridor trotoar ±7.2 dari sumbu jalan.
+   if(n.userData.activity==='work'){
+     const jobs=[[20,20],[-100,-100],[100,-100],[-100,100],[140,140],[-140,140]];
+     const j=jobs[i%jobs.length];
+     if(n.userData.workState==='commute'){
+       const doorX=j[0]+((i%3)-1)*3.5,doorZ=j[1]+((i%2)*5-2.5);
+       const dx=doorX-n.position.x,dz=doorZ-n.position.z,d=Math.hypot(dx,dz);
+       if(d>2.0){const step=Math.min(d,.055*dt*60);n.position.x+=dx/d*step;n.position.z+=dz/d*step;n.rotation.y=Math.atan2(dx,-dz);animateHuman(n,now+n.userData.walkPhase,true)}
+       else{n.userData.workState='inside';n.userData.workTimer=5+Math.random()*8;n.visible=false}
+     }else if(n.userData.workState==='inside'){
+       if(n.userData.workTimer<=0){n.visible=true;n.userData.workState='return';setTarget(road+side,n.position.z);n.userData.activity='walk';n.userData.activityTimer=2+Math.random()*4}
+     }
+     return;
+   }
+   if(!n.visible)return;
+   if(n.userData.activity==='talk'){
+     let p=n.userData.talkPartner;
+     if(!p||!p.parent){p=npcs[(i%2===0)?Math.min(i+1,npcs.length-1):Math.max(0,i-1)];n.userData.talkPartner=p}
+     if(p&&p!==n){n.rotation.y=Math.atan2(p.position.x-n.position.x,-(p.position.z-n.position.z));animateHuman(n,now+n.userData.walkPhase,false)}
+     if(n.userData.activityTimer<=0)n.userData.activity='walk';
+   }else if(n.userData.activity==='phone'){
+     n.rotation.y=Math.sin(now*.35+n.userData.walkPhase)*.12;animateHuman(n,now+n.userData.walkPhase,false);
+     if(n.userData.phone)n.userData.phone.rotation.y+=dt*1.5;
+     if(n.userData.activityTimer<=0)n.userData.activity='walk';
+   }else if(n.userData.activity==='wait'){
+     n.rotation.y=Math.sin(now*.25+n.userData.walkPhase)*.18;animateHuman(n,now+n.userData.walkPhase,false);
+     if(n.userData.activityTimer<=0)n.userData.activity='walk';
+   }else{
+     const t=n.userData.target,dx=t.x-n.position.x,dz=t.z-n.position.z,d=Math.hypot(dx,dz);
+     if(d<1.2){
+       n.userData.pathIndex=(n.userData.pathIndex+1+npcs.length)%npcRoad.length;
+       const nextRoad=npcRoad[n.userData.pathIndex%npcRoad.length];
+       // Di persimpangan, pindah koridor trotoar dengan segmen pendek, bukan memotong badan jalan.
+       if(Math.random()<.28){
+         const altSide=(Math.random()<.5?-7.2:7.2);
+         n.userData.side=altSide;
+       }
+       setTarget(nextRoad+(n.userData.side||side),npcRoad[(n.userData.pathIndex+2)%npcRoad.length]);
+       if(Math.random()<.14)n.userData.activity=['talk','phone','wait','work'][Math.floor(Math.random()*4)];
+       n.userData.activityTimer=2+Math.random()*5;
+     }else{
+       const step=Math.min(d,.065*dt*60);
+       n.position.x+=dx/d*step;n.position.z+=dz/d*step;n.rotation.y=Math.atan2(dx,-dz);
+       animateHuman(n,now+n.userData.walkPhase,true);
+     }
+   }
+ }); handleWanted(dt,obj);
  if(obj.position.distanceTo(target.position)<9)completeMission();
  const desired=new THREE.Vector3(0,inCar?9:5.2,inCar?16:11).applyQuaternion(obj.quaternion).add(obj.position);
  camera.position.lerp(desired,.11);camera.lookAt(obj.position.x,obj.position.y+1.3,obj.position.z);
