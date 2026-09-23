@@ -84,6 +84,30 @@ scene.fog=new THREE.Fog(0x4f7890,180,620);
 const camera=new THREE.PerspectiveCamera(64,innerWidth/innerHeight,.1,700);
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(innerWidth,innerHeight);
+const cameraControls={
+ target:new THREE.Vector3(0,0,0),distance:34,height:22,
+ dragging:false,lastX:0,lastY:0,touchMode:0,lastPinch:0
+};
+function clampCamera(){
+ cameraControls.distance=Math.max(10,Math.min(95,cameraControls.distance));
+ cameraControls.target.x=Math.max(-250,Math.min(250,cameraControls.target.x));
+ cameraControls.target.z=Math.max(-250,Math.min(250,cameraControls.target.z));
+ camera.position.set(cameraControls.target.x,cameraControls.height,cameraControls.target.z+cameraControls.distance);
+ camera.lookAt(cameraControls.target.x,0,cameraControls.target.z);
+}
+function zoomCamera(amount){cameraControls.distance=Math.max(10,Math.min(95,cameraControls.distance+amount));clampCamera();}
+renderer.domElement.style.touchAction='none';
+renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();zoomCamera(e.deltaY*.035)},{passive:false});
+renderer.domElement.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;cameraControls.dragging=true;cameraControls.lastX=e.clientX;cameraControls.lastY=e.clientY;renderer.domElement.setPointerCapture?.(e.pointerId);});
+renderer.domElement.addEventListener('pointermove',e=>{if(!cameraControls.dragging)return;const dx=e.clientX-cameraControls.lastX,dy=e.clientY-cameraControls.lastY;cameraControls.lastX=e.clientX;cameraControls.lastY=e.clientY;cameraControls.target.x-=dx*.055*(cameraControls.distance/34);cameraControls.target.z+=dy*.055*(cameraControls.distance/34);clampCamera();});
+renderer.domElement.addEventListener('pointerup',()=>cameraControls.dragging=false);
+renderer.domElement.addEventListener('pointercancel',()=>cameraControls.dragging=false);
+let pinchStart=0;
+renderer.domElement.addEventListener('touchstart',e=>{if(e.touches.length===2){pinchStart=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);}},{passive:false});
+renderer.domElement.addEventListener('touchmove',e=>{if(e.touches.length!==2)return;e.preventDefault();const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);if(pinchStart){zoomCamera((pinchStart-d)*.035);pinchStart=d;}},{passive:false});
+window.addEventListener('keydown',e=>{if(e.key==='+'||e.key==='=')zoomCamera(-2);if(e.key==='-'||e.key==='_')zoomCamera(2);});
+clampCamera();
+
 renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const hemi=new THREE.HemisphereLight(0xffffff,0x28432d,1.9);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xffffff,2.1);sun.position.set(80,120,40);sun.castShadow=true;sun.shadow.mapSize.set(1536,1536);sun.shadow.camera.near=1;sun.shadow.camera.far=360;sun.shadow.camera.left=-190;sun.shadow.camera.right=190;sun.shadow.camera.top=190;sun.shadow.camera.bottom=-190;scene.add(sun);
