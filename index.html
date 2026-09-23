@@ -571,8 +571,10 @@ function update(dt){
  const gasPressed=pressed('w')||pressed('gas'); const keyForward=(gasPressed?1:0)-(pressed('s')?1:0),keyStrafe=(pressed('d')?1:0)-(pressed('a')?1:0); const moveForward=Math.abs(analogState.y)>.05? -analogState.y : keyForward; const moveStrafe=Math.abs(analogState.x)>.05? analogState.x : keyStrafe; const movingInput=Math.hypot(moveStrafe,moveForward)>0.05;
  if(inCar){
   const boost=pressed('shift')&&fuel>2;
-  const max=boost?95:70;
-  const accelRate=boost?42:30;const drag=accel===0?7:1.8;speed+=accel*accelRate*dt-speed*drag*dt;speed=Math.max(-28,Math.min(max,speed));
+  // Kecepatan normal kendaraan pemain disamakan dengan mobil NPC tercepat (49,2 km/j).
+  // Nitro tetap menjadi akselerasi tambahan agar fitur NITRO tetap terasa berbeda.
+  const max=boost?70:49.2;
+  const accelRate=boost?42:22;const drag=accel===0?7:1.8;speed+=accel*accelRate*dt-speed*drag*dt;speed=Math.max(-28,Math.min(max,speed));
   if(boost){fuel=Math.max(0,fuel-dt*4.8);if(Math.random()<dt*8)soundBurst('boost',.012)}if(pressed('space')){speed*=.72;if(Math.abs(speed)>18)soundBurst('brake',.018)}
   if(Math.abs(speed)>0.8){const steerRate=(pressed('space')?0.82:1.12)*Math.min(1,Math.abs(speed)/28);car.rotation.y+=steer*steerRate*dt*(speed>=0?1:-1);}const drive=(speed/3.6)*dt;const forward=new THREE.Vector3(0,0,-1).applyQuaternion(car.quaternion);const moved=moveWithCollision(car,forward.x*drive,forward.z*drive,2.35);if(!moved){if(audioReady&&Math.abs(speed)>8&&performance.now()/1000-audioLastImpact>.7){soundBurst('impact',.12);audioLastImpact=performance.now()/1000}speed*=.15;carHealth=Math.max(0,carHealth-Math.abs(speed)*dt*3);if(Math.abs(speed)>.12)toast('🚧 Bangunan menghalangi jalan')}
   fuel=Math.max(0,fuel-Math.abs(speed)*dt*.006);
