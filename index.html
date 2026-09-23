@@ -96,24 +96,27 @@ function clampCamera(){
  cameraControls.target.x=THREE.MathUtils.clamp(cameraControls.target.x,-250+maxPan,250-maxPan);
  cameraControls.target.z=THREE.MathUtils.clamp(cameraControls.target.z,-250+maxPan,250-maxPan);
 }
+const cameraDesiredPosition=new THREE.Vector3();
+const cameraLookTarget=new THREE.Vector3();
 function applyCamera(player){
  if(!player)return;
  const now=performance.now();
  if(now>cameraControls.manualUntil&&!cameraControls.dragging){
    const desiredYaw=player.rotation.y;
-   if(true){
-     let delta=THREE.MathUtils.euclideanModulo(desiredYaw-cameraControls.yaw+Math.PI,Math.PI*2)-Math.PI;
-     cameraControls.yaw+=delta*Math.min(1,0.12*(now-(cameraControls.manualUntil||now))/16.67);
-   }
+   let delta=THREE.MathUtils.euclideanModulo(desiredYaw-cameraControls.yaw+Math.PI,Math.PI*2)-Math.PI;
+   cameraControls.yaw+=delta*.055;
  }
  const horizontal=cameraControls.distance*Math.cos(cameraControls.pitch);
  const vertical=cameraControls.distance*Math.sin(cameraControls.pitch);
- camera.position.set(
+ cameraDesiredPosition.set(
    cameraControls.target.x+Math.sin(cameraControls.yaw)*horizontal,
    cameraControls.height+vertical,
    cameraControls.target.z+Math.cos(cameraControls.yaw)*horizontal
  );
- camera.lookAt(cameraControls.target.x,1.05,cameraControls.target.z);
+ // Pergerakan kamera dibuat halus supaya tidak terasa patah saat berjalan maupun mengemudi.
+ camera.position.lerp(cameraDesiredPosition,.12);
+ cameraLookTarget.set(cameraControls.target.x,1.05,cameraControls.target.z);
+ camera.lookAt(cameraLookTarget);
 }
 function zoomCamera(amount){cameraControls.distance=THREE.MathUtils.clamp(cameraControls.distance+amount,5,34);clampCamera();}
 renderer.domElement.style.touchAction='none';
@@ -397,8 +400,40 @@ function updateSafeNpc(n,i,dt,now){
 
 const weatherStates=['Cerah','Mendung','Hujan'];
 let rainDrops=[];
-function buildWeatherFX(){rainDrops.forEach(r=>scene.remove(r));rainDrops=[];if(weather!=='Hujan')return;const g=new THREE.BufferGeometry();const pts=[];for(let i=0;i<420;i++)pts.push(rnd(-180,180),rnd(2,85),rnd(-180,180));g.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));const m=new THREE.PointsMaterial({color:0x9fd8ff,size:.32,transparent:true,opacity:.58,depthWrite:false});const rain=new THREE.Points(g,m);rain.userData.isRain=true;scene.add(rain);rainDrops.push(rain)}
-function updateRain(dt,obj){if(weather!=='Hujan'||!rainDrops[0])return;const rain=rainDrops[0],a=rain.geometry.attributes.position;for(let i=0;i<a.count;i++){let y=a.getY(i)-42*dt;let x=a.getX(i),z=a.getZ(i);if(y<1){y=rnd(45,85);x=obj.position.x+rnd(-180,180);z=obj.position.z+rnd(-180,180)}a.setXYZ(i,x,y,z)}a.needsUpdate=true}
+function buildWeatherFX(){
+ rainDrops.forEach(r=>{scene.remove(r);r.geometry?.dispose();r.material?.dispose()});
+ rainDrops=[];
+ if(weather!=='Hujan')return;
+ const g=new THREE.BufferGeometry();
+ const segments=isMobileDevice?260:420;
+ const pts=new Float32Array(segments*6);
+ for(let i=0;i<segments;i++){
+   const x=rnd(-180,180),y=rnd(4,88),z=rnd(-180,180);
+   const len=rnd(1.8,3.8);
+   const o=i*6;
+   pts[o]=x;pts[o+1]=y;pts[o+2]=z;
+   pts[o+3]=x+.35;pts[o+4]=Math.max(1,y-len);pts[o+5]=z+.08;
+ }
+ g.setAttribute('position',new THREE.BufferAttribute(pts,3));
+ const m=new THREE.LineBasicMaterial({color:0xbfe8ff,transparent:true,opacity:.48,depthWrite:false});
+ const rain=new THREE.LineSegments(g,m);
+ rain.userData.isRain=true;
+ scene.add(rain);rainDrops.push(rain);
+}
+function updateRain(dt,obj){
+ if(weather!=='Hujan'||!rainDrops[0])return;
+ const rain=rainDrops[0],a=rain.geometry.attributes.position;
+ for(let i=0;i<a.count;i+=2){
+   let x=a.getX(i),y=a.getY(i)-52*dt,z=a.getZ(i);
+   const len=Math.max(.8,a.getY(i)-a.getY(i+1));
+   if(y<1){
+     y=rnd(48,88);x=obj.position.x+rnd(-180,180);z=obj.position.z+rnd(-180,180);
+   }
+   a.setXYZ(i,x,y,z);
+   a.setXYZ(i+1,x+.35,Math.max(1,y-len),z+.08);
+ }
+ a.needsUpdate=true;
+}
 function setWeather(next){weather=next;document.querySelector('#weather').textContent=weather==='Hujan'?'🌧️ Hujan':weather==='Mendung'?'☁️ Mendung':'☀️ Cerah';buildWeatherFX();if(weather==='Hujan')toast('🌧️ Hujan turun di Cirebon');}
 function cycleWeather(){setWeather(weatherStates[(weatherStates.indexOf(weather)+1)%weatherStates.length]);beep(520,.12,.045)}
 let missionReward=50000;const keys=new Set();const pressed=k=>keys.has(k);
@@ -501,7 +536,7 @@ if(scene.fog)scene.fog.color.copy(sky);
 moonLight.intensity=.05+.38*night;
 fillLight.intensity=.10+.28*day;
 lampMat.emissiveIntensity=Math.max(0,night-.05)*2.2;
- sun.intensity=(.35+1.9*day)*(weather==='Hujan' ? .72 : weather==='Mendung' ? .88 : 1);hemi.intensity=(.55+1.4*day)*(weather==='Hujan' ? .8 : weather==='Mendung' ? .93 : 1);if(scene.fog)scene.fog.far=weather==='Hujan'?300:620;
+ sun.intensity=(.35+1.9*day)*(weather==='Hujan' ? .72 : weather==='Mendung' ? .88 : 1);hemi.intensity=(.55+1.4*day)*(weather==='Hujan' ? .8 : weather==='Mendung' ? .93 : 1);if(scene.fog)scene.fog.far=weather==='Hujan'?300:620;updateRain(dt,inCar?car:player);
  document.querySelector('#clock').textContent=String(Math.floor(hour)).padStart(2,'0')+':'+String(Math.floor(gameMinutes%60)).padStart(2,'0')+(day>.55?' Siang':' Malam');
 }
 function update(dt){
