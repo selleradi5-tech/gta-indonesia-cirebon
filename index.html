@@ -117,6 +117,7 @@ function applyCamera(player){
  camera.position.lerp(cameraDesiredPosition,.12);
  cameraLookTarget.set(cameraControls.target.x,1.05,cameraControls.target.z);
  camera.lookAt(cameraLookTarget);
+ if(weaponRecoil>0)camera.rotateX(-weaponRecoil*.35);
 }
 function zoomCamera(amount){cameraControls.distance=THREE.MathUtils.clamp(cameraControls.distance+amount,5,34);clampCamera();}
 renderer.domElement.style.touchAction='none';
@@ -589,7 +590,7 @@ function updateContextControls(){
  const nearService=inCar&&(car.position.distanceTo(shop.position)<20||car.position.distanceTo(gas.position)<20);
  const weaponReady=!inCar&&weaponEquipped;
  const set=(id,on)=>{const e=document.querySelector(id);if(e)e.classList.toggle('hidden',!on)};
- set('#btnEnter',nearCar);set('#btnSteal',nearTraffic);set('#btnNitro',inCar&&fuel>2);set('#btnBrake',inCar);set('#btnRepair',nearService);set('#btnExit',inCar);set('#btnWeapon',!inCar);set('#btnFire',weaponReady);
+ set('#btnEnter',nearCar);set('#btnSteal',nearTraffic);set('#btnNitro',inCar&&fuel>2);set('#btnBrake',inCar);set('#btnRepair',nearService);set('#btnExit',inCar);set('#btnWeapon',!inCar);set('#btnSwitch',!inCar);set('#btnReload',weaponReady);set('#btnFire',weaponReady);
 }
 function syncControlMode(){
   const walkingControls=document.querySelector('#controls');
