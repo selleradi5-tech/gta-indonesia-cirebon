@@ -4,59 +4,60 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>GTA Indonesia — Cirebon</title>
 <style>
-html,body{margin:0;height:100%;overflow:hidden;background:#111;font-family:Arial,sans-serif;color:#fff}
-#game{position:fixed;inset:0}canvas{display:block}
-#hud{position:fixed;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;pointer-events:none;font-weight:700;text-shadow:0 2px 4px #000}
-.box{background:#0009;border:1px solid #fff3;border-radius:12px;padding:8px 10px}
-#mission{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#000b;padding:9px 14px;border-radius:14px;text-align:center;font-size:13px}
-#controls{position:fixed;left:12px;right:12px;bottom:14px;display:flex;justify-content:space-between;pointer-events:none}
-.pad,.actions{display:grid;gap:7px;pointer-events:auto}.pad{grid-template-columns:repeat(3,52px)}.actions{grid-template-columns:repeat(2,62px)}
-button{height:52px;border:1px solid #fff5;border-radius:14px;background:#111b;color:#fff;font-size:18px;font-weight:700;touch-action:none}
-.spacer{visibility:hidden}
-@media(min-width:900px){button{opacity:.65}}
-</style>
-</head>
+html,body{margin:0;height:100%;overflow:hidden;background:#111;font-family:Arial,sans-serif;color:#fff}#game{position:fixed;inset:0}canvas{display:block}
+#hud{position:fixed;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;pointer-events:none;font-weight:700;text-shadow:0 2px 4px #000}.box{background:#0009;border:1px solid #fff3;border-radius:12px;padding:8px 10px;line-height:1.45}
+#mission{position:fixed;top:78px;left:50%;transform:translateX(-50%);background:#000b;padding:9px 14px;border-radius:14px;text-align:center;font-size:13px;min-width:230px}
+#minimap{position:fixed;right:10px;top:72px;width:120px;height:120px;background:#152019dd;border:2px solid #fff7;border-radius:14px;overflow:hidden}#mapdot{position:absolute;width:9px;height:9px;border-radius:50%;background:#29a8ff;left:56px;top:56px;box-shadow:0 0 7px #fff}.maproad{position:absolute;background:#555}.r1{width:100%;height:10px;top:55px}.r2{height:100%;width:10px;left:55px}
+#toast{position:fixed;left:50%;bottom:105px;transform:translateX(-50%);background:#000c;padding:8px 14px;border-radius:12px;opacity:0;transition:.25s;pointer-events:none}
+#controls{position:fixed;left:12px;right:12px;bottom:14px;display:flex;justify-content:space-between;pointer-events:none}.pad,.actions{display:grid;gap:7px;pointer-events:auto}.pad{grid-template-columns:repeat(3,52px)}.actions{grid-template-columns:repeat(2,64px)}
+button{height:52px;border:1px solid #fff5;border-radius:14px;background:#111b;color:#fff;font-size:17px;font-weight:700;touch-action:none}.spacer{visibility:hidden}@media(min-width:900px){button{opacity:.65}}
+</style></head>
 <body>
 <div id="game"></div>
-<div id="hud"><div class="box">💵 Rp <span id="cash">150000</span><br>⭐ <span id="wanted">0</span>/5</div><div class="box">CIREBON<br><small id="mode">Jalan kaki</small></div></div>
+<div id="hud"><div class="box">💵 Rp <span id="cash">150000</span><br>⛽ <span id="fuel">100</span>% · ⭐ <span id="wanted">0</span>/5</div><div class="box">CIREBON<br><small id="mode">Jalan kaki</small><br><small id="clock">12:00 Siang</small></div></div>
 <div id="mission">MISI 1 · ANTAR PAKET<br><small>Datangi titik kuning di sekitar Balai Kota</small></div>
-<div id="controls">
-<div class="pad"><span class="spacer"></span><button data-k="w">▲</button><span class="spacer"></span><button data-k="a">◀</button><button data-k="s">▼</button><button data-k="d">▶</button></div>
-<div class="actions"><button data-k="e">MASUK</button><button data-k="shift">NITRO</button><button data-k="r">REPAIR</button><button data-k="space">REM</button></div>
-</div>
+<div id="minimap"><div class="maproad r1"></div><div class="maproad r2"></div><div id="mapdot"></div></div><div id="toast"></div>
+<div id="controls"><div class="pad"><span class="spacer"></span><button data-k="w">▲</button><span class="spacer"></span><button data-k="a">◀</button><button data-k="s">▼</button><button data-k="d">▶</button></div>
+<div class="actions"><button data-k="e">MASUK</button><button data-k="shift">NITRO</button><button data-k="r">REPAIR</button><button data-k="space">REM</button><button data-k="save">SAVE</button><button data-k="load">LOAD</button></div></div>
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js';
-const scene=new THREE.Scene(); scene.background=new THREE.Color(0x8fc8ee); scene.fog=new THREE.Fog(0x8fc8ee,90,300);
-const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,500);
-const renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setPixelRatio(Math.min(devicePixelRatio,2)); renderer.setSize(innerWidth,innerHeight); document.querySelector('#game').appendChild(renderer.domElement);
-scene.add(new THREE.HemisphereLight(0xffffff,0x446644,2));
-const sun=new THREE.DirectionalLight(0xffffff,2.2); sun.position.set(80,120,40); scene.add(sun);
-const mat=(c)=>new THREE.MeshStandardMaterial({color:c});
-const ground=new THREE.Mesh(new THREE.PlaneGeometry(500,500),mat(0x3f7042)); ground.rotation.x=-Math.PI/2; scene.add(ground);
+const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,600),renderer=new THREE.WebGLRenderer({antialias:true});
+scene.background=new THREE.Color(0x8fc8ee);scene.fog=new THREE.Fog(0x8fc8ee,90,320);renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);document.querySelector('#game').appendChild(renderer.domElement);
+const hemi=new THREE.HemisphereLight(0xffffff,0x36543a,2);scene.add(hemi);const sun=new THREE.DirectionalLight(0xffffff,2.2);sun.position.set(80,120,40);scene.add(sun);const mat=c=>new THREE.MeshStandardMaterial({color:c});
 function cube(x,y,z,sx,sy,sz,c){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat(c));m.position.set(x,y,z);scene.add(m);return m}
-for(let x=-120;x<=120;x+=40){cube(x,.03,0,12,.06,280,0x444444);cube(x,.07,0,.35,.08,280,0xf1d85a)}
-for(let z=-120;z<=120;z+=40){cube(0,.03,z,280,.06,12,0x444444);cube(0,.07,z,280,.08,.35,0xf1d85a)}
-for(let x=-100;x<=100;x+=20)for(let z=-100;z<=100;z+=20){if(Math.abs(x%40)<8||Math.abs(z%40)<8)continue;let h=6+Math.random()*18;cube(x,h/2,z,12,h,12,[0xd6b08c,0xb7c9d9,0xd0d0c0,0xc59b79][Math.floor(Math.random()*4)])}
-const landmark=cube(0,4,0,22,8,18,0xd6b24c); cube(0,9,0,12,2,10,0xf0e3bd);
+function localCube(x,y,z,sx,sy,sz,c){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat(c));m.position.set(x,y,z);return m}
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(600,600),mat(0x3f7042));ground.rotation.x=-Math.PI/2;scene.add(ground);
+for(let x=-140;x<=140;x+=40){cube(x,.03,0,12,.06,320,0x444444);cube(x,.07,0,.35,.08,320,0xf1d85a)}for(let z=-140;z<=140;z+=40){cube(0,.03,z,320,.06,12,0x444444);cube(0,.07,z,320,.08,.35,0xf1d85a)}
+for(let x=-120;x<=120;x+=20)for(let z=-120;z<=120;z+=20){if(Math.abs(x%40)<8||Math.abs(z%40)<8)continue;let h=6+Math.random()*18;cube(x,h/2,z,12,h,12,[0xd6b08c,0xb7c9d9,0xd0d0c0,0xc59b79][Math.floor(Math.random()*4)])}
+cube(0,4,0,22,8,18,0xd6b24c);cube(0,9,0,12,2,10,0xf0e3bd);cube(-2,12,0,2,6,2,0xb33a2e);
+function label(text,x,z){const c=document.createElement('canvas');c.width=512;c.height=96;const ctx=c.getContext('2d');ctx.fillStyle='rgba(0,0,0,.7)';ctx.fillRect(0,0,512,96);ctx.fillStyle='#fff';ctx.font='bold 38px Arial';ctx.textAlign='center';ctx.fillText(text,256,62);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true}));s.scale.set(22,4,1);s.position.set(x,8,z);scene.add(s)}
+label('BALAI KOTA',0,0);label('KOTA CIREBON',80,-80);
 const target=new THREE.Mesh(new THREE.CylinderGeometry(5,5,.15,32),new THREE.MeshBasicMaterial({color:0xffd21a}));target.position.set(55,.15,55);scene.add(target);
-const player=new THREE.Group(); const body=new THREE.Mesh(new THREE.CapsuleGeometry(1,2,6,10),mat(0x2468d8));body.position.y=2;player.add(body);player.position.set(18,0,18);scene.add(player);
-let car=null,inCar=false, cash=150000,wanted=0, speed=0;
-function makeCar(x,z,c=0xc72c2c){let g=new THREE.Group();g.add(cube(0,1,0,3.8,1.4,6,c));let w=mat(0x111111);for(let sx of [-1.7,1.7])for(let sz of [-2,2]){let q=new THREE.Mesh(new THREE.CylinderGeometry(.65,.65,.45,16),w);q.rotation.z=Math.PI/2;q.position.set(sx,.65,sz);g.add(q)}g.position.set(x,0,z);scene.add(g);return g}
-for(let i=0;i<8;i++){let c=makeCar(-80+i*22,(i%2?55:-55),i%2?0xeeeeee:0xc72c2c);c.rotation.y=i%2?Math.PI:0}
-car=makeCar(18,10,0x1d7c45);
-function pressed(k){return keys.has(k)}
-const keys=new Set();
-addEventListener('keydown',e=>{keys.add(e.key.toLowerCase());if(e.key===' '||e.key==='Shift')keys.add(e.key===' '?'space':'shift');if(e.key.toLowerCase()==='e')interact()});
-addEventListener('keyup',e=>{keys.delete(e.key.toLowerCase());keys.delete(e.key===' '?'space':'shift')});
-document.querySelectorAll('button[data-k]').forEach(b=>{let k=b.dataset.k;b.onpointerdown=()=>keys.add(k);b.onpointerup=b.onpointercancel=b.onpointerleave=()=>keys.delete(k)});
-function interact(){if(!inCar&&player.position.distanceTo(car.position)<8){inCar=true;player.visible=false;document.querySelector('#mode').textContent='Mengemudi'}else if(inCar){inCar=false;player.visible=true;player.position.copy(car.position).x+=4;document.querySelector('#mode').textContent='Jalan kaki'}}
-function update(){let obj=inCar?car:player;let accel=(pressed('w')?1:0)-(pressed('s')?1:0);let steer=(pressed('a')?1:0)-(pressed('d')?1:0);
-if(inCar){speed+=(accel*(pressed('shift')?0.055:0.025))-speed*.018;speed=Math.max(-.45,Math.min(.8,speed));car.rotation.y+=steer*speed*.035;car.translateZ(-speed*3)}else{let v=.32;player.translateZ(-accel*v);player.rotation.y+=steer*.06}
-if(pressed('r'))speed*=.92;
-let desired=new THREE.Vector3(0,8,14).applyQuaternion(obj.quaternion).add(obj.position);camera.position.lerp(desired,.12);camera.lookAt(obj.position.x,obj.position.y+1,obj.position.z);
-if(obj.position.distanceTo(target.position)<7){cash+=50000;target.position.set(-55,-.1,-55);document.querySelector('#mission').innerHTML='MISI SELESAI · +Rp50.000<br><small>Jelajahi Cirebon</small>'}
-document.querySelector('#cash').textContent=cash.toLocaleString('id-ID');document.querySelector('#wanted').textContent=wanted}
-function loop(){requestAnimationFrame(loop);update();renderer.render(scene,camera)}loop();
+const player=new THREE.Group(),body=new THREE.Mesh(new THREE.CapsuleGeometry(1,2,6,10),mat(0x2468d8));body.position.y=2;player.add(body);player.position.set(18,0,18);scene.add(player);
+function makeCar(x,z,c=0xc72c2c){const g=new THREE.Group();g.add(localCube(0,1,0,3.8,1.4,6,c));const w=mat(0x111111);for(const sx of[-1.7,1.7])for(const sz of[-2,2]){const q=new THREE.Mesh(new THREE.CylinderGeometry(.65,.65,.45,16),w);q.rotation.z=Math.PI/2;q.position.set(sx,.65,sz);g.add(q)}g.position.set(x,0,z);scene.add(g);return g}
+let car=makeCar(18,10,0x1d7c45),inCar=false,cash=150000,wanted=0,speed=0,fuel=100,mission=1,missionReward=50000,gameMinutes=720;
+const traffic=[];for(let i=0;i<10;i++){const c=makeCar(-120+i*24,(i%2?55:-55),i%3?0xeeeeee:0xc72c2c);c.rotation.y=i%2?Math.PI:0;traffic.push(c)}
+const police=[];for(let i=0;i<3;i++)police.push(makeCar(70+i*22,70,0xf2f2f2));
+const npcs=[];for(let i=0;i<14;i++){const n=new THREE.Mesh(new THREE.CapsuleGeometry(.5,.9,5,8),mat(i%2?0xe0a32f:0x8b5cf6));n.position.set(-100+Math.random()*200,1,-100+Math.random()*200);scene.add(n);npcs.push(n)}
+const keys=new Set();const pressed=k=>keys.has(k);
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(e.key===' ')keys.add('space');else if(e.key==='Shift')keys.add('shift');else keys.add(k);if(k==='e')interact();if(k==='r')repair();if(k==='f5')saveGame();if(k==='f9')loadGame()});
+addEventListener('keyup',e=>{keys.delete(e.key.toLowerCase());if(e.key===' ')keys.delete('space');if(e.key==='Shift')keys.delete('shift')});
+document.querySelectorAll('button[data-k]').forEach(b=>{const k=b.dataset.k;b.onpointerdown=e=>{e.preventDefault();if(k==='e')interact();else if(k==='r')repair();else if(k==='save')saveGame();else if(k==='load')loadGame();else keys.add(k)};b.onpointerup=b.onpointercancel=b.onpointerleave=()=>keys.delete(k)});
+function toast(t){const el=document.querySelector('#toast');el.textContent=t;el.style.opacity=1;clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.style.opacity=0,1800)}
+function interact(){if(!inCar&&player.position.distanceTo(car.position)<9){inCar=true;player.visible=false;document.querySelector('#mode').textContent='Mengemudi';toast('Kamu masuk kendaraan')}else if(inCar){inCar=false;player.visible=true;player.position.copy(car.position);player.position.x+=4;document.querySelector('#mode').textContent='Jalan kaki';toast('Kamu keluar kendaraan')}}
+function repair(){if(inCar&&cash>=25000){cash-=25000;fuel=Math.min(100,fuel+35);speed=0;toast('Kendaraan diperbaiki dan diisi · Rp25.000')}else if(inCar)toast('Uang tidak cukup')}
+function saveGame(){localStorage.setItem('gtaCirebonSave',JSON.stringify({cash,fuel,wanted,mission,gameMinutes,x:car.position.x,z:car.position.z}));toast('Game disimpan')}
+function loadGame(){const s=JSON.parse(localStorage.getItem('gtaCirebonSave')||'null');if(!s){toast('Belum ada save');return}cash=s.cash;fuel=s.fuel;wanted=s.wanted;mission=s.mission||1;gameMinutes=s.gameMinutes||720;car.position.set(s.x||18,0,s.z||10);toast('Game dimuat')}
+function nextMission(){cash+=missionReward;mission++;const x=((mission*37)%240)-120,z=((mission*61)%240)-120;target.position.set(x,.15,z);document.querySelector('#mission').innerHTML='MISI '+mission+' · ANTAR PAKET<br><small>Ikuti titik kuning · hadiah Rp'+missionReward.toLocaleString('id-ID')+'</small>';toast('Misi selesai! +Rp'+missionReward.toLocaleString('id-ID'));if(mission%3===0){wanted=Math.min(5,wanted+1);toast('Polisi mulai memperhatikanmu! ⭐ '+wanted)}}
+function updateWorld(dt){gameMinutes=(gameMinutes+dt*2)%1440;const hour=gameMinutes/60,daylight=Math.max(.18,Math.sin((hour-6)/12*Math.PI)),sky=new THREE.Color().setHSL(.56,.45,.18+.45*daylight);scene.background.copy(sky);scene.fog.color.copy(sky);sun.intensity=.35+1.9*daylight;hemi.intensity=.5+1.5*daylight;document.querySelector('#clock').textContent=Math.floor(hour).toString().padStart(2,'0')+':'+Math.floor(gameMinutes%60).toString().padStart(2,'0')+(daylight>.55?' Siang':' Malam')}
+function update(dt){const obj=inCar?car:player,accel=(pressed('w')?1:0)-(pressed('s')?1:0),steer=(pressed('a')?1:0)-(pressed('d')?1:0);
+if(inCar){const boost=pressed('shift')&&fuel>1;speed+=accel*(boost?.07:.028)-speed*.025;speed=Math.max(-.5,Math.min(boost?1.15:.78,speed));if(boost)fuel=Math.max(0,fuel-dt*4);if(pressed('space'))speed*=.88;car.rotation.y+=steer*speed*.035;car.translateZ(-speed*3);fuel=Math.max(0,fuel-Math.abs(speed)*dt*.45);if(fuel<=0){speed=0;toast('Bensin habis! Tekan REPAIR')}}else{player.translateZ(-accel*.34);player.rotation.y+=steer*.06}
+traffic.forEach((c,i)=>{c.translateZ(-(0.015+i%3*.006)*dt*60);if(Math.abs(c.position.z)>155)c.position.z=-c.position.z});npcs.forEach((n,i)=>{n.position.x+=Math.sin(performance.now()/1200+i)*.006*dt*60;n.position.z+=Math.cos(performance.now()/1400+i)*.004*dt*60});
+if(wanted>0){police.forEach(p=>{const d=p.position.distanceTo(obj.position),dir=obj.position.clone().sub(p.position).normalize();p.position.add(dir.multiplyScalar((.018+wanted*.004)*dt*60));if(d<7){wanted=Math.min(5,wanted+1);speed*=.5;toast('POLISI! Tingkat buronan naik')}});if(Math.random()<dt*.018)wanted=Math.max(0,wanted-1)}
+if(obj.position.distanceTo(target.position)<8)nextMission();
+const desired=new THREE.Vector3(0,inCar?9:7,inCar?16:13).applyQuaternion(obj.quaternion).add(obj.position);camera.position.lerp(desired,.12);camera.lookAt(obj.position.x,obj.position.y+1,obj.position.z);
+document.querySelector('#cash').textContent=Math.floor(cash).toLocaleString('id-ID');document.querySelector('#fuel').textContent=Math.round(fuel);document.querySelector('#wanted').textContent=wanted;
+const mapX=Math.max(4,Math.min(112,60+(obj.position.x/280)*110)),mapZ=Math.max(4,Math.min(112,60+(obj.position.z/280)*110));document.querySelector('#mapdot').style.left=mapX+'px';document.querySelector('#mapdot').style.top=mapZ+'px';updateWorld(dt)}
+let last=performance.now();function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);renderer.render(scene,camera)}requestAnimationFrame(loop);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
-</script>
-</body></html>
+</script></body></html>
