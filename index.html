@@ -12,7 +12,7 @@
 #gps{position:fixed;left:10px;bottom:225px;background:#000c;border:1px solid #fff3;border-radius:12px;padding:8px 10px;font-size:12px;z-index:6;pointer-events:none;max-width:210px}#mission{position:fixed;top:68px;left:50%;transform:translateX(-50%);background:#000d;border:1px solid #fff2;padding:6px 10px;border-radius:12px;text-align:center;font-size:11px;min-width:190px;max-width:52vw;z-index:5;pointer-events:none;white-space:nowrap}
 #minimap{position:fixed;right:10px;top:62px;width:104px;height:104px;background:#122018e8;border:2px solid #fff8;border-radius:15px;overflow:hidden;z-index:5}
 #map{width:100%;height:100%}#weaponHud{position:fixed;right:10px;bottom:170px;background:#000c;border:1px solid #fff3;border-radius:14px;padding:8px 12px;min-width:145px;text-align:center;z-index:6;pointer-events:none;display:none;font-weight:800;text-shadow:0 2px 3px #000}#weaponName{font-size:15px}#ammo{font-size:22px}#weaponState{font-size:10px;opacity:.75}#crosshair{position:fixed;left:50%;top:50%;width:28px;height:28px;transform:translate(-50%,-50%);z-index:6;pointer-events:none;display:none}#crosshair:before,#crosshair:after{content:'';position:absolute;background:#fff;box-shadow:0 0 3px #000}#crosshair:before{left:13px;top:2px;width:2px;height:24px}#crosshair:after{left:2px;top:13px;width:24px;height:2px}#crosshair.hit{filter:drop-shadow(0 0 4px #ff4040);transform:translate(-50%,-50%) scale(1.35)}#vehicleHud{position:fixed;left:10px;bottom:170px;background:#000c;border:1px solid #fff3;border-radius:14px;padding:8px 12px;min-width:135px;text-align:center;z-index:6;pointer-events:none;display:none;font-weight:800;text-shadow:0 2px 3px #000}#speed{font-size:21px}#vehicleControls{position:fixed;left:50%;right:10px;bottom:max(10px,env(safe-area-inset-bottom));transform:translateX(-50%);display:none;grid-template-columns:repeat(6,minmax(48px,1fr));gap:6px;z-index:7;pointer-events:none;max-width:520px}.vbtn{pointer-events:auto;height:52px!important;border-radius:15px!important;background:#0b0b0dcc!important;font-size:22px!important;padding:0!important}.vbtn.gas{background:#176b2acc!important}.vbtn.brake{background:#7a2022cc!important}.vbtn.reverse{background:#725515cc!important}.vbtn.exit{background:#27384acc!important}#weaponHud{transition:transform .12s ease,opacity .12s ease}#weaponHud.aim{transform:scale(1.05)}#crosshair.aim{width:34px;height:34px}#reloadBar{width:110px;height:4px;background:#ffffff22;border-radius:4px;margin:4px auto 0;overflow:hidden}#reloadFill{height:100%;width:0%;background:#ffd34d;transition:width .05s linear}#weaponHint{font-size:9px;opacity:.65;margin-top:2px}@media(max-width:430px){#vehicleControls{left:8px;right:8px;transform:none;grid-template-columns:repeat(6,1fr);gap:5px}.vbtn{height:52px!important;font-size:21px!important}}#toast{position:fixed;left:50%;bottom:112px;transform:translateX(-50%);background:#000d;border:1px solid #fff3;padding:9px 14px;border-radius:13px;opacity:0;transition:.2s;pointer-events:none;z-index:10;white-space:nowrap}
-#controls{position:fixed;left:8px;right:8px;bottom:max(10px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:end;z-index:6;pointer-events:none}.actions button{height:42px;font-size:11px;padding:0 8px;border-radius:12px}.pad button{height:42px;font-size:13px}.analog{position:relative;width:142px;height:142px;border-radius:50%;background:#111a;border:2px solid #fff5;pointer-events:auto;touch-action:none;box-shadow:0 5px 18px #0008}.analog::after{content:'GERAK';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff6;font-size:10px;font-weight:800;pointer-events:none}.stick{position:absolute;left:50%;top:50%;width:62px;height:62px;margin:-31px;border-radius:50%;background:#ffffff2b;border:2px solid #fff8;box-shadow:0 3px 10px #0008;transform:translate(0,0);z-index:2;pointer-events:none}
+#controls{position:fixed;left:8px;right:8px;bottom:max(10px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:end;z-index:6;pointer-events:none}.actions button{height:42px;font-size:11px;padding:0 8px;border-radius:12px}.pad button{height:42px;font-size:13px}.analog{position:relative;width:142px;height:142px;border-radius:50%;background:#111a;border:2px solid #fff5;pointer-events:auto;touch-action:none;box-shadow:0 5px 18px #0008;transition:left .08s ease,top .08s ease}.analog::after{content:'GERAK';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff6;font-size:10px;font-weight:800;pointer-events:none}.stick{position:absolute;left:50%;top:50%;width:62px;height:62px;margin:-31px;border-radius:50%;background:#ffffff2b;border:2px solid #fff8;box-shadow:0 3px 10px #0008;transform:translate(0,0);z-index:2;pointer-events:none}
 .pad,.actions{display:grid;gap:7px;pointer-events:auto}.pad{grid-template-columns:repeat(3,54px)}.actions{grid-template-columns:repeat(3,56px)}
 button{height:52px;border:1px solid #fff5;border-radius:14px;background:#111c;color:#fff;font-size:15px;font-weight:800;touch-action:none;user-select:none;-webkit-user-select:none;backdrop-filter:blur(5px)}
 button:active{background:#fff3}.spacer{visibility:hidden}.hidden{display:none!important}
@@ -732,110 +732,37 @@ function cycleWeather(){setWeather(weatherStates[(weatherStates.indexOf(weather)
 let missionReward=50000;const keys=new Set();const pressed=k=>keys.has(k);
 const analogState={x:0,y:0,active:false};
 const analog=document.querySelector('#analog'),stick=document.querySelector('#stick');
-function setAnalog(clientX,clientY){if(!analog)return;const r=analog.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,max=r.width*.34;let dx=clientX-cx,dy=clientY-cy;const len=Math.hypot(dx,dy);if(len>max){dx=dx/len*max;dy=dy/len*max}analogState.x=dx/max;analogState.y=dy/max;if(stick)stick.style.transform=`translate(${dx}px,${dy}px)`}
-function resetAnalog(){analogState.x=0;analogState.y=0;analogState.active=false;if(stick)stick.style.transform='translate(0,0)'}
-if(analog){analog.addEventListener('pointerdown',e=>{e.preventDefault();analogState.active=true;analog.setPointerCapture?.(e.pointerId);setAnalog(e.clientX,e.clientY)});analog.addEventListener('pointermove',e=>{if(analogState.active)setAnalog(e.clientX,e.clientY)});analog.addEventListener('pointerup',resetAnalog);analog.addEventListener('pointercancel',resetAnalog)}
-let lastToast='',toastTimer=0;
-
-function toast(t){ensureAudio();beep(620,.055,.035);const el=document.querySelector('#toast');el.textContent=t;el.style.opacity=1;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.style.opacity=0,1900)}
-function nearby(pos,obj,dist){return pos.distanceTo(obj.position)<dist}
-function nearestTraffic(){
-  let best=null,bd=7;
-  traffic.forEach(v=>{const d=v.position.distanceTo(player.position);if(d<bd){bd=d;best=v}});
-  return best;
+const analogHome={left:8,bottom:10};
+function moveAnalogBase(clientX,clientY){
+ if(!analog)return;
+ const size=analog.offsetWidth||142,half=size/2;
+ const safeLeft=Math.max(half+6,Math.min(innerWidth*.46-half,clientX));
+ const safeTop=Math.max(88,Math.min(innerHeight-half-12,clientY));
+ analog.style.position='fixed';analog.style.left=(safeLeft-half)+'px';analog.style.top=(safeTop-half)+'px';analog.style.bottom='auto';
 }
-function updateContextControls(){
- const nearCar=!inCar&&nearby(player.position,car,9);
- const nearTraffic=!inCar&&!!nearestTraffic();
- const nearService=inCar&&(car.position.distanceTo(shop.position)<20||car.position.distanceTo(gas.position)<20);
- const weaponReady=!inCar&&weaponEquipped;
- const set=(id,on)=>{const e=document.querySelector(id);if(e)e.classList.toggle('hidden',!on)};
- set('#btnEnter',nearCar);set('#btnSteal',nearTraffic);set('#btnNitro',inCar&&fuel>2);set('#btnBrake',inCar);set('#btnRepair',nearService);set('#btnExit',inCar);set('#btnWeapon',!inCar);set('#btnAim',weaponReady);set('#btnSwitch',!inCar);set('#btnReload',weaponReady);set('#btnFire',weaponReady);
+function resetAnalogPosition(){
+ if(!analog)return;
+ analog.style.left=analogHome.left+'px';analog.style.top='auto';analog.style.bottom='max(10px,env(safe-area-inset-bottom))';
 }
-function syncControlMode(){
-  const walkingControls=document.querySelector('#controls');
-  const vehicleControls=document.querySelector('#vehicleControls');
-  if(walkingControls) walkingControls.style.display=inCar?'none':'flex';
-  if(vehicleControls) vehicleControls.style.display=inCar?'grid':'none';
+function setAnalog(clientX,clientY){
+ if(!analog)return;
+ const r=analog.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,max=r.width*.34;
+ let dx=clientX-cx,dy=clientY-cy;const len=Math.hypot(dx,dy);
+ if(len>max){dx=dx/len*max;dy=dy/len*max}
+ analogState.x=dx/max;analogState.y=dy/max;
+ if(stick)stick.style.transform=`translate(${dx}px,${dy}px)`;
 }
-function syncVehicleUI(){
-  const hud=document.querySelector('#vehicleHud');
-  const controls=document.querySelector('#vehicleControls');
-  if(!hud||!controls)return;
-  hud.style.display=inCar?'block':'none';
-  controls.style.display=inCar?'grid':'none';
-  syncControlMode();
-  document.querySelector('#vehicleName').textContent=car&&car.userData.stolen?'Kendaraan Curian':'Cirebon Car';
-  document.querySelector('#speed').textContent=Math.round(Math.abs(speed));
-  document.querySelector('#gear').textContent=speed>0.03?'D':speed<-.03?'R':'N';
-  document.querySelector('#carHealth').textContent=Math.round(carHealth);
+function resetAnalog(){
+ analogState.x=0;analogState.y=0;analogState.active=false;
+ if(stick)stick.style.transform='translate(0,0)';
+ resetAnalogPosition();
 }
-function stealNearestCar(){
-  if(inCar)return;
-  const v=nearestTraffic();
-  if(!v){toast('Dekati kendaraan lain');return}
-  car.visible=false;
-  car=v;car.visible=true;inCar=true;engineOn=true;player.visible=false;
-  car.userData.stolen=true;document.querySelector('#mode').textContent='Mengemudi';
-  resetAnalog();
-  toast('Kendaraan berhasil diambil');syncVehicleUI();
+if(analog){
+ analog.addEventListener('pointerdown',e=>{e.preventDefault();analogState.active=true;moveAnalogBase(e.clientX,e.clientY);analog.setPointerCapture?.(e.pointerId);setAnalog(e.clientX,e.clientY)});
+ analog.addEventListener('pointermove',e=>{if(analogState.active){e.preventDefault();setAnalog(e.clientX,e.clientY)}});
+ analog.addEventListener('pointerup',resetAnalog);analog.addEventListener('pointercancel',resetAnalog);
 }
-function enterExit(){
- if(activeInterior){exitBuilding();return}
- if(!inCar&&nearby(player.position,car,9)){ensureAudio();soundBurst('unlock',.07);inCar=true;player.visible=false;resetAnalog();document.querySelector('#mode').textContent='Mengemudi';toast('Kamu masuk kendaraan')}
- else if(!inCar&&enterBuilding())return;
- else if(inCar){ensureAudio();soundBurst('click',.05);inCar=false;player.visible=true;player.position.copy(car.position);const side=new THREE.Vector3(1,0,0).applyQuaternion(car.quaternion);player.position.add(side.multiplyScalar(5));player.position.y=0;player.rotation.y=car.rotation.y;keys.delete('w');keys.delete('a');keys.delete('s');keys.delete('d');keys.delete('gas');keys.delete('space');document.querySelector('#mode').textContent='Jalan kaki';syncControlMode();toast('Kamu keluar kendaraan · siap berjalan')}
-}
-function service(){
- if(!inCar){toast('Naik kendaraan dulu');return}
- const d=car.position.distanceTo(shop.position),g=car.position.distanceTo(gas.position);
- if(d<16&&cash>=25000){cash-=25000;health=100;carHealth=100;speed=0;soundBurst('unlock',.08);toast('Bengkel: kendaraan diperbaiki · Rp25.000')}
- else if(g<16&&cash>=15000){cash-=15000;fuel=100;soundBurst('unlock',.08);toast('SPBU: tangki penuh · Rp15.000')}
- else toast('Dekati BENGKEL atau SPBU')
-}
-function saveGame(){
- localStorage.setItem('gtaCirebonSave',JSON.stringify({cash,wanted,speed:0,fuel,health,carHealth,mission,gameMinutes,x:car.position.x,z:car.position.z}));
- toast('Game disimpan di perangkat');
-}
-function loadGame(){
- try{const s=JSON.parse(localStorage.getItem('gtaCirebonSave')||'null');if(!s){toast('Belum ada save');return}
- cash=Number(s.cash)||150000;wanted=Number(s.wanted)||0;fuel=Math.max(0,Math.min(100,Number(s.fuel)||100));health=Math.max(0,Math.min(100,Number(s.health)||100));carHealth=Math.max(0,Math.min(100,Number(s.carHealth)||100));mission=Math.max(1,Number(s.mission)||1);gameMinutes=Number(s.gameMinutes)||720;car.position.set(Number(s.x)||40,0,Number(s.z)||20);inCar=false;player.visible=true;document.querySelector('#mode').textContent='Jalan kaki';setMission();toast('Game dimuat')}
- catch(e){toast('Save rusak atau tidak cocok')}}
-function setMission(){
- const x=((mission*53)%280)-140,z=((mission*79)%280)-140;target.position.set(x,.18,z);
- document.querySelector('#mission').innerHTML='MISI '+mission+' · ANTAR PAKET<br><small id="missionText">Titik kuning · hadiah Rp'+missionReward.toLocaleString('id-ID')+'</small>';
-}
-function completeMission(){
- cash+=missionReward;mission++;
- if(mission%4===0){wanted=Math.min(5,wanted+1);soundBurst('horn',.06);toast('Misi selesai! Polisi mulai mencari kamu ⭐ '+wanted)}
- else toast('Misi selesai! +Rp'+missionReward.toLocaleString('id-ID'));
- setMission();
-}
-function handleWanted(dt,obj){
- if(wanted<=0)return;
- police.forEach((p,i)=>{
-  const to=obj.position.clone().sub(p.position),d=to.length();
-  if(d>250)return;
-  to.normalize();p.position.add(to.multiplyScalar((.35+wanted*.08)*dt));
-  p.lookAt(obj.position.x,p.position.y,obj.position.z);
-  if(d<7){health=Math.max(0,health-dt*9);speed*=.82;if(health<=0){cash=Math.max(0,cash-25000);wanted=0;health=70;car.position.set(40,0,20);toast('Kamu tertangkap! Denda Rp25.000')}}
- });
- // wanted slowly falls only when away from police
- if(Math.random()<dt*(wanted>0 ? .035 : 0))wanted=Math.max(0,wanted-1);
-}
-function updateWorld(dt){
- weatherTimer+=dt;if(weatherTimer>45){weatherTimer=0;cycleWeather()} const wet=weather==='Hujan';sun.intensity*=wet ? .82 : 1;
- gameMinutes=(gameMinutes+dt*2.2)%1440;const hour=gameMinutes/60,day=Math.max(.15,Math.sin((hour-6)/12*Math.PI));
- const sky=new THREE.Color().setHSL(.57,.42,.17+.48*day);scene.background=sky;
-const night=1-day;
-if(scene.fog)scene.fog.color.copy(sky);
-moonLight.intensity=.05+.38*night;
-fillLight.intensity=.10+.28*day;
-lampMat.emissiveIntensity=Math.max(0,night-.05)*2.2;
- lightUpdateClock+=dt;if(lightUpdateClock>=.12){lightUpdateClock=0;const on=Math.max(0,(night-.08)/.92);streetLights.forEach(g=>{g.userData.streetLight.intensity=on*18;g.userData.bulb.material.emissiveIntensity=on*2.6;});}
- sun.intensity=(.35+1.9*day)*(weather==='Hujan' ? .72 : weather==='Mendung' ? .88 : 1);hemi.intensity=(.55+1.4*day)*(weather==='Hujan' ? .8 : weather==='Mendung' ? .93 : 1);if(scene.fog)scene.fog.far=weather==='Hujan'?300:520;updateRain(dt,inCar?car:player);
- document.querySelector('#clock').textContent=String(Math.floor(hour)).padStart(2,'0')+':'+String(Math.floor(gameMinutes%60)).padStart(2,'0')+(day>.55?' Siang':' Malam');
-}
+window.addEventListener('resize',()=>{if(!analogState.active)resetAnalogPosition()});
 function update(dt){
  const obj=inCar?car:player;
  const gasPressed=pressed('w')||pressed('gas'); const keyForward=(gasPressed?1:0)-(pressed('s')?1:0),keyStrafe=(pressed('d')?1:0)-(pressed('a')?1:0); const accel=keyForward; const steer=keyStrafe; const moveForward=Math.abs(analogState.y)>.05? -analogState.y : keyForward; const moveStrafe=Math.abs(analogState.x)>.05? analogState.x : keyStrafe; const movingInput=Math.hypot(moveStrafe,moveForward)>0.05;
@@ -856,7 +783,13 @@ function update(dt){
   // Keep vehicle inside the playable city.
   car.position.x=Math.max(-178,Math.min(178,car.position.x));car.position.z=Math.max(-178,Math.min(178,car.position.z));
  }else{
-  const walkSpeed=5.2;const camForward=new THREE.Vector3(-Math.sin(cameraControls.yaw),0,-Math.cos(cameraControls.yaw));const camRight=new THREE.Vector3(Math.cos(cameraControls.yaw),0,-Math.sin(cameraControls.yaw));const dir=new THREE.Vector3().addScaledVector(camForward,moveForward).addScaledVector(camRight,moveStrafe);if(dir.lengthSq()>1)dir.normalize();const walk=walkSpeed*dt;if(movingInput&&dir.lengthSq()>0.001){player.rotation.y=THREE.MathUtils.lerp(player.rotation.y,Math.atan2(dir.x,-dir.z),Math.min(1,dt*12));moveWithCollision(player,dir.x*walk,dir.z*walk,.68);animateHuman(player,performance.now()/1000,true)}else animateHuman(player,performance.now()/1000,false);
+  const walkSpeed=5.2;const camForward=new THREE.Vector3(-Math.sin(cameraControls.yaw),0,-Math.cos(cameraControls.yaw));const camRight=new THREE.Vector3(Math.cos(cameraControls.yaw),0,-Math.sin(cameraControls.yaw));const dir=new THREE.Vector3().addScaledVector(camForward,moveForward).addScaledVector(camRight,moveStrafe);if(dir.lengthSq()>1)dir.normalize();const walk=walkSpeed*dt;if(movingInput&&dir.lengthSq()>0.001){
+   const targetRotation=Math.atan2(dir.x,-dir.z);
+   let turnDelta=THREE.MathUtils.euclideanModulo(targetRotation-player.rotation.y+Math.PI,Math.PI*2)-Math.PI;
+   player.rotation.y+=turnDelta*Math.min(1,dt*16);
+   moveWithCollision(player,dir.x*walk,dir.z*walk,.68);
+   animateHuman(player,performance.now()/1000,true);
+ }else animateHuman(player,performance.now()/1000,false);
   player.position.x=Math.max(-175,Math.min(175,player.position.x));player.position.z=Math.max(-175,Math.min(175,player.position.z));
  }
  traffic.forEach((c,i)=>{
