@@ -716,9 +716,50 @@ function cycleWeather(){setWeather(weatherStates[(weatherStates.indexOf(weather)
 let missionReward=50000;const keys=new Set();const pressed=k=>keys.has(k);
 const analogState={x:0,y:0,active:false};
 const analog=document.querySelector('#analog'),stick=document.querySelector('#stick');
-function setAnalog(clientX,clientY){if(!analog)return;const r=analog.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,max=r.width*.34;let dx=clientX-cx,dy=clientY-cy;const len=Math.hypot(dx,dy);if(len>max){dx=dx/len*max;dy=dy/len*max}analogState.x=dx/max;analogState.y=dy/max;if(stick)stick.style.transform=`translate(${dx}px,${dy}px)`}
-function resetAnalog(){analogState.x=0;analogState.y=0;analogState.active=false;if(stick)stick.style.transform='translate(0,0)'}
-if(analog){analog.addEventListener('pointerdown',e=>{e.preventDefault();analogState.active=true;analog.setPointerCapture?.(e.pointerId);setAnalog(e.clientX,e.clientY)});analog.addEventListener('pointermove',e=>{if(analogState.active)setAnalog(e.clientX,e.clientY)});analog.addEventListener('pointerup',resetAnalog);analog.addEventListener('pointercancel',resetAnalog)}
+const analogHome={left:8,bottom:10};
+function placeAnalogAt(x,y){
+ if(!analog)return;
+ const size=analog.offsetWidth||142,half=size/2;
+ const cx=Math.max(half+8,Math.min(innerWidth-half-8,x));
+ const cy=Math.max(half+8,Math.min(innerHeight-half-8,y));
+ analog.style.position='fixed';
+ analog.style.left=(cx-half)+'px';
+ analog.style.top=(cy-half)+'px';
+ analog.style.bottom='auto';
+}
+function returnAnalogHome(){
+ if(!analog)return;
+ analog.style.position='relative';
+ analog.style.left='';
+ analog.style.top='';
+ analog.style.bottom='';
+}
+function setAnalog(clientX,clientY){
+ if(!analog)return;
+ const r=analog.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,max=r.width*.34;
+ let dx=clientX-cx,dy=clientY-cy;
+ const len=Math.hypot(dx,dy);
+ if(len>max){dx=dx/len*max;dy=dy/len*max}
+ analogState.x=dx/max;analogState.y=dy/max;
+ if(stick)stick.style.transform=`translate(${dx}px,${dy}px)`;
+}
+function resetAnalog(){
+ analogState.x=0;analogState.y=0;analogState.active=false;
+ if(stick)stick.style.transform='translate(0,0)';
+ returnAnalogHome();
+}
+if(analog){
+ analog.addEventListener('pointerdown',e=>{
+   e.preventDefault();
+   analogState.active=true;
+   placeAnalogAt(e.clientX,e.clientY);
+   analog.setPointerCapture?.(e.pointerId);
+   setAnalog(e.clientX,e.clientY);
+ });
+ analog.addEventListener('pointermove',e=>{if(analogState.active){e.preventDefault();setAnalog(e.clientX,e.clientY)}});
+ analog.addEventListener('pointerup',resetAnalog);
+ analog.addEventListener('pointercancel',resetAnalog);
+}
 let lastToast='',toastTimer=0;
 
 function toast(t){ensureAudio();beep(620,.055,.035);const el=document.querySelector('#toast');el.textContent=t;el.style.opacity=1;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.style.opacity=0,1900)}
@@ -840,7 +881,13 @@ function update(dt){
   // Keep vehicle inside the playable city.
   car.position.x=Math.max(-178,Math.min(178,car.position.x));car.position.z=Math.max(-178,Math.min(178,car.position.z));
  }else{
-  const walkSpeed=5.2;const camForward=new THREE.Vector3(-Math.sin(cameraControls.yaw),0,-Math.cos(cameraControls.yaw));const camRight=new THREE.Vector3(Math.cos(cameraControls.yaw),0,-Math.sin(cameraControls.yaw));const dir=new THREE.Vector3().addScaledVector(camForward,moveForward).addScaledVector(camRight,moveStrafe);if(dir.lengthSq()>1)dir.normalize();const walk=walkSpeed*dt;if(movingInput&&dir.lengthSq()>0.001){player.rotation.y=THREE.MathUtils.lerp(player.rotation.y,Math.atan2(dir.x,-dir.z),Math.min(1,dt*12));moveWithCollision(player,dir.x*walk,dir.z*walk,.68);animateHuman(player,performance.now()/1000,true)}else animateHuman(player,performance.now()/1000,false);
+  const walkSpeed=5.2;const camForward=new THREE.Vector3(-Math.sin(cameraControls.yaw),0,-Math.cos(cameraControls.yaw));const camRight=new THREE.Vector3(Math.cos(cameraControls.yaw),0,-Math.sin(cameraControls.yaw));const dir=new THREE.Vector3().addScaledVector(camForward,moveForward).addScaledVector(camRight,moveStrafe);if(dir.lengthSq()>1)dir.normalize();const walk=walkSpeed*dt;if(movingInput&&dir.lengthSq()>0.001){
+ const targetRotation=Math.atan2(dir.x,-dir.z);
+ let turnDelta=THREE.MathUtils.euclideanModulo(targetRotation-player.rotation.y+Math.PI,Math.PI*2)-Math.PI;
+ player.rotation.y+=turnDelta*Math.min(1,dt*14);
+ moveWithCollision(player,dir.x*walk,dir.z*walk,.68);
+ animateHuman(player,performance.now()/1000,true);
+}else animateHuman(player,performance.now()/1000,false);
   player.position.x=Math.max(-175,Math.min(175,player.position.x));player.position.z=Math.max(-175,Math.min(175,player.position.z));
  }
  traffic.forEach((c,i)=>{
