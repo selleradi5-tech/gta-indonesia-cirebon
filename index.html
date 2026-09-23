@@ -31,7 +31,7 @@ button:active{background:#fff3}.spacer{visibility:hidden}.hidden{display:none!im
 <div id="controls">
  <div class="pad"><span class="spacer"></span><button data-k="w">▲</button><span class="spacer"></span><button data-k="a">◀</button><button data-k="s">▼</button><button data-k="d">▶</button></div>
  <div class="actions">
-  <button id="btnEnter" data-action="enter">MASUK</button><button id="btnSteal" data-action="steal">AMBIL</button><button id="btnNitro" data-k="shift">NITRO</button><button id="btnRepair" data-action="repair">BENGKEL</button>
+  <button id="btnEnter" data-action="enter">MASUK</button><button id="btnSteal" data-action="steal">AMBIL</button><button id="btnNitro" data-k="shift">NITRO</button><button id="btnRepair" data-action="repair">BENGKEL</button><button id="btnExit" data-action="exit" class="hidden">TURUN</button>
   <button id="btnBrake" data-k="space">REM</button>
  </div>
 </div>
@@ -88,6 +88,12 @@ renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFi
 const hemi=new THREE.HemisphereLight(0xffffff,0x28432d,1.9);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xffffff,2.1);sun.position.set(80,120,40);sun.castShadow=true;sun.shadow.mapSize.set(1536,1536);sun.shadow.camera.near=1;sun.shadow.camera.far=360;sun.shadow.camera.left=-190;sun.shadow.camera.right=190;sun.shadow.camera.top=190;sun.shadow.camera.bottom=-190;scene.add(sun);
 document.querySelector('#game').appendChild(renderer.domElement);
+const moonLight=new THREE.DirectionalLight(0x9bbcff,0.0);moonLight.position.set(-70,90,-110);scene.add(moonLight);
+const fillLight=new THREE.DirectionalLight(0xffd9b0,0.35);fillLight.position.set(-60,45,80);scene.add(fillLight);
+const roadEdgeMat=new THREE.MeshStandardMaterial({color:0x9a9a9a,roughness:.95});
+const windowMat=new THREE.MeshStandardMaterial({color:0x263c52,roughness:.28,metalness:.05});
+const lampMat=new THREE.MeshStandardMaterial({color:0xffd36a,emissive:0xffa000,emissiveIntensity:0.0});
+function addWindowGlow(x,y,z,sx,sz){const w=new THREE.Mesh(new THREE.PlaneGeometry(sx,sz),lampMat);w.position.set(x,y,z);w.rotation.y=Math.PI;scene.add(w);return w}
 const mat=c=>new THREE.MeshStandardMaterial({color:c,roughness:.8});
 const rnd=(a,b)=>a+Math.random()*(b-a);
 const colliders=[];
@@ -114,6 +120,11 @@ for(let bx=-150;bx<=150;bx+=20)for(let bz=-150;bz<=150;bz+=20){
   const building=meshBox(null,cx,h/2,cz,bw,h,bd,cc);building.castShadow=true;building.receiveShadow=true;
   addCollider(cx,cz,bw,bd,.35);
   if(Math.random()<.22){const roof=meshBox(null,cx,h+.5,cz,bw*.55,.7,bd*.55,0x4e4e4e);roof.castShadow=true;roof.receiveShadow=true;}
+  if(Math.random()<.72){
+    const side=new THREE.Mesh(new THREE.BoxGeometry(Math.max(2.4,bw*.58),Math.min(1.8,h*.16),.035),windowMat);
+    side.position.set(cx,h*.58,cz-bd/2-.02);side.castShadow=false;scene.add(side);
+    const side2=side.clone();side2.position.z=cz+bd/2+.02;side2.rotation.y=Math.PI;scene.add(side2);
+  }
 }
 
 // Landmarks and districts
@@ -139,69 +150,14 @@ const target=new THREE.Mesh(new THREE.CylinderGeometry(5,5,.18,32),new THREE.Mes
 target.position.set(120,.18,120);scene.add(target);
 
 
-// ===== REALISTIC PROCEDURAL AUDIO SYSTEM =====
-const audioListener=new THREE.AudioListener();camera.add(audioListener);
-const REAL_AUDIO={engine:'https://upload.wikimedia.org/wikipedia/commons/b/b1/5_cylinder_engine_sound.ogg',siren:'https://upload.wikimedia.org/wikipedia/commons/b/b2/Whelen.ogg'};
-const engineAudio=new Audio(REAL_AUDIO.engine);engineAudio.loop=true;engineAudio.preload='auto';engineAudio.volume=.12;
-const sirenAudio=new Audio(REAL_AUDIO.siren);sirenAudio.loop=true;sirenAudio.preload='auto';sirenAudio.volume=.07;
-let realAudioReady=false,engineGraph=null,sirenGraph=null;
-function connectSoftAudio(el,kind){try{const ctx=audioListener.context,src=ctx.createMediaElementSource(el),gain=ctx.createGain(),filter=ctx.createBiquadFilter(),comp=ctx.createDynamicsCompressor();filter.type='lowpass';filter.frequency.value=kind==='engine'?1900:2600;filter.Q.value=.35;gain.gain.value=kind==='engine' ? .65 : .45;comp.threshold.value=-24;comp.knee.value=18;comp.ratio.value=3;comp.attack.value=.02;comp.release.value=.25;src.connect(filter).connect(gain).connect(comp).connect(ctx.destination);return{gain,filter,comp}}catch(e){return null}}
-function startRealAudio(){try{const ctx=audioListener.context;if(ctx.state==='suspended')ctx.resume();if(!engineGraph)engineGraph=connectSoftAudio(engineAudio,'engine');if(!sirenGraph)sirenGraph=connectSoftAudio(sirenAudio,'siren');engineAudio.play().then(()=>{engineAudio.pause();engineAudio.currentTime=0;realAudioReady=true}).catch(()=>{})}catch(e){}}
-function updateRealAudio(){if(!realAudioReady)return;const t=audioListener.context.currentTime;const inGain=inCar?Math.min(.10,.035+Math.abs(speed)/1200):0;engineAudio.volume=.1;if(engineGraph)engineGraph.gain.gain.setTargetAtTime(inGain,t,.12);if(inCar){engineAudio.playbackRate=Math.max(.86,Math.min(1.22,.9+Math.abs(speed)/220));if(engineAudio.paused)engineAudio.play().catch(()=>{})}else engineAudio.pause();if(wanted>0){if(sirenAudio.paused)sirenAudio.play().catch(()=>{});if(sirenGraph)sirenGraph.gain.gain.setTargetAtTime(.055,t,.18)}else{if(sirenGraph)sirenGraph.gain.gain.setTargetAtTime(0,t,.25);if(!sirenAudio.paused)sirenAudio.pause()}}
-let audioReady=false,audioInitialized=false,audioMaster=.28,audioEngineNodes=[],audioRainGain=null,audioAmbGain=null,audioSirenNodes=[],audioLastImpact=0;
-function ensureAudio(){
- startRealAudio();
- try{
-  const ctx=audioListener.context;if(ctx.state==='suspended')ctx.resume();if(audioInitialized)return;
-  audioInitialized=true;audioReady=true;audioListener.setMasterVolume(audioMaster);
-  // Soft ambience and effects; recorded engine is the primary vehicle sound.
-  const eg=ctx.createGain();eg.gain.value=0;eg.connect(ctx.destination);
-  const o1=ctx.createOscillator(),o2=ctx.createOscillator(),og=ctx.createGain();
-  o1.type='sawtooth';o2.type='triangle';o1.frequency.value=52;o2.frequency.value=104;og.gain.value=.34;
-  o1.connect(og);o2.connect(og);og.connect(eg);o1.start();o2.start();
-  const n=ctx.createBufferSource(),nb=ctx.createBuffer(1,ctx.sampleRate*2,ctx.sampleRate),nd=nb.getChannelData(0);
-  for(let i=0;i<nd.length;i++)nd[i]=(Math.random()*2-1)*.12;
-  n.buffer=nb;n.loop=true;const nf=ctx.createBiquadFilter();nf.type='lowpass';nf.frequency.value=700;n.connect(nf);nf.connect(eg);n.start();
-  audioEngineNodes=[o1,o2,og,eg,nf,n];
-  const rg=ctx.createGain();rg.gain.value=0;rg.connect(ctx.destination);audioRainGain=rg;
-  const rn=ctx.createBufferSource(),rb=ctx.createBuffer(1,ctx.sampleRate*3,ctx.sampleRate),rd=rb.getChannelData(0);
-  for(let i=0;i<rd.length;i++)rd[i]=(Math.random()*2-1)*.055;rn.buffer=rb;rn.loop=true;
-  const rf=ctx.createBiquadFilter();rf.type='highpass';rf.frequency.value=900;rn.connect(rf);rf.connect(rg);rn.start();
-  const ag=ctx.createGain();ag.gain.value=.018;ag.connect(ctx.destination);audioAmbGain=ag;
-  const ao=ctx.createOscillator();ao.type='sine';ao.frequency.value=68;ao.connect(ag);ao.start();
-  beep(760,.07,.025);
- }catch(e){}
-}
-function soundBurst(type='click',vol=.05){
- if(!audioReady)return;try{
-  const ctx=audioListener.context,o=ctx.createOscillator(),g=ctx.createGain(),f=ctx.createBiquadFilter();
-  o.type=type==='horn'?'triangle':'sine';
-  const base={click:420,unlock:300,impact:70,boost:140,brake:95,horn:220}[type]||360;
-  o.frequency.setValueAtTime(base,ctx.currentTime);
-  if(type==='impact')o.frequency.exponentialRampToValueAtTime(42,ctx.currentTime+.18);
-  if(type==='boost')o.frequency.exponentialRampToValueAtTime(520,ctx.currentTime+.22);
-  f.type='lowpass';f.frequency.value=type==='impact'?420:1200;
-  g.gain.setValueAtTime(vol*.45,ctx.currentTime);g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+((type==='impact' ? .2 : .1)));
-  o.connect(f);f.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+((type==='impact' ? .22 : .11)));
- }catch(e){}
-}
-function updateAudio(dt){
- if(!audioReady)return;const ctx=audioListener.context,eg=audioEngineNodes[3],o1=audioEngineNodes[0],o2=audioEngineNodes[1];
- if(eg){
-  const rpm=inCar ? (48+Math.abs(speed)*3.2+(pressed('w') ? 22 : 0)) : 0;
-  eg.gain.linearRampToValueAtTime((inCar ? .025 : 0),ctx.currentTime+.08);
-  o1.frequency.setTargetAtTime(rpm,ctx.currentTime,.055);o2.frequency.setTargetAtTime(rpm*2.02,ctx.currentTime,.055);
- }
- if(audioRainGain)audioRainGain.gain.linearRampToValueAtTime(weather==='Hujan' ? .06 : weather==='Mendung' ? .012 : 0,ctx.currentTime+.35);
- if(audioAmbGain)audioAmbGain.gain.linearRampToValueAtTime((inCar ? .012 : .022),ctx.currentTime+.3);
- const wantedLevel=Math.min(1,wanted/5);
- if(wantedLevel>.01&&audioSirenNodes.length===0)startSiren();
- if(wantedLevel<=0&&audioSirenNodes.length)stopSiren();
- 
-}
-function startSiren(){}
-function stopSiren(){audioSirenNodes=[]}
-function beep(freq=440,dur=.07,vol=.04){soundBurst('click',vol)}
+// Audio vehicle sementara dimatikan. Visual/gameplay tetap aktif.
+let audioReady=false,audioInitialized=false,audioMaster=0,audioRainGain=null,audioAmbGain=null,audioLastImpact=0;
+function ensureAudio(){audioReady=false}
+function soundBurst(){/* efek kendaraan dimatikan sementara */}
+function updateAudio(){}
+function updateRealAudio(){}
+function beep(){}
+
 const player=new THREE.Group();const body=new THREE.Mesh(new THREE.CapsuleGeometry(1,2,6,10),mat(0x2468d8));body.position.y=2;player.add(body);player.position.set(40,0,20);scene.add(player);
 
 function makeCar(x,z,color=0xc72c2c,police=false){
@@ -239,7 +195,7 @@ function updateContextControls(){
  const nearTraffic=!inCar&&!!nearestTraffic();
  const nearService=inCar&&(car.position.distanceTo(shop.position)<20||car.position.distanceTo(gas.position)<20);
  const set=(id,on)=>{const e=document.querySelector(id);if(e)e.classList.toggle('hidden',!on)};
- set('#btnEnter',nearCar);set('#btnSteal',nearTraffic);set('#btnNitro',inCar&&fuel>2);set('#btnBrake',inCar);set('#btnRepair',nearService);
+ set('#btnEnter',nearCar);set('#btnSteal',nearTraffic);set('#btnNitro',inCar&&fuel>2);set('#btnBrake',inCar);set('#btnRepair',nearService);set('#btnExit',inCar);
 }
 function syncVehicleUI(){
   const hud=document.querySelector('#vehicleHud');
@@ -308,6 +264,9 @@ function updateWorld(dt){
  const sky=new THREE.Color().setHSL(.57,.42,.17+.48*day);scene.background=sky;
 const night=1-day;
 if(scene.fog)scene.fog.color.copy(sky);
+moonLight.intensity=.05+.38*night;
+fillLight.intensity=.10+.28*day;
+lampMat.emissiveIntensity=Math.max(0,night-.05)*2.2;
  sun.intensity=(.35+1.9*day)*(weather==='Hujan' ? .72 : weather==='Mendung' ? .88 : 1);hemi.intensity=(.55+1.4*day)*(weather==='Hujan' ? .8 : weather==='Mendung' ? .93 : 1);if(scene.fog)scene.fog.far=weather==='Hujan'?300:620;
  document.querySelector('#clock').textContent=String(Math.floor(hour)).padStart(2,'0')+':'+String(Math.floor(gameMinutes%60)).padStart(2,'0')+(day>.55?' Siang':' Malam');
 }
@@ -355,7 +314,7 @@ function keyDown(e){ensureAudio();
 }
 addEventListener('keydown',keyDown);addEventListener('keyup',e=>{keys.delete(e.key.toLowerCase());if(e.key===' ')keys.delete('space');if(e.key==='shift')keys.delete('shift')});
 document.querySelectorAll('button[data-k]').forEach(b=>{const k=b.dataset.k;b.onpointerdown=e=>{e.preventDefault();ensureAudio();keys.add(k);if(k==='gas')keys.add('w')};b.onpointerup=b.onpointercancel=b.onpointerleave=()=>{keys.delete(k);if(k==='gas')keys.delete('w')}});
-document.querySelectorAll('button[data-action]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();const a=b.dataset.action;if(a==='enter')enterExit();if(a==='steal')stealNearestCar();if(a==='repair')service()}});
+document.querySelectorAll('button[data-action]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();const a=b.dataset.action;if(a==='enter')enterExit();if(a==='steal')stealNearestCar();if(a==='repair')service();if(a==='exit')enterExit()}});
 setMission();buildWeatherFX();syncVehicleUI();ensureAudio();
 let last=performance.now();function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);renderer.render(scene,camera)}requestAnimationFrame(loop);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
