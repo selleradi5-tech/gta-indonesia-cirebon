@@ -12,7 +12,7 @@
 #gps{position:fixed;left:10px;bottom:225px;background:#000c;border:1px solid #fff3;border-radius:12px;padding:8px 10px;font-size:12px;z-index:6;pointer-events:none;max-width:210px}#mission{position:fixed;top:68px;left:50%;transform:translateX(-50%);background:#000d;border:1px solid #fff2;padding:6px 10px;border-radius:12px;text-align:center;font-size:11px;min-width:190px;max-width:52vw;z-index:5;pointer-events:none;white-space:nowrap}
 #minimap{position:fixed;right:10px;top:62px;width:104px;height:104px;background:#122018e8;border:2px solid #fff8;border-radius:15px;overflow:hidden;z-index:5}
 #map{width:100%;height:100%}#weaponHud{position:fixed;right:10px;bottom:170px;background:#000c;border:1px solid #fff3;border-radius:14px;padding:8px 12px;min-width:145px;text-align:center;z-index:6;pointer-events:none;display:none;font-weight:800;text-shadow:0 2px 3px #000}#weaponName{font-size:15px}#ammo{font-size:22px}#weaponState{font-size:10px;opacity:.75}#crosshair{position:fixed;left:50%;top:50%;width:28px;height:28px;transform:translate(-50%,-50%);z-index:6;pointer-events:none;display:none}#crosshair:before,#crosshair:after{content:'';position:absolute;background:#fff;box-shadow:0 0 3px #000}#crosshair:before{left:13px;top:2px;width:2px;height:24px}#crosshair:after{left:2px;top:13px;width:24px;height:2px}#crosshair.hit{filter:drop-shadow(0 0 4px #ff4040);transform:translate(-50%,-50%) scale(1.35)}#vehicleHud{position:fixed;left:10px;bottom:170px;background:#000c;border:1px solid #fff3;border-radius:14px;padding:8px 12px;min-width:135px;text-align:center;z-index:6;pointer-events:none;display:none;font-weight:800;text-shadow:0 2px 3px #000}#speed{font-size:21px}#vehicleControls{position:fixed;left:50%;right:10px;bottom:max(10px,env(safe-area-inset-bottom));transform:translateX(-50%);display:none;grid-template-columns:repeat(6,minmax(48px,1fr));gap:6px;z-index:7;pointer-events:none;max-width:520px}.vbtn{pointer-events:auto;height:52px!important;border-radius:15px!important;background:#0b0b0dcc!important;font-size:22px!important;padding:0!important}.vbtn.gas{background:#176b2acc!important}.vbtn.brake{background:#7a2022cc!important}.vbtn.reverse{background:#725515cc!important}.vbtn.exit{background:#27384acc!important}#weaponHud{transition:transform .12s ease,opacity .12s ease}#weaponHud.aim{transform:scale(1.05)}#crosshair.aim{width:34px;height:34px}#reloadBar{width:110px;height:4px;background:#ffffff22;border-radius:4px;margin:4px auto 0;overflow:hidden}#reloadFill{height:100%;width:0%;background:#ffd34d;transition:width .05s linear}#weaponHint{font-size:9px;opacity:.65;margin-top:2px}@media(max-width:430px){#vehicleControls{left:8px;right:8px;transform:none;grid-template-columns:repeat(6,1fr);gap:5px}.vbtn{height:52px!important;font-size:21px!important}}#toast{position:fixed;left:50%;bottom:112px;transform:translateX(-50%);background:#000d;border:1px solid #fff3;padding:9px 14px;border-radius:13px;opacity:0;transition:.2s;pointer-events:none;z-index:10;white-space:nowrap}
-#controls{position:fixed;left:8px;right:8px;bottom:max(10px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:end;z-index:6;pointer-events:none}.actions button{height:42px;font-size:11px;padding:0 8px;border-radius:12px}.pad button{height:42px;font-size:13px}.analog{position:relative;width:142px;height:142px;border-radius:50%;background:#111a;border:2px solid #fff5;pointer-events:auto;touch-action:none;box-shadow:0 5px 18px #0008;transition:left .08s ease,top .08s ease}.analog::after{content:'GERAK';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff6;font-size:10px;font-weight:800;pointer-events:none}.stick{position:absolute;left:50%;top:50%;width:62px;height:62px;margin:-31px;border-radius:50%;background:#ffffff2b;border:2px solid #fff8;box-shadow:0 3px 10px #0008;transform:translate(0,0);z-index:2;pointer-events:none}
+#controls{position:fixed;left:8px;right:8px;bottom:max(10px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:end;z-index:6;pointer-events:none}.actions button{height:42px;font-size:11px;padding:0 8px;border-radius:12px}.pad button{height:42px;font-size:13px}.analog{position:relative;width:142px;height:142px;border-radius:50%;background:#111a;border:2px solid #fff5;pointer-events:auto;touch-action:none;box-shadow:0 5px 18px #0008}.analog::after{content:'GERAK';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff6;font-size:10px;font-weight:800;pointer-events:none}.stick{position:absolute;left:50%;top:50%;width:62px;height:62px;margin:-31px;border-radius:50%;background:#ffffff2b;border:2px solid #fff8;box-shadow:0 3px 10px #0008;transform:translate(0,0);z-index:2;pointer-events:none}
 .pad,.actions{display:grid;gap:7px;pointer-events:auto}.pad{grid-template-columns:repeat(3,54px)}.actions{grid-template-columns:repeat(3,56px)}
 button{height:52px;border:1px solid #fff5;border-radius:14px;background:#111c;color:#fff;font-size:15px;font-weight:800;touch-action:none;user-select:none;-webkit-user-select:none;backdrop-filter:blur(5px)}
 button:active{background:#fff3}.spacer{visibility:hidden}.hidden{display:none!important}
@@ -356,39 +356,23 @@ function updateAudio(){}
 function updateRealAudio(){}
 function beep(){}
 
-function makeHuman(skin=0xc98f72,shirt=0x2468d8,pants=0x20242a,shoe=0x171717,hair=0x201810,detail=false){
+function makeHuman(skin=0xc98f72,shirt=0x2468d8,pants=0x20242a,shoe=0x171717,hair=0x201810){
  const g=new THREE.Group();g.userData.human=true;
- // Proporsi manusia tetap ringan. Detail wajah hanya untuk karakter pemain agar 170 NPC tidak bertambah berat.
+ // Skala dunia: tinggi dasar manusia sekitar 1.9 m, agar proporsional dengan mobil, jalan, dan bangunan.
  g.scale.setScalar(.34);
- const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.72,1.45,4,8),mat(shirt));torso.position.y=2.55;torso.scale.z=.62;torso.castShadow=true;g.add(torso);
- const pelvis=new THREE.Mesh(new THREE.SphereGeometry(.48,8,6),mat(pants));pelvis.position.set(0,1.72,0);pelvis.scale.set(.92,.62,.62);pelvis.castShadow=true;g.add(pelvis);
- const head=new THREE.Mesh(new THREE.SphereGeometry(.58,10,8),mat(skin));head.position.y=4.15;head.castShadow=true;g.add(head);
- const hairCap=new THREE.Mesh(new THREE.SphereGeometry(.61,10,6,0,Math.PI*2,0,Math.PI*.48),mat(hair));hairCap.position.y=4.35;hairCap.castShadow=true;g.add(hairCap);
- const neck=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.28,8),mat(skin));neck.position.y=3.55;g.add(neck);
+ const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.72,1.45,5,10),mat(shirt));torso.position.y=2.55;torso.scale.z=.62;torso.castShadow=true;g.add(torso);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.58,14,12),mat(skin));head.position.y=4.15;head.castShadow=true;g.add(head);
+ const hairCap=new THREE.Mesh(new THREE.SphereGeometry(.61,14,8,0,Math.PI*2,0,Math.PI*.48),mat(hair));hairCap.position.y=4.35;hairCap.castShadow=true;g.add(hairCap);
+ const neck=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.28,10),mat(skin));neck.position.y=3.55;g.add(neck);
  const limbMat=mat(shirt),pantsMat=mat(pants),shoeMat=mat(shoe);
  const armL=new THREE.Group(),armR=new THREE.Group(),legL=new THREE.Group(),legR=new THREE.Group();
- const armGeo=new THREE.CapsuleGeometry(.22,.95,4,7),legGeo=new THREE.CapsuleGeometry(.25,1.05,4,7);
- const makeLimb=(parent,geo,m,x,y)=>{const q=new THREE.Mesh(geo,m);q.position.set(x,y,0);q.castShadow=true;parent.add(q);return q};
+ const armGeo=new THREE.CapsuleGeometry(.22,.95,5,8),legGeo=new THREE.CapsuleGeometry(.25,1.05,5,8);
+ const makeLimb=(parent,geo,m, x,y)=>{const q=new THREE.Mesh(geo,m);q.position.set(x,y,0);q.castShadow=true;parent.add(q);return q};
  armL.position.set(-.82,2.95,0);armR.position.set(.82,2.95,0);legL.position.set(-.34,1.35,0);legR.position.set(.34,1.35,0);
  makeLimb(armL,armGeo,limbMat,0,-.52);makeLimb(armR,armGeo,limbMat,0,-.52);
  makeLimb(legL,legGeo,pantsMat,0,-.58);makeLimb(legR,legGeo,pantsMat,0,-.58);
  const footL=new THREE.Mesh(new THREE.BoxGeometry(.42,.22,.72),shoeMat);footL.position.set(0,-1.25,-.14);footL.castShadow=true;legL.add(footL);
  const footR=footL.clone();legR.add(footR);
- if(detail){
-   const eyeMat=new THREE.MeshStandardMaterial({color:0x17120e,roughness:.55});
-   const whiteMat=new THREE.MeshStandardMaterial({color:0xf7f3e8,roughness:.7});
-   const mouthMat=new THREE.MeshStandardMaterial({color:0x5a2020,roughness:.8});
-   const eyeGeo=new THREE.SphereGeometry(.075,6,4),whiteGeo=new THREE.SphereGeometry(.115,6,4);
-   [-.205,.205].forEach(x=>{
-     const white=new THREE.Mesh(whiteGeo,whiteMat);white.position.set(x,4.17,.535);white.scale.z=.45;g.add(white);
-     const eye=new THREE.Mesh(eyeGeo,eyeMat);eye.position.set(x,4.17,.605);g.add(eye);
-   });
-   const nose=new THREE.Mesh(new THREE.ConeGeometry(.07,.18,6),mat(skin));nose.rotation.x=Math.PI/2;nose.position.set(0,4.02,.60);g.add(nose);
-   const mouth=new THREE.Mesh(new THREE.BoxGeometry(.18,.035,.025),mouthMat);mouth.position.set(0,3.86,.59);g.add(mouth);
-   const earGeo=new THREE.SphereGeometry(.11,6,4);
-   [-.59,.59].forEach(x=>{const ear=new THREE.Mesh(earGeo,mat(skin));ear.position.set(x,4.12,0);ear.scale.z=.55;g.add(ear);});
-   const collar=new THREE.Mesh(new THREE.TorusGeometry(.27,.055,5,10),mat(0xe8e8e8));collar.rotation.x=Math.PI/2;collar.position.set(0,3.45,0);g.add(collar);
- }
  g.add(armL,armR,legL,legR);g.userData.parts={armL,armR,legL,legR};return g;
 }
 function animateHuman(g,t,walking){
@@ -397,7 +381,7 @@ function animateHuman(g,t,walking){
  p.armL.rotation.x=swing;p.armR.rotation.x=-swing;p.legL.rotation.x=-swing;p.legR.rotation.x=swing;
  g.position.y=walking?Math.abs(Math.sin(t*9))*.035:0;
 }
-const player=makeHuman(0xc98f72,0x2468d8,0x20242a,0x171717,0x201810,true);player.position.set(40,0,20);player.userData.isPlayer=true;scene.add(player);
+const player=makeHuman(0xc98f72,0x2468d8,0x20242a);player.position.set(40,0,20);player.userData.isPlayer=true;scene.add(player);
 let weaponModel;
 
 function makeCar(x,z,color=0xc72c2c,police=false,type='sedan'){
@@ -732,7 +716,6 @@ function cycleWeather(){setWeather(weatherStates[(weatherStates.indexOf(weather)
 let missionReward=50000;const keys=new Set();const pressed=k=>keys.has(k);
 const analogState={x:0,y:0,active:false};
 const analog=document.querySelector('#analog'),stick=document.querySelector('#stick');
-const analogHome={left:8,bottom:10};
 function moveAnalogBase(clientX,clientY){
  if(!analog)return;
  const size=analog.offsetWidth||142,half=size/2;
@@ -740,23 +723,15 @@ function moveAnalogBase(clientX,clientY){
  const safeTop=Math.max(88,Math.min(innerHeight-half-12,clientY));
  analog.style.position='fixed';analog.style.left=(safeLeft-half)+'px';analog.style.top=(safeTop-half)+'px';analog.style.bottom='auto';
 }
-function resetAnalogPosition(){
- if(!analog)return;
- analog.style.left=analogHome.left+'px';analog.style.top='auto';analog.style.bottom='max(10px,env(safe-area-inset-bottom))';
-}
+function resetAnalogPosition(){if(!analog)return;analog.style.position='relative';analog.style.left='';analog.style.top='';analog.style.bottom='';}
 function setAnalog(clientX,clientY){
  if(!analog)return;
  const r=analog.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,max=r.width*.34;
  let dx=clientX-cx,dy=clientY-cy;const len=Math.hypot(dx,dy);
  if(len>max){dx=dx/len*max;dy=dy/len*max}
- analogState.x=dx/max;analogState.y=dy/max;
- if(stick)stick.style.transform=`translate(${dx}px,${dy}px)`;
+ analogState.x=dx/max;analogState.y=dy/max;if(stick)stick.style.transform=`translate(${dx}px,${dy}px)`;
 }
-function resetAnalog(){
- analogState.x=0;analogState.y=0;analogState.active=false;
- if(stick)stick.style.transform='translate(0,0)';
- resetAnalogPosition();
-}
+function resetAnalog(){analogState.x=0;analogState.y=0;analogState.active=false;if(stick)stick.style.transform='translate(0,0)';resetAnalogPosition();}
 if(analog){
  analog.addEventListener('pointerdown',e=>{e.preventDefault();analogState.active=true;moveAnalogBase(e.clientX,e.clientY);analog.setPointerCapture?.(e.pointerId);setAnalog(e.clientX,e.clientY)});
  analog.addEventListener('pointermove',e=>{if(analogState.active){e.preventDefault();setAnalog(e.clientX,e.clientY)}});
@@ -784,12 +759,12 @@ function update(dt){
   car.position.x=Math.max(-178,Math.min(178,car.position.x));car.position.z=Math.max(-178,Math.min(178,car.position.z));
  }else{
   const walkSpeed=5.2;const camForward=new THREE.Vector3(-Math.sin(cameraControls.yaw),0,-Math.cos(cameraControls.yaw));const camRight=new THREE.Vector3(Math.cos(cameraControls.yaw),0,-Math.sin(cameraControls.yaw));const dir=new THREE.Vector3().addScaledVector(camForward,moveForward).addScaledVector(camRight,moveStrafe);if(dir.lengthSq()>1)dir.normalize();const walk=walkSpeed*dt;if(movingInput&&dir.lengthSq()>0.001){
-   const targetRotation=Math.atan2(dir.x,-dir.z);
-   let turnDelta=THREE.MathUtils.euclideanModulo(targetRotation-player.rotation.y+Math.PI,Math.PI*2)-Math.PI;
-   player.rotation.y+=turnDelta*Math.min(1,dt*16);
-   moveWithCollision(player,dir.x*walk,dir.z*walk,.68);
-   animateHuman(player,performance.now()/1000,true);
- }else animateHuman(player,performance.now()/1000,false);
+ const targetRotation=Math.atan2(dir.x,-dir.z);
+ let turnDelta=THREE.MathUtils.euclideanModulo(targetRotation-player.rotation.y+Math.PI,Math.PI*2)-Math.PI;
+ player.rotation.y+=turnDelta*Math.min(1,dt*16);
+ moveWithCollision(player,dir.x*walk,dir.z*walk,.68);
+ animateHuman(player,performance.now()/1000,true);
+}else animateHuman(player,performance.now()/1000,false);
   player.position.x=Math.max(-175,Math.min(175,player.position.x));player.position.z=Math.max(-175,Math.min(175,player.position.z));
  }
  traffic.forEach((c,i)=>{
