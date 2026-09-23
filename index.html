@@ -518,7 +518,7 @@ function update(dt){
        animateHuman(n,now+n.userData.walkPhase,true);
      }
    }
- });}); handleWanted(dt,obj);
+ }); handleWanted(dt,obj);
  if(obj.position.distanceTo(target.position)<9)completeMission();
  const desired=new THREE.Vector3(0,inCar?9:5.2,inCar?16:11).applyQuaternion(obj.quaternion).add(obj.position);
  camera.position.lerp(desired,.11);camera.lookAt(obj.position.x,obj.position.y+1.3,obj.position.z);
