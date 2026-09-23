@@ -89,7 +89,7 @@ const cameraControls={
  panX:0,panZ:0,dragging:false,lastX:0,lastY:0,pointers:new Map(),pinchStart:0,pinchMidX:0,pinchMidY:0
 };
 function clampCamera(){
- cameraControls.distance=Math.max(9,Math.min(105,cameraControls.distance));
+ cameraControls.distance=Math.max(8,Math.min(70,cameraControls.distance));
  cameraControls.panX=Math.max(-120,Math.min(120,cameraControls.panX));
  cameraControls.panZ=Math.max(-120,Math.min(120,cameraControls.panZ));
  cameraControls.target.x=Math.max(-250,Math.min(250,cameraControls.target.x));
@@ -97,16 +97,24 @@ function clampCamera(){
  camera.position.set(cameraControls.target.x,cameraControls.height,cameraControls.target.z+cameraControls.distance);
  camera.lookAt(cameraControls.target.x,1.0,cameraControls.target.z);
 }
-function zoomCamera(amount){cameraControls.distance=Math.max(9,Math.min(105,cameraControls.distance+amount));clampCamera();}
-function setCameraFromPlayer(player){
+function zoomCamera(amount){cameraControls.distance=Math.max(8,Math.min(70,cameraControls.distance+amount));clampCamera();}
+let cameraModeInCar=false;
+function setCameraFromPlayer(player,inCar){
  if(!player)return;
- const follow=.16;
+ const follow=.22;
  const tx=THREE.MathUtils.clamp(player.position.x+cameraControls.panX,-250,250);
  const tz=THREE.MathUtils.clamp(player.position.z+cameraControls.panZ,-250,250);
+ if(cameraModeInCar!==inCar){
+   cameraModeInCar=inCar;
+   cameraControls.panX=0;cameraControls.panZ=0;
+   cameraControls.distance=inCar?22:16;
+   cameraControls.height=inCar?9.5:8.5;
+   cameraControls.target.set(player.position.x,0,player.position.z);
+ }
  cameraControls.target.x=THREE.MathUtils.lerp(cameraControls.target.x,tx,follow);
  cameraControls.target.z=THREE.MathUtils.lerp(cameraControls.target.z,tz,follow);
  camera.position.set(cameraControls.target.x,cameraControls.height,cameraControls.target.z+cameraControls.distance);
- camera.lookAt(cameraControls.target.x,1.0,cameraControls.target.z);
+ camera.lookAt(cameraControls.target.x,1.1,cameraControls.target.z);
 }
 renderer.domElement.style.touchAction='none';
 renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();zoomCamera(e.deltaY*.045)},{passive:false});
@@ -617,8 +625,8 @@ function update(dt){
    }
  }); handleWanted(dt,obj);
  if(obj.position.distanceTo(target.position)<9)completeMission();
- cameraControls.height=THREE.MathUtils.lerp(cameraControls.height,inCar?9:22,.08);
- setCameraFromPlayer(obj);
+ cameraControls.height=THREE.MathUtils.lerp(cameraControls.height,inCar?9.5:8.5,.14);
+ setCameraFromPlayer(obj,inCar);
  clampCamera();
  const area=obj.position.distanceTo(gas.position)<30?'SPBU':obj.position.distanceTo(shop.position)<30?'Bengkel':obj.position.distanceTo(new THREE.Vector3(-100,0,-100))<35?'Keraton':obj.position.distanceTo(new THREE.Vector3(100,0,-100))<35?'Area Mall':obj.position.distanceTo(new THREE.Vector3(-100,0,100))<35?'Alun-Alun':'Kota';
  document.querySelector('#area').textContent=area;
