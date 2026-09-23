@@ -147,7 +147,7 @@ function endPointer(e){cameraControls.pointers.delete(e.pointerId);if(cameraCont
 renderer.domElement.addEventListener('pointerup',endPointer);
 renderer.domElement.addEventListener('pointercancel',endPointer);
 window.addEventListener('keydown',e=>{if(e.key==='+'||e.key==='=')zoomCamera(-1.5);if(e.key==='-'||e.key==='_')zoomCamera(1.5);});
-clampCamera();}
+clampCamera();
 let cameraModeInCar=false;
 function setCameraFromPlayer(player,inCar){
  if(!player)return;
