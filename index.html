@@ -87,7 +87,7 @@ const renderer=new THREE.WebGLRenderer({antialias:!isMobileDevice,powerPreferenc
 renderer.setPixelRatio(Math.min(devicePixelRatio,isMobileDevice?1.15:1.35));renderer.setSize(innerWidth,innerHeight);
 const cameraControls={
  target:new THREE.Vector3(0,0,0),distance:8,height:6.2,
- yaw:0,pitch:0.28,dragging:false,lastX:0,lastY:0,pointers:new Map(),pinchStart:0
+ yaw:0,pitch:0.28,dragging:false,lastX:0,lastY:0,pointers:new Map(),pinchStart:0,manualUntil:0
 };
 function clampCamera(){
  cameraControls.distance=THREE.MathUtils.clamp(cameraControls.distance,5,34);
@@ -98,6 +98,15 @@ function clampCamera(){
 }
 function applyCamera(player){
  if(!player)return;
+ const now=performance.now();
+ if(now>cameraControls.manualUntil&&!cameraControls.dragging){
+   const moving=inCar?Math.abs(speed)>2:Math.hypot(moveStrafe||0,moveForward||0)>.12;
+   if(moving){
+     const desiredYaw=player.rotation.y;
+     let delta=THREE.MathUtils.euclideanModulo(desiredYaw-cameraControls.yaw+Math.PI,Math.PI*2)-Math.PI;
+     cameraControls.yaw+=delta*Math.min(1,0.12*(now-(cameraControls.manualUntil||now))/16.67);
+   }
+ }
  const horizontal=cameraControls.distance*Math.cos(cameraControls.pitch);
  const vertical=cameraControls.distance*Math.sin(cameraControls.pitch);
  camera.position.set(
@@ -143,8 +152,9 @@ renderer.domElement.addEventListener('pointermove',e=>{
  cameraControls.lastX=e.clientX;cameraControls.lastY=e.clientY;
  cameraControls.yaw-=dx*.009;
  cameraControls.pitch=THREE.MathUtils.clamp(cameraControls.pitch+dy*.006,0.12,0.72);
+ cameraControls.manualUntil=performance.now()+1400;
 });
-function endPointer(e){cameraControls.pointers.delete(e.pointerId);if(cameraControls.pointers.size<2)cameraControls.pinchStart=0;cameraControls.dragging=false;}
+function endPointer(e){cameraControls.pointers.delete(e.pointerId);if(cameraControls.pointers.size<2)cameraControls.pinchStart=0;cameraControls.dragging=false;cameraControls.manualUntil=performance.now()+1400;}
 renderer.domElement.addEventListener('pointerup',endPointer);
 renderer.domElement.addEventListener('pointercancel',endPointer);
 window.addEventListener('keydown',e=>{if(e.key==='+'||e.key==='=')zoomCamera(-1.5);if(e.key==='-'||e.key==='_')zoomCamera(1.5);});
@@ -650,7 +660,7 @@ function keyDown(e){ensureAudio();
  if(k==='e')enterExit();if(k==='r')service();if(k==='f5')saveGame();if(k==='f9')loadGame();
 }
 addEventListener('keydown',keyDown);addEventListener('keyup',e=>{keys.delete(e.key.toLowerCase());if(e.key==='ArrowUp')keys.delete('w');if(e.key==='ArrowDown')keys.delete('s');if(e.key==='ArrowLeft')keys.delete('a');if(e.key==='ArrowRight')keys.delete('d');if(e.key===' ')keys.delete('space');if(e.key==='shift')keys.delete('shift')});
-document.querySelectorAll('button[data-k]').forEach(b=>{const k=b.dataset.k;b.onpointerdown=e=>{e.preventDefault();ensureAudio();keys.add(k);if(k==='gas')keys.add('w')};b.onpointerup=b.onpointercancel=b.onpointerleave=()=>{keys.delete(k);if(k==='gas')keys.delete('w')}});
+document.querySelectorAll('button[data-k]').forEach(b=>{const k=b.dataset.k;b.style.touchAction='none';b.onpointerdown=e=>{e.preventDefault();ensureAudio();b.setPointerCapture?.(e.pointerId);keys.add(k);if(k==='gas')keys.add('w')};const release=()=>{keys.delete(k);if(k==='gas')keys.delete('w')};b.onpointerup=release;b.onpointercancel=release;});
 document.querySelectorAll('button[data-action]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();const a=b.dataset.action;if(a==='enter')enterExit();if(a==='steal')stealNearestCar();if(a==='repair')service();if(a==='exit')enterExit()};b.onpointerup=b.onpointercancel=b.onpointerleave=()=>{}});
 setMission();buildWeatherFX();syncVehicleUI();ensureAudio();
 let last=performance.now();
