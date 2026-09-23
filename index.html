@@ -443,7 +443,7 @@ function update(dt){
        if(d>1.2){const step=Math.min(d,.06*dt*60);n.position.x+=dx/d*step;n.position.z+=dz/d*step;n.rotation.y=Math.atan2(dx,-dz);animateHuman(n,now+n.userData.walkPhase,true)}
        else{n.userData.workState='commute';n.userData.workTimer=0;n.position.set(npcRoad[(i+2)%npcRoad.length]+side,0,npcRoad[(i*3+2)%npcRoad.length]);}
      }
-     continue;
+     return;
    }
 
    if(role==='taksi' || role==='truk'){
@@ -467,7 +467,7 @@ function update(dt){
        animateHuman(n,now+n.userData.walkPhase,false);
        if(n.userData.workTimer<=-3){n.userData.workState='commute';n.userData.workTimer=0}
      }
-     continue;
+     return;
    }
 
    if(!n.visible)return;
