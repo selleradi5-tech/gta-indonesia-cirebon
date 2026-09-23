@@ -1,0 +1,8 @@
+{
+  "name":"gta-indonesia-cirebon-multiplayer-server",
+  "version":"1.0.0",
+  "private":true,
+  "type":"commonjs",
+  "scripts":{"start":"node server.js"},
+  "dependencies":{"socket.io":"^4.8.1"}
+}
