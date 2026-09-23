@@ -488,7 +488,7 @@ n.userData.workTarget=null;
  scene.add(n);npcs.push(n)
 }
 
-let cash=150000,wanted=0,speed=0,fuel=100,health=100,mission=1,gameMinutes=720,carHealth=100,engineOn=false,weather='Cerah',weatherTimer=0;
+let cash=150000,wanted=0,speed=0,fuel=100,health=100,mission=1,gameMinutes=720,carHealth=100,engineOn=false,weather='Cerah',weatherTimer=0,lightUpdateClock=0;
 const weaponDefs=[
  {name:'Pistol',short:'PISTOL',mag:12,reserveMax:60,damage:45,rate:.30,pellets:1,spread:.012,recoil:.018,reload:1.05,color:0x222222},
  {name:'SMG',short:'SMG',mag:30,reserveMax:120,damage:20,rate:.095,pellets:1,spread:.035,recoil:.012,reload:1.35,color:0x33404a},
@@ -964,7 +964,7 @@ function update(dt){
  const area=obj.position.distanceTo(gas.position)<30?'SPBU':obj.position.distanceTo(shop.position)<30?'Bengkel':obj.position.distanceTo(new THREE.Vector3(-100,0,-100))<35?'Keraton':obj.position.distanceTo(new THREE.Vector3(100,0,-100))<35?'Area Mall':obj.position.distanceTo(new THREE.Vector3(-100,0,100))<35?'Alun-Alun':'Kota';
  document.querySelector('#area').textContent=area;
  document.querySelector('#cash').textContent=Math.floor(cash).toLocaleString('id-ID');document.querySelector('#fuel').textContent=Math.round(fuel);document.querySelector('#wanted').textContent=wanted;document.querySelector('#health').textContent=Math.round(health);
- updateMap(obj);updateWorld(dt);updatePerformance(dt,obj);updateWeapon(dt);updateAudio(dt);updateRealAudio();syncVehicleUI();updateContextControls();document.querySelector('#weather').textContent=weather==='Hujan'?'🌧️ Hujan':weather==='Mendung'?'☁️ Mendung':'☀️ Cerah';
+ mapClock+=dt;if(mapClock>=.12){mapClock=0;updateMap(obj)}updateWorld(dt);updatePerformance(dt,obj);updateWeapon(dt);updateAudio(dt);updateRealAudio();syncVehicleUI();updateContextControls();document.querySelector('#weather').textContent=weather==='Hujan'?'🌧️ Hujan':weather==='Mendung'?'☁️ Mendung':'☀️ Cerah';
 }
 function updateMap(obj){
  const c=document.querySelector('#map'),ctx=c.getContext('2d'),w=c.width,h=c.height,s=280/128;
@@ -993,16 +993,17 @@ weaponModel=buildWeapon();buildWeaponPickups();setMission();buildWeatherFX();syn
   if(player)player.traverse(o=>{if(o.isMesh)o.castShadow=true;});
   if(car)car.traverse(o=>{if(o.isMesh)o.castShadow=true;});
 })();
-let perfClock=0,perfFrames=0,perfTime=performance.now(),adaptiveScale=isMobileDevice?1.35:1.5;
+let perfClock=0,perfFrames=0,perfTime=performance.now(),adaptiveScale=isMobileDevice?1.5:1.7,perfWarmup=0,mapClock=0;
 function updatePerformance(dt,obj){
   perfClock+=dt;perfFrames++;
   const now=performance.now();
   // Evaluasi FPS sekali per detik agar resolusi tidak berubah-ubah setiap frame.
   if(now-perfTime>1000){
     const fps=perfFrames*1000/(now-perfTime);perfFrames=0;perfTime=now;
-    const minScale=isMobileDevice?.82:1.0,maxScale=isMobileDevice?1.5:1.75;
-    if(fps<30)adaptiveScale=Math.max(minScale,adaptiveScale-.08);
-    else if(fps>48)adaptiveScale=Math.min(maxScale,adaptiveScale+.06);
+    const minScale=isMobileDevice?.92:1.08,maxScale=isMobileDevice?1.7:2.0;
+    if(perfWarmup>1.5&&fps<42)adaptiveScale=Math.max(minScale,adaptiveScale-.10);
+    else if(fps>56)adaptiveScale=Math.min(maxScale,adaptiveScale+.05);
+    perfWarmup+=1;
     const target=Math.min(devicePixelRatio,adaptiveScale);
     if(Math.abs(renderer.getPixelRatio()-target)>.02)renderer.setPixelRatio(target);
   }
