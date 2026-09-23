@@ -28,4 +28,4 @@ io.on('connection',socket=>{
   });
   socket.on('disconnect',()=>{const room=socket.data.room,players=room&&rooms.get(room);if(!players)return;players.delete(socket.id);socket.to(room).emit('playerLeft',{id:socket.id});if(players.size===0)rooms.delete(room);});
 });
-server.listen(PORT,()=>console.log('GTA Cirebon multiplayer server listening on '+PORT));
+server.listen(PORT,'0.0.0.0',()=>console.log('GTA Cirebon multiplayer server listening on '+PORT));
