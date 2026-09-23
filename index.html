@@ -80,11 +80,11 @@ const boot=document.querySelector('#boot-status'); if(boot) boot.remove();
 
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x4f7890);
-scene.fog=new THREE.Fog(0x4f7890,180,620);
+scene.fog=new THREE.Fog(0x4f7890,145,420);
 const camera=new THREE.PerspectiveCamera(64,innerWidth/innerHeight,.1,700);
 const isMobileDevice=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 const renderer=new THREE.WebGLRenderer({antialias:!isMobileDevice,powerPreference:'high-performance'});
-renderer.setPixelRatio(Math.min(devicePixelRatio,isMobileDevice?1.15:1.35));renderer.setSize(innerWidth,innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,isMobileDevice?.9:1.05));renderer.setSize(innerWidth,innerHeight);
 const cameraControls={
  target:new THREE.Vector3(0,0,0),distance:8,height:2.0,
  yaw:0,pitch:0.28,dragging:false,lastX:0,lastY:0,pointers:new Map(),pinchStart:0,manualUntil:0
@@ -171,7 +171,7 @@ window.addEventListener('keydown',e=>{if(e.key==='+'||e.key==='=')zoomCamera(-1.
 clampCamera();
 renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 const hemi=new THREE.HemisphereLight(0xffffff,0x28432d,1.9);scene.add(hemi);
-const sun=new THREE.DirectionalLight(0xffffff,2.1);sun.position.set(80,120,40);sun.castShadow=true;sun.shadow.mapSize.set(isMobileDevice?768:1024,isMobileDevice?768:1024);sun.shadow.camera.near=1;sun.shadow.camera.far=360;sun.shadow.camera.left=-190;sun.shadow.camera.right=190;sun.shadow.camera.top=190;sun.shadow.camera.bottom=-190;scene.add(sun);
+const sun=new THREE.DirectionalLight(0xffffff,2.1);sun.position.set(80,120,40);sun.castShadow=true;sun.shadow.mapSize.set(isMobileDevice?512:768,isMobileDevice?512:768);sun.shadow.camera.near=1;sun.shadow.camera.far=360;sun.shadow.camera.left=-190;sun.shadow.camera.right=190;sun.shadow.camera.top=190;sun.shadow.camera.bottom=-190;scene.add(sun);
 document.querySelector('#game').appendChild(renderer.domElement);
 const moonLight=new THREE.DirectionalLight(0x9bbcff,0.0);moonLight.position.set(-70,90,-110);scene.add(moonLight);
 const fillLight=new THREE.DirectionalLight(0xffd9b0,0.35);fillLight.position.set(-60,45,80);scene.add(fillLight);
@@ -817,7 +817,7 @@ moonLight.intensity=.05+.38*night;
 fillLight.intensity=.10+.28*day;
 lampMat.emissiveIntensity=Math.max(0,night-.05)*2.2;
  streetLights.forEach(g=>{const on=Math.max(0,(night-.08)/.92);g.userData.streetLight.intensity=on*18;g.userData.bulb.material.emissiveIntensity=on*2.6;});
- sun.intensity=(.35+1.9*day)*(weather==='Hujan' ? .72 : weather==='Mendung' ? .88 : 1);hemi.intensity=(.55+1.4*day)*(weather==='Hujan' ? .8 : weather==='Mendung' ? .93 : 1);if(scene.fog)scene.fog.far=weather==='Hujan'?300:620;updateRain(dt,inCar?car:player);
+ sun.intensity=(.35+1.9*day)*(weather==='Hujan' ? .72 : weather==='Mendung' ? .88 : 1);hemi.intensity=(.55+1.4*day)*(weather==='Hujan' ? .8 : weather==='Mendung' ? .93 : 1);if(scene.fog)scene.fog.far=weather==='Hujan'?240:420;updateRain(dt,inCar?car:player);
  document.querySelector('#clock').textContent=String(Math.floor(hour)).padStart(2,'0')+':'+String(Math.floor(gameMinutes%60)).padStart(2,'0')+(day>.55?' Siang':' Malam');
 }
 function update(dt){
@@ -982,6 +982,25 @@ addEventListener('keydown',keyDown);addEventListener('keyup',e=>{keys.delete(e.k
 document.querySelectorAll('button[data-k]').forEach(b=>{const k=b.dataset.k;b.style.touchAction='none';b.onpointerdown=e=>{e.preventDefault();ensureAudio();b.setPointerCapture?.(e.pointerId);keys.add(k);if(k==='gas')keys.add('w')};const release=()=>{keys.delete(k);if(k==='gas')keys.delete('w')};b.onpointerup=release;b.onpointercancel=release;});
 document.querySelectorAll('button[data-action]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();const a=b.dataset.action;if(a==='enter')enterExit();if(a==='steal')stealNearestCar();if(a==='repair')service();if(a==='weapon')equipWeapon();if(a==='aim')toggleAim();if(a==='switch')switchWeapon();if(a==='reload')reloadWeapon();if(a==='fire'){fireHeld=true;doShot()}if(a==='exit')enterExit()};const release=()=>{if(b.dataset.action==='fire')fireHeld=false};b.onpointerup=release;b.onpointercancel=release;b.onpointerleave=release;});
 weaponModel=buildWeapon();buildWeaponPickups();setMission();buildWeatherFX();syncVehicleUI();syncWeaponModel();ensureAudio();
+// Performance pass: kurangi biaya GPU tanpa menghilangkan isi kota.
+(function optimizeScene(){
+  const maxNpc=isMobileDevice?85:125, maxTraffic=isMobileDevice?55:80;
+  let npcCount=0,trafficCount=0;
+  npcs.forEach(n=>{
+    npcCount++;
+    if(npcCount>maxNpc)n.visible=false;
+    n.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=true;}});
+  });
+  traffic.forEach(v=>{
+    trafficCount++;
+    if(trafficCount>maxTraffic)v.visible=false;
+    v.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=true;}});
+  });
+  police.forEach(p=>p.traverse(o=>{if(o.isMesh)o.castShadow=false;}));
+  if(player)player.traverse(o=>{if(o.isMesh)o.castShadow=true;});
+  if(car)car.traverse(o=>{if(o.isMesh)o.castShadow=true;});
+})();
+
 let last=performance.now();
 let runtimeFaulted=false;
 function loop(now){
