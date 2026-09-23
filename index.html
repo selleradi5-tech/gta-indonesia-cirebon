@@ -84,7 +84,7 @@ scene.fog=new THREE.Fog(0x4f7890,180,620);
 const camera=new THREE.PerspectiveCamera(64,innerWidth/innerHeight,.1,700);
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.setSize(innerWidth,innerHeight);
-renderer.shadowMap.enabled=false;document.querySelector('#game').appendChild(renderer.domElement);
+renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.08;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;document.querySelector('#game').appendChild(renderer.domElement);
 
 const hemi=new THREE.HemisphereLight(0xffffff,0x28432d,1.9);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xffffff,2.1);sun.position.set(80,120,40);scene.add(sun);
@@ -97,11 +97,11 @@ function moveWithCollision(obj,dx,dz,r=2){const ox=obj.position.x,oz=obj.positio
 function meshBox(parent,x,y,z,sx,sy,sz,c){const m=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat(c));m.position.set(x,y,z);(parent||scene).add(m);return m}
 function label(text,x,z){const c=document.createElement('canvas');c.width=512;c.height=80;const ctx=c.getContext('2d');ctx.fillStyle='rgba(0,0,0,.72)';ctx.fillRect(0,0,512,80);ctx.fillStyle='#fff';ctx.font='bold 34px Arial';ctx.textAlign='center';ctx.fillText(text,256,52);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true}));s.scale.set(20,3.2,1);s.position.set(x,8,z);scene.add(s)}
 
-const ground=new THREE.Mesh(new THREE.PlaneGeometry(620,620),mat(0x416f45));ground.rotation.x=-Math.PI/2;scene.add(ground);
+const ground=new THREE.Mesh(new THREE.PlaneGeometry(620,620),mat(0x416f45));ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
 
 // Cirebon-inspired grid district, not a copy of Google Maps.
-for(let x=-160;x<=160;x+=40){meshBox(null,x,.035,0,11,.07,360,0x3d3d3d);meshBox(null,x,.075,0,.25,.09,360,0xf0d35a)}
-for(let z=-160;z<=160;z+=40){meshBox(null,0,.035,z,360,.07,11,0x3d3d3d);meshBox(null,0,.075,z,360,.09,.25,0xf0d35a);meshBox(null,0,.085,z-2.6,360,.05,.10,0xffffff);meshBox(null,0,.085,z+2.6,360,.05,.10,0xffffff)}
+for(let x=-160;x<=160;x+=40){const road=meshBox(null,x,.035,0,11,.07,360,0x3d3d3d);road.receiveShadow=true;const line=meshBox(null,x,.075,0,.25,.09,360,0xf0d35a);line.receiveShadow=true}
+for(let z=-160;z<=160;z+=40){const road=meshBox(null,0,.035,z,360,.07,11,0x3d3d3d);road.receiveShadow=true;const line=meshBox(null,0,.075,z,360,.09,.25,0xf0d35a);line.receiveShadow=true;meshBox(null,0,.085,z-2.6,360,.05,.10,0xffffff);meshBox(null,0,.085,z+2.6,360,.05,.10,0xffffff)}
 // Strict city-block placement. Roads have an 11-unit width, so every building
 // is kept at least 7 units from the road center and never overlaps the road surface.
 for(let bx=-150;bx<=150;bx+=20)for(let bz=-150;bz<=150;bz+=20){
@@ -111,9 +111,9 @@ for(let bx=-150;bx<=150;bx+=20)for(let bz=-150;bz<=150;bz+=20){
   const cx=bx,cz=bz;
   if(Math.abs(cx%40)<roadClearX || Math.abs(cz%40)<roadClearZ) continue;
   const cc=[0xd6b08c,0xb7c9d9,0xd0d0c0,0xc59b79,0xa9c5a8][Math.floor(rnd(0,5))];
-  meshBox(null,cx,h/2,cz,bw,h,bd,cc);
+  const building=meshBox(null,cx,h/2,cz,bw,h,bd,cc);building.castShadow=true;building.receiveShadow=true;
   addCollider(cx,cz,bw,bd,.35);
-  if(Math.random()<.22)meshBox(null,cx,h+.5,cz,bw*.55,.7,bd*.55,0x4e4e4e);
+  if(Math.random()<.22){const roof=meshBox(null,cx,h+.5,cz,bw*.55,.7,bd*.55,0x4e4e4e);roof.castShadow=true;roof.receiveShadow=true;}
 }
 
 // Landmarks and districts
@@ -132,7 +132,7 @@ meshBox(null,-100,2,120,20,4,14,0x287bb8);addCollider(-100,120,20,14,1);
 // Road shoulders: visual curb strips keep the street edge readable without blocking traffic.
 for(let p=-160;p<=160;p+=40){meshBox(null,p,.11,-174,12,.12,2,0x777777);meshBox(null,p,.11,174,12,.12,2,0x777777);meshBox(null,-174,.11,p,2,.12,12,0x777777);meshBox(null,174,.11,p,2,.12,12,0x777777)}
 
-const target=new THREE.Mesh(new THREE.CylinderGeometry(5,5,.18,32),new THREE.MeshBasicMaterial({color:0xffd21a}));
+const target=new THREE.Mesh(new THREE.CylinderGeometry(5,5,.18,32),new THREE.MeshStandardMaterial({color:0xffd21a,emissive:0x6b4d00,emissiveIntensity:.45}));
 target.position.set(120,.18,120);scene.add(target);
 
 const player=new THREE.Group();const body=new THREE.Mesh(new THREE.CapsuleGeometry(1,2,6,10),mat(0x2468d8));body.position.y=2;player.add(body);player.position.set(40,0,20);scene.add(player);
@@ -152,8 +152,8 @@ const npcs=[];const npcRoad=[-160,-120,-80,-40,0,40,80,120,160];for(let i=0;i<24
 
 let cash=150000,wanted=0,speed=0,fuel=100,health=100,mission=1,gameMinutes=720,carHealth=100,engineOn=false,weather='Cerah',weatherTimer=0;
 const weatherStates=['Cerah','Mendung','Hujan'];
-let rainDrops=[];
-function setWeather(next){weather=next;document.querySelector('#weather').textContent=weather==='Hujan'?'🌧️ Hujan':weather==='Mendung'?'☁️ Mendung':'☀️ Cerah'; if(weather==='Hujan')toast('🌧️ Hujan turun di Cirebon');}
+let rainDrops=[];\nfunction buildWeatherFX(){rainDrops.forEach(r=>scene.remove(r));rainDrops=[];if(weather!=='Hujan')return;const g=new THREE.BufferGeometry();const pts=[];for(let i=0;i<420;i++)pts.push(rnd(-180,180),rnd(2,85),rnd(-180,180));g.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));const m=new THREE.PointsMaterial({color:0x9fd8ff,size:.32,transparent:true,opacity:.58,depthWrite:false});const rain=new THREE.Points(g,m);rain.userData.isRain=true;scene.add(rain);rainDrops.push(rain)}\nfunction updateRain(dt,obj){if(weather!=='Hujan'||!rainDrops[0])return;const rain=rainDrops[0],a=rain.geometry.attributes.position;for(let i=0;i<a.count;i++){let y=a.getY(i)-42*dt;let x=a.getX(i),z=a.getZ(i);if(y<1){y=rnd(45,85);x=obj.position.x+rnd(-180,180);z=obj.position.z+rnd(-180,180)}a.setXYZ(i,x,y,z)}a.needsUpdate=true}
+function setWeather(next){weather=next;document.querySelector('#weather').textContent=weather==='Hujan'?'🌧️ Hujan':weather==='Mendung'?'☁️ Mendung':'☀️ Cerah';buildWeatherFX();if(weather==='Hujan')toast('🌧️ Hujan turun di Cirebon');}
 function cycleWeather(){setWeather(weatherStates[(weatherStates.indexOf(weather)+1)%weatherStates.length]);}
 let missionReward=50000;const keys=new Set();const pressed=k=>keys.has(k);
 let lastToast='',toastTimer=0;
@@ -285,7 +285,7 @@ function keyDown(e){
 addEventListener('keydown',keyDown);addEventListener('keyup',e=>{keys.delete(e.key.toLowerCase());if(e.key===' ')keys.delete('space');if(e.key==='shift')keys.delete('shift')});
 document.querySelectorAll('button[data-k]').forEach(b=>{const k=b.dataset.k;b.onpointerdown=e=>{e.preventDefault();keys.add(k);if(k==='gas')keys.add('w')};b.onpointerup=b.onpointercancel=b.onpointerleave=()=>{keys.delete(k);if(k==='gas')keys.delete('w')}});
 document.querySelectorAll('button[data-action]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();const a=b.dataset.action;if(a==='enter')enterExit();if(a==='steal')stealNearestCar();if(a==='repair')service();if(a==='save')saveGame();if(a==='load')loadGame()}});
-setMission();syncVehicleUI();
+setMission();buildWeatherFX();syncVehicleUI();
 let last=performance.now();function loop(now){requestAnimationFrame(loop);const dt=Math.min(.05,(now-last)/1000);last=now;update(dt);renderer.render(scene,camera)}requestAnimationFrame(loop);
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 
