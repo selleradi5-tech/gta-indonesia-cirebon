@@ -358,89 +358,32 @@ function beep(){}
 
 function makeHuman(skin=0xc98f72,shirt=0x2468d8,pants=0x20242a,shoe=0x171717,hair=0x201810){
  const g=new THREE.Group();g.userData.human=true;
- // Humanoid procedural yang lebih proporsional: kepala, leher, torso, bahu, siku, tangan, paha, betis, sepatu, dan wajah.
- // Tetap ringan agar 170 NPC tidak membuat FPS jatuh.
+ // Skala dunia: tinggi dasar manusia sekitar 1.9 m, agar proporsional dengan mobil, jalan, dan bangunan.
  g.scale.setScalar(.34);
- const skinMat=mat(skin),shirtMat=mat(shirt),pantsMat=mat(pants),shoeMat=mat(shoe),hairMat=mat(hair);
- const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.62,1.12,6,12),shirtMat);
- torso.position.y=2.55;torso.scale.z=.52;torso.castShadow=true;torso.receiveShadow=true;g.add(torso);
- const chest=new THREE.Mesh(new THREE.SphereGeometry(.68,12,8),shirtMat);
- chest.position.set(0,2.92,0);chest.scale.set(.98,.72,.55);chest.castShadow=true;g.add(chest);
- const pelvis=new THREE.Mesh(new THREE.BoxGeometry(1.02,.52,.62),pantsMat);
- pelvis.position.y=1.86;pelvis.scale.x=.9;pelvis.castShadow=true;g.add(pelvis);
- const neck=new THREE.CylinderGeometry(.20,.23,.30,10);
- const neckMesh=new THREE.Mesh(neck,skinMat);neckMesh.position.y=3.52;neckMesh.castShadow=true;g.add(neckMesh);
-
- const head=new THREE.Mesh(new THREE.SphereGeometry(.55,16,14),skinMat);
- head.position.set(0,4.12,0);head.scale.set(1,.98,.94);head.castShadow=true;g.add(head);
- // Telinga
- for(const side of[-1,1]){
-   const ear=new THREE.Mesh(new THREE.SphereGeometry(.12,8,6),skinMat);
-   ear.position.set(side*.54,4.10,-.01);ear.scale.z=.72;ear.castShadow=true;g.add(ear);
- }
- // Rambut dengan garis depan yang mengikuti bentuk kepala
- const hairCap=new THREE.Mesh(new THREE.SphereGeometry(.575,16,9,0,Math.PI*2,0,Math.PI*.50),hairMat);
- hairCap.position.set(0,4.30,0);hairCap.castShadow=true;g.add(hairCap);
- const fringe=new THREE.Mesh(new THREE.BoxGeometry(.72,.16,.20),hairMat);
- fringe.position.set(0,4.34,-.48);fringe.rotation.x=-.08;fringe.castShadow=true;g.add(fringe);
- // Mata, alis, hidung, dan mulut menghadap arah depan karakter (-Z)
- const eyeMat=new THREE.MeshStandardMaterial({color:0xf4f0e8,roughness:.45});
- const pupilMat=new THREE.MeshStandardMaterial({color:0x17120e,roughness:.3});
- for(const side of[-1,1]){
-   const eye=new THREE.Mesh(new THREE.SphereGeometry(.095,8,6),eyeMat);
-   eye.position.set(side*.19,4.17,-.505);eye.scale.z=.55;g.add(eye);
-   const pupil=new THREE.Mesh(new THREE.SphereGeometry(.045,7,5),pupilMat);
-   pupil.position.set(side*.19,4.17,-.553);pupil.scale.z=.55;g.add(pupil);
-   const brow=new THREE.Mesh(new THREE.BoxGeometry(.20,.045,.035),hairMat);
-   brow.position.set(side*.19,4.31,-.515);brow.rotation.z=side*.08;g.add(brow);
- }
- const nose=new THREE.Mesh(new THREE.ConeGeometry(.075,.18,6),skinMat);
- nose.rotation.x=-Math.PI/2;nose.position.set(0,4.08,-.55);g.add(nose);
- const mouth=new THREE.Mesh(new THREE.BoxGeometry(.20,.035,.025),new THREE.MeshStandardMaterial({color:0x7a3e3e,roughness:.7}));
- mouth.position.set(0,3.92,-.525);g.add(mouth);
-
- // Bahu dan lengan dengan pivot di bahu agar gerak jalan terlihat lebih natural.
+ const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.72,1.45,5,10),mat(shirt));torso.position.y=2.55;torso.scale.z=.62;torso.castShadow=true;g.add(torso);
+ const head=new THREE.Mesh(new THREE.SphereGeometry(.58,14,12),mat(skin));head.position.y=4.15;head.castShadow=true;g.add(head);
+ const hairCap=new THREE.Mesh(new THREE.SphereGeometry(.61,14,8,0,Math.PI*2,0,Math.PI*.48),mat(hair));hairCap.position.y=4.35;hairCap.castShadow=true;g.add(hairCap);
+ const neck=new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.28,10),mat(skin));neck.position.y=3.55;g.add(neck);
+ const limbMat=mat(shirt),pantsMat=mat(pants),shoeMat=mat(shoe);
  const armL=new THREE.Group(),armR=new THREE.Group(),legL=new THREE.Group(),legR=new THREE.Group();
- armL.position.set(-.72,3.02,0);armR.position.set(.72,3.02,0);
- legL.position.set(-.31,1.66,0);legR.position.set(.31,1.66,0);
- const upperArmGeo=new THREE.CapsuleGeometry(.19,.60,5,8);
- const foreArmGeo=new THREE.CapsuleGeometry(.17,.48,5,8);
- const thighGeo=new THREE.CapsuleGeometry(.24,.70,5,8);
- const shinGeo=new THREE.CapsuleGeometry(.19,.68,5,8);
- const makePart=(parent,geo,material,x,y,z=0)=>{const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m};
- const upperL=makePart(armL,upperArmGeo,shirtMat,0,-.34,0);
- const upperR=makePart(armR,upperArmGeo,shirtMat,0,-.34,0);
- const foreL=makePart(armL,foreArmGeo,skinMat,0,-.86,0);
- const foreR=makePart(armR,foreArmGeo,skinMat,0,-.86,0);
- const handL=new THREE.Mesh(new THREE.SphereGeometry(.19,9,7),skinMat);handL.position.set(0,-1.18,0);handL.scale.set(.82,1.05,.82);handL.castShadow=true;armL.add(handL);
- const handR=handL.clone();armR.add(handR);
- const thighL=makePart(legL,thighGeo,pantsMat,0,-.34,0);
- const thighR=makePart(legR,thighGeo,pantsMat,0,-.34,0);
- const shinL=makePart(legL,shinGeo,pantsMat,0,-.98,0);
- const shinR=makePart(legR,shinGeo,pantsMat,0,-.98,0);
- const footL=new THREE.Mesh(new THREE.BoxGeometry(.40,.22,.70),shoeMat);
- footL.position.set(0,-1.48,-.14);footL.castShadow=true;legL.add(footL);
+ const armGeo=new THREE.CapsuleGeometry(.22,.95,5,8),legGeo=new THREE.CapsuleGeometry(.25,1.05,5,8);
+ const makeLimb=(parent,geo,m, x,y)=>{const q=new THREE.Mesh(geo,m);q.position.set(x,y,0);q.castShadow=true;parent.add(q);return q};
+ armL.position.set(-.82,2.95,0);armR.position.set(.82,2.95,0);legL.position.set(-.34,1.35,0);legR.position.set(.34,1.35,0);
+ makeLimb(armL,armGeo,limbMat,0,-.52);makeLimb(armR,armGeo,limbMat,0,-.52);
+ makeLimb(legL,legGeo,pantsMat,0,-.58);makeLimb(legR,legGeo,pantsMat,0,-.58);
+ const footL=new THREE.Mesh(new THREE.BoxGeometry(.42,.22,.72),shoeMat);footL.position.set(0,-1.25,-.14);footL.castShadow=true;legL.add(footL);
  const footR=footL.clone();legR.add(footR);
- // Detail pakaian ringan
- const collar=new THREE.Mesh(new THREE.TorusGeometry(.22,.045,5,10),shirtMat);
- collar.rotation.x=Math.PI/2;collar.position.set(0,3.42,-.01);collar.scale.set(1.25,.8,1);g.add(collar);
- const belt=new THREE.Mesh(new THREE.BoxGeometry(1.0,.07,.66),new THREE.MeshStandardMaterial({color:0x242424,roughness:.65}));
- belt.position.y=1.91;g.add(belt);
-
- g.add(armL,armR,legL,legR);
- g.userData.parts={armL,armR,legL,legR,head,torso,chest};
- return g;
+ g.add(armL,armR,legL,legR);g.userData.parts={armL,armR,legL,legR};return g;
 }
 function animateHuman(g,t,walking){
  const p=g.userData.parts;if(!p)return;
- const swing=walking?Math.sin(t*9)*.55:Math.sin(t*2)*.025;
- const legSwing=walking?Math.sin(t*9)*.62:0;
- p.armL.rotation.x=swing;p.armR.rotation.x=-swing;
- p.legL.rotation.x=-legSwing;p.legR.rotation.x=legSwing;
- p.head.rotation.y=walking?Math.sin(t*2.1)*.025:Math.sin(t*.7)*.035;
- p.torso.rotation.z=walking?Math.sin(t*9)*.018:0;
+ const swing=walking?Math.sin(t*9)*.48:Math.sin(t*2)*.03;
+ p.armL.rotation.x=swing;p.armR.rotation.x=-swing;p.legL.rotation.x=-swing;p.legR.rotation.x=swing;
  g.position.y=walking?Math.abs(Math.sin(t*9))*.035:0;
 }
+const player=makeHuman(0xc98f72,0x2468d8,0x20242a);player.position.set(40,0,20);player.userData.isPlayer=true;scene.add(player);
+let weaponModel;
+
 function makeCar(x,z,color=0xc72c2c,police=false,type='sedan'){
  const g=new THREE.Group();g.userData.vehicle=true;g.userData.carType=type;
  const specs={
