@@ -9,7 +9,7 @@
 #game{position:fixed;inset:0}canvas{display:block}
 #hud{position:fixed;top:max(10px,env(safe-area-inset-top));left:10px;right:10px;display:flex;justify-content:space-between;gap:8px;pointer-events:none;text-shadow:0 2px 4px #000;z-index:5}
 .box{background:#000b;border:1px solid #fff3;border-radius:13px;padding:8px 10px;line-height:1.35;font-weight:700;backdrop-filter:blur(4px)}
-#mission{position:fixed;top:78px;left:50%;transform:translateX(-50%);background:#000d;border:1px solid #fff2;padding:9px 14px;border-radius:14px;text-align:center;font-size:13px;min-width:245px;z-index:5;pointer-events:none}
+#gps{position:fixed;left:10px;bottom:180px;background:#000c;border:1px solid #fff3;border-radius:12px;padding:8px 10px;font-size:12px;z-index:6;pointer-events:none;max-width:210px}#mission{position:fixed;top:78px;left:50%;transform:translateX(-50%);background:#000d;border:1px solid #fff2;padding:9px 14px;border-radius:14px;text-align:center;font-size:13px;min-width:245px;z-index:5;pointer-events:none}
 #minimap{position:fixed;right:10px;top:74px;width:128px;height:128px;background:#122018e8;border:2px solid #fff8;border-radius:15px;overflow:hidden;z-index:5}
 #map{width:100%;height:100%}#vehicleHud{position:fixed;right:10px;bottom:185px;background:#000c;border:1px solid #fff3;border-radius:14px;padding:8px 12px;min-width:135px;text-align:center;z-index:6;pointer-events:none;display:none;font-weight:800;text-shadow:0 2px 3px #000}#speed{font-size:25px}#vehicleControls{position:fixed;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);display:none;grid-template-columns:repeat(3,70px);gap:7px;z-index:7;pointer-events:none}.vbtn{pointer-events:auto;height:58px!important;border-radius:18px!important;background:#0b0b0dcc!important}.gas{grid-column:2/4!important;background:#176b2acc!important}.brake{background:#7a2022cc!important}.reverse{background:#725515cc!important}@media(max-width:430px){#vehicleControls{grid-template-columns:repeat(3,60px)}.vbtn{height:52px!important}}#toast{position:fixed;left:50%;bottom:112px;transform:translateX(-50%);background:#000d;border:1px solid #fff3;padding:9px 14px;border-radius:13px;opacity:0;transition:.2s;pointer-events:none;z-index:10;white-space:nowrap}
 #controls{position:fixed;left:12px;right:12px;bottom:max(12px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:end;z-index:6;pointer-events:none}
@@ -23,15 +23,15 @@ button:active{background:#fff3}.spacer{visibility:hidden}
 <div id="game"></div>
 <div id="hud">
  <div class="box">💵 Rp <span id="cash">150.000</span><br>⛽ <span id="fuel">100</span>% · ⭐ <span id="wanted">0</span>/5<br>❤️ <span id="health">100</span>%</div>
- <div class="box">CIREBON<br><small id="area">Kota</small> · <small id="mode">Jalan kaki</small><br><small id="clock">12:00 Siang</small></div>
+ <div class="box">CIREBON<br><small id="area">Kota</small> · <small id="mode">Jalan kaki</small><br><small id="clock">12:00 Siang</small><br><small id="weather">☀️ Cerah</small></div>
 </div>
-<div id="mission">MISI 1 · ANTAR PAKET<br><small id="missionText">Datangi titik kuning</small></div>
+<div id="gps">📍 GPS: <span id="gpsText">Menuju titik misi</span></div><div id="mission">MISI 1 · ANTAR PAKET<br><small id="missionText">Datangi titik kuning</small></div>
 <div id="minimap"><canvas id="map" width="128" height="128"></canvas></div>
 <div id="vehicleHud">🚗 <span id="vehicleName">Cirebon Car</span><br><span id="speed">0</span> km/j<br><small>⚙️ <span id="gear">N</span> · ❤️ <span id="carHealth">100</span>%</small></div><div id="toast"></div>
 <div id="controls">
  <div class="pad"><span class="spacer"></span><button data-k="w">▲</button><span class="spacer"></span><button data-k="a">◀</button><button data-k="s">▼</button><button data-k="d">▶</button></div>
  <div class="actions">
-  <button data-action="enter">MASUK</button><button data-k="shift">NITRO</button><button data-action="repair">BENGKEL</button>
+  <button data-action="enter">MASUK</button><button data-action="steal">AMBIL</button><button data-k="shift">NITRO</button><button data-action="repair">BENGKEL</button>
   <button data-k="space">REM</button><button data-action="save">SAVE</button><button data-action="load">LOAD</button>
  </div>
 </div>
@@ -130,16 +130,30 @@ function makeCar(x,z,color=0xc72c2c,police=false){
  g.position.set(x,0,z);scene.add(g);return g;
 }
 let car=makeCar(18,10,0x1d7c45),inCar=false;
-const traffic=[];for(let i=0;i<16;i++){const c=makeCar(-160+i*20,i%2?55:-55,[0xc72c2c,0xeeeeee,0x2457a6,0xd7b23f][i%4]);c.rotation.y=i%2?Math.PI:0;traffic.push(c)}
+const traffic=[];for(let i=0;i<20;i++){const c=makeCar(-160+i*16,i%2?55:-55,[0xc72c2c,0xeeeeee,0x2457a6,0xd7b23f,0x222222][i%5]);c.rotation.y=i%2?Math.PI:0;c.userData.speed=.018+(i%5)*.006;c.userData.stolen=false;traffic.push(c)}
 const police=[];for(let i=0;i<4;i++)police.push(makeCar(110-i*25,120,0xf2f2f2,true));
 const npcs=[];for(let i=0;i<24;i++){const n=new THREE.Mesh(new THREE.CapsuleGeometry(.5,.9,5,8),mat([0xe0a32f,0x8b5cf6,0x38a169,0xd97706][i%4]));n.position.set(rnd(-145,145),1,rnd(-145,145));scene.add(n);npcs.push(n)}
 
-let cash=150000,wanted=0,speed=0,fuel=100,health=100,mission=1,gameMinutes=720,carHealth=100,engineOn=false;
+let cash=150000,wanted=0,speed=0,fuel=100,health=100,mission=1,gameMinutes=720,carHealth=100,engineOn=false,weather='Cerah',weatherTimer=0;
 let missionReward=50000;const keys=new Set();const pressed=k=>keys.has(k);
 let lastToast='',toastTimer=0;
 
 function toast(t){const el=document.querySelector('#toast');el.textContent=t;el.style.opacity=1;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.style.opacity=0,1900)}
 function nearby(pos,obj,dist){return pos.distanceTo(obj.position)<dist}
+function nearestTraffic(){
+  let best=null,bd=7;
+  traffic.forEach(v=>{const d=v.position.distanceTo(player.position);if(d<bd){bd=d;best=v}});
+  return best;
+}
+function stealNearestCar(){
+  if(inCar)return;
+  const v=nearestTraffic();
+  if(!v){toast('Dekati kendaraan lain');return}
+  car.visible=false;
+  car=v;car.visible=true;inCar=true;engineOn=true;player.visible=false;
+  car.userData.stolen=true;document.querySelector('#mode').textContent='Mengemudi';
+  toast('Kendaraan berhasil diambil');syncVehicleUI();
+}
 function enterExit(){
  if(!inCar&&nearby(player.position,car,9)){inCar=true;player.visible=false;document.querySelector('#mode').textContent='Mengemudi';toast('Kamu masuk kendaraan')}
  else if(inCar){inCar=false;player.visible=true;player.position.copy(car.position);player.position.x+=4;document.querySelector('#mode').textContent='Jalan kaki';toast('Kamu keluar kendaraan')}
