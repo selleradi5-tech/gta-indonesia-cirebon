@@ -8,12 +8,12 @@
 *{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;background:#101820;color:#fff;font-family:Arial,sans-serif;touch-action:none}
 #game{position:fixed;inset:0}canvas{display:block}
 #hud{position:fixed;top:max(10px,env(safe-area-inset-top));left:10px;right:10px;display:flex;justify-content:space-between;gap:8px;pointer-events:none;text-shadow:0 2px 4px #000;z-index:5}
-.box{background:#000b;border:1px solid #fff3;border-radius:13px;padding:7px 9px;line-height:1.25;font-weight:700;backdrop-filter:blur(4px)}
-#gps{position:fixed;left:10px;bottom:255px;background:#000c;border:1px solid #fff3;border-radius:12px;padding:8px 10px;font-size:12px;z-index:6;pointer-events:none;max-width:210px}#mission{position:fixed;top:78px;left:50%;transform:translateX(-50%);background:#000d;border:1px solid #fff2;padding:9px 14px;border-radius:14px;text-align:center;font-size:13px;min-width:245px;z-index:5;pointer-events:none}
-#minimap{position:fixed;right:10px;top:74px;width:128px;height:128px;background:#122018e8;border:2px solid #fff8;border-radius:15px;overflow:hidden;z-index:5}
-#map{width:100%;height:100%}#vehicleHud{position:fixed;left:10px;bottom:185px;background:#000c;border:1px solid #fff3;border-radius:14px;padding:8px 12px;min-width:135px;text-align:center;z-index:6;pointer-events:none;display:none;font-weight:800;text-shadow:0 2px 3px #000}#speed{font-size:25px}#vehicleControls{position:fixed;left:50%;bottom:max(10px,env(safe-area-inset-bottom));transform:translateX(-50%);display:none;grid-template-columns:repeat(3,62px);gap:5px;z-index:7;pointer-events:none}.vbtn{pointer-events:auto;height:50px!important;border-radius:15px!important;background:#0b0b0dcc!important}.gas{grid-column:2/4!important;background:#176b2acc!important;font-size:12px!important}.brake{background:#7a2022cc!important}.reverse{background:#725515cc!important}@media(max-width:430px){#vehicleControls{grid-template-columns:repeat(3,60px)}.vbtn{height:52px!important}}#toast{position:fixed;left:50%;bottom:112px;transform:translateX(-50%);background:#000d;border:1px solid #fff3;padding:9px 14px;border-radius:13px;opacity:0;transition:.2s;pointer-events:none;z-index:10;white-space:nowrap}
-#controls{position:fixed;left:10px;right:10px;bottom:max(10px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:end;z-index:6;pointer-events:none}.actions button{height:42px;font-size:11px;padding:0 8px;border-radius:12px}.pad button{height:42px;font-size:13px}
-.pad,.actions{display:grid;gap:7px;pointer-events:auto}.pad{grid-template-columns:repeat(3,54px)}.actions{grid-template-columns:repeat(3,62px)}
+.box{background:#000b;border:1px solid #fff3;border-radius:11px;padding:6px 8px;line-height:1.25;font-weight:700;backdrop-filter:blur(4px)}
+#gps{position:fixed;left:10px;bottom:225px;background:#000c;border:1px solid #fff3;border-radius:12px;padding:8px 10px;font-size:12px;z-index:6;pointer-events:none;max-width:210px}#mission{position:fixed;top:68px;left:50%;transform:translateX(-50%);background:#000d;border:1px solid #fff2;padding:6px 10px;border-radius:12px;text-align:center;font-size:11px;min-width:190px;max-width:52vw;z-index:5;pointer-events:none;white-space:nowrap}
+#minimap{position:fixed;right:10px;top:62px;width:104px;height:104px;background:#122018e8;border:2px solid #fff8;border-radius:15px;overflow:hidden;z-index:5}
+#map{width:100%;height:100%}#vehicleHud{position:fixed;left:10px;bottom:170px;background:#000c;border:1px solid #fff3;border-radius:14px;padding:8px 12px;min-width:135px;text-align:center;z-index:6;pointer-events:none;display:none;font-weight:800;text-shadow:0 2px 3px #000}#speed{font-size:21px}#vehicleControls{position:fixed;left:50%;bottom:max(10px,env(safe-area-inset-bottom));transform:translateX(-50%);display:none;grid-template-columns:repeat(3,62px);gap:5px;z-index:7;pointer-events:none}.vbtn{pointer-events:auto;height:50px!important;border-radius:15px!important;background:#0b0b0dcc!important}.gas{grid-column:2/4!important;background:#176b2acc!important;font-size:12px!important}.brake{background:#7a2022cc!important}.reverse{background:#725515cc!important}@media(max-width:430px){#vehicleControls{grid-template-columns:repeat(3,60px)}.vbtn{height:52px!important}}#toast{position:fixed;left:50%;bottom:112px;transform:translateX(-50%);background:#000d;border:1px solid #fff3;padding:9px 14px;border-radius:13px;opacity:0;transition:.2s;pointer-events:none;z-index:10;white-space:nowrap}
+#controls{position:fixed;left:8px;right:8px;bottom:max(10px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:end;z-index:6;pointer-events:none}.actions button{height:42px;font-size:11px;padding:0 8px;border-radius:12px}.pad button{height:42px;font-size:13px}
+.pad,.actions{display:grid;gap:7px;pointer-events:auto}.pad{grid-template-columns:repeat(3,54px)}.actions{grid-template-columns:repeat(3,56px)}
 button{height:52px;border:1px solid #fff5;border-radius:14px;background:#111c;color:#fff;font-size:15px;font-weight:800;touch-action:none;user-select:none;-webkit-user-select:none;backdrop-filter:blur(5px)}
 button:active{background:#fff3}.spacer{visibility:hidden}.hidden{display:none!important}
 @media(max-width:430px){#minimap{width:108px;height:108px}.actions{grid-template-columns:repeat(3,58px)}button{height:48px;font-size:13px}.pad{grid-template-columns:repeat(3,50px)}#mission{top:72px;font-size:12px;min-width:220px}.box{font-size:12px}}
@@ -102,19 +102,18 @@ const ground=new THREE.Mesh(new THREE.PlaneGeometry(620,620),mat(0x416f45));grou
 // Cirebon-inspired grid district, not a copy of Google Maps.
 for(let x=-160;x<=160;x+=40){meshBox(null,x,.035,0,11,.07,360,0x3d3d3d);meshBox(null,x,.075,0,.25,.09,360,0xf0d35a)}
 for(let z=-160;z<=160;z+=40){meshBox(null,0,.035,z,360,.07,11,0x3d3d3d);meshBox(null,0,.075,z,360,.09,.25,0xf0d35a);meshBox(null,0,.085,z-2.6,360,.05,.10,0xffffff);meshBox(null,0,.085,z+2.6,360,.05,.10,0xffffff)}
-// Gebäude liegen ausschließlich in den Blöcken zwischen den Straßen.
-// Straßenkorridore bleiben vollständig frei: Gebäude stehen 8-14 Einheiten vom Straßenrand entfernt.
-const buildingSpots=[];
-for(let x=-140;x<=140;x+=40)for(let z=-140;z<=140;z+=40){
-  const offsets=[[-10,-10],[10,-10],[-10,10],[10,10]];
-  for(const [ox,oz] of offsets){
-    const bx=x+ox,bz=z+oz;
-    if(Math.abs(bx)>155||Math.abs(bz)>155)continue;
-    const h=rnd(7,18),bw=rnd(8,11),bd=rnd(8,11),cc=[0xd6b08c,0xb7c9d9,0xd0d0c0,0xc59b79,0xa9c5a8][Math.floor(rnd(0,5))];
-    meshBox(null,bx,h/2,bz,bw,h,bd,cc);
-    addCollider(bx,bz,bw,bd,.8);
-    if(Math.random()<.25)meshBox(null,bx,h+.5,bz,bw*.55,.7,bd*.55,0x4e4e4e);
-  }
+// Strict city-block placement. Roads have an 11-unit width, so every building
+// is kept at least 7 units from the road center and never overlaps the road surface.
+for(let bx=-150;bx<=150;bx+=20)for(let bz=-150;bz<=150;bz+=20){
+  if(Math.abs(bx%40)===0 || Math.abs(bz%40)===0) continue;
+  const h=rnd(7,17),bw=rnd(6.5,8.2),bd=rnd(6.5,8.2);
+  const roadClearX=5.8, roadClearZ=5.8;
+  const cx=bx,cz=bz;
+  if(Math.abs(cx%40)<roadClearX || Math.abs(cz%40)<roadClearZ) continue;
+  const cc=[0xd6b08c,0xb7c9d9,0xd0d0c0,0xc59b79,0xa9c5a8][Math.floor(rnd(0,5))];
+  meshBox(null,cx,h/2,cz,bw,h,bd,cc);
+  addCollider(cx,cz,bw,bd,.35);
+  if(Math.random()<.22)meshBox(null,cx,h+.5,cz,bw*.55,.7,bd*.55,0x4e4e4e);
 }
 
 // Landmarks and districts
