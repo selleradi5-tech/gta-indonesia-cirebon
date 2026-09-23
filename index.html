@@ -489,7 +489,7 @@ lampMat.emissiveIntensity=Math.max(0,night-.05)*2.2;
 }
 function update(dt){
  const obj=inCar?car:player;
- const gasPressed=pressed('w')||pressed('gas'); const keyForward=(gasPressed?1:0)-(pressed('s')?1:0),keyStrafe=(pressed('d')?1:0)-(pressed('a')?1:0); const moveForward=Math.abs(analogState.y)>.05? -analogState.y : keyForward; const moveStrafe=Math.abs(analogState.x)>.05? analogState.x : keyStrafe; const movingInput=Math.hypot(moveStrafe,moveForward)>0.05;
+ const gasPressed=pressed('w')||pressed('gas'); const keyForward=(gasPressed?1:0)-(pressed('s')?1:0),keyStrafe=(pressed('d')?1:0)-(pressed('a')?1:0); const accel=keyForward; const steer=keyStrafe; const moveForward=Math.abs(analogState.y)>.05? -analogState.y : keyForward; const moveStrafe=Math.abs(analogState.x)>.05? analogState.x : keyStrafe; const movingInput=Math.hypot(moveStrafe,moveForward)>0.05;
  if(inCar){
   const boost=pressed('shift')&&fuel>2;
   // Kecepatan normal kendaraan pemain disamakan dengan mobil NPC tercepat (49,2 km/j).
