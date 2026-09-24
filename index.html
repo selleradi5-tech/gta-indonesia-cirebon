@@ -1028,7 +1028,8 @@ function update(dt){
  const area=(()=>{const x=obj.position.x,z=obj.position.z;if((x-140)*(x-140)+(z-140)*(z-140)<900)return 'SPBU';if((x+140)*(x+140)+(z-140)*(z-140)<900)return 'Bengkel';if((x+100)*(x+100)+(z+100)*(z+100)<1225)return 'Keraton';if((x-100)*(x-100)+(z+100)*(z+100)<1225)return 'Area Mall';if((x+100)*(x+100)+(z-100)*(z-100)<1225)return 'Alun-Alun';return 'Kota'})()
  document.querySelector('#area').textContent=area;
  document.querySelector('#cash').textContent=Math.floor(cash).toLocaleString('id-ID');document.querySelector('#fuel').textContent=Math.round(fuel);document.querySelector('#wanted').textContent=wanted;document.querySelector('#health').textContent=Math.round(health);
- updateMultiplayer(dt,obj);\n mapClock+=dt;if(mapClock>=.12){mapClock=0;updateMap(obj)}updateWorld(dt);updatePerformance(dt,obj);updateWeapon(dt);updateAudio(dt);updateRealAudio();syncVehicleUI();updateContextControls();document.querySelector('#weather').textContent=weather==='Hujan'?'🌧️ Hujan':weather==='Mendung'?'☁️ Mendung':'☀️ Cerah';
+ updateMultiplayer(dt,obj);
+ mapClock+=dt;if(mapClock>=.12){mapClock=0;updateMap(obj)}updateWorld(dt);updatePerformance(dt,obj);updateWeapon(dt);updateAudio(dt);updateRealAudio();syncVehicleUI();updateContextControls();document.querySelector('#weather').textContent=weather==='Hujan'?'🌧️ Hujan':weather==='Mendung'?'☁️ Mendung':'☀️ Cerah';
 }
 function updateMap(obj){
  const c=document.querySelector('#map'),ctx=c.getContext('2d'),w=c.width,h=c.height,s=280/128;
@@ -1088,7 +1089,8 @@ function updateMultiplayer(dt,obj){
   remotePlayers.forEach(r=>{r.group.position.lerp(r.target,Math.min(1,dt*12));let d=THREE.MathUtils.euclideanModulo(r.targetRot-r.group.rotation.y+Math.PI,Math.PI*2)-Math.PI;r.group.rotation.y+=d*Math.min(1,dt*12);});
 }
 document.querySelector('#mpJoin')?.addEventListener('click',mpConnect);document.querySelector('#mpLeave')?.addEventListener('click',mpDisconnect);
-\nfunction keyDown(e){ensureAudio();
+
+function keyDown(e){ensureAudio();
  const k=e.key.toLowerCase();if(e.key===' ')keys.add('space');else if(e.key==='shift')keys.add('shift');else {keys.add(k);if(k==='arrowup')keys.add('w');if(k==='arrowdown')keys.add('s');if(k==='arrowleft')keys.add('a');if(k==='arrowright')keys.add('d');}
  if(k==='e')enterExit();if(k==='r'){if(weaponEquipped)reloadWeapon();else service()}if(k==='f')fireWeapon();if(k==='1')equipWeapon();if(k==='2')switchWeapon();if(k==='q')toggleAim();if(k==='f5')saveGame();if(k==='f9')loadGame();
 }
